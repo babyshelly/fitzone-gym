@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Panel de Administración - FitZone</title>
+        <link rel="stylesheet" href="/css/style.css">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        <script src="/js/alerts.js"></script>
+    </head>
+    <body>
+        <!-- Header del Admin -->
+        <header class="header">
+            <nav class="navbar">
+                <div class="nav-container">
+                    <div class="logo">
+                        <i class="fas fa-dumbbell"></i>
+                        <span>FitZone Admin</span>
+                    </div>
+                    <ul class="nav-menu">
+                        <li><a href="#usuarios">Usuarios</a></li>
+                        <li><a href="#stats">Estadísticas</a></li>
+                        <li><a href="#clases">Clases</a></li>
+                        <li><a href="#ordenes">Órdenes</a></li>
+                        <li><a href="/" class="btn-logout">Salir</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Dashboard Admin -->
+        <main class="admin-main">
+            <!-- Alertas globales -->
+            <div class="container">
+                <div id="global-alert" class="alert">
+                    <span id="alert-message"></span>
+                </div>
+            </div>
+
+            <!-- Resumen General -->
+            <section class="admin-overview">
+                <div class="container">
+                    <h1>Panel de Administración</h1>
+                    <div class="overview-cards">
+                        <div class="overview-card">
+                            <i class="fas fa-users"></i>
+                            <div class="card-content">
+                                <h3 id="total-users">0</h3>
+                                <p>Usuarios Registrados</p>
+                            </div>
+                        </div>
+                        <div class="overview-card">
+                            <i class="fas fa-calendar-check"></i>
+                            <div class="card-content">
+                                <h3 id="total-reservas">0</h3>
+                                <p>Reservas Activas</p>
+                            </div>
+                        </div>
+                        <div class="overview-card">
+                            <i class="fas fa-shopping-cart"></i>
+                            <div class="card-content">
+                                <h3 id="total-ordenes">0</h3>
+                                <p>Órdenes del Mes</p>
+                            </div>
+                        </div>
+                        <div class="overview-card">
+                            <i class="fas fa-dollar-sign"></i>
+                            <div class="card-content">
+                                <h3 id="total-ingresos">$0</h3>
+                                <p>Ingresos del Mes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gestión de Usuarios -->
+            <section id="usuarios" class="admin-section">
+                <div class="container">
+                    <div class="section-header">
+                        <h2>Gestión de Usuarios</h2>
+                        <div class="section-actions">
+                            <button class="btn btn-primary" onclick="refreshUsers()">
+                                <i class="fas fa-sync"></i> Actualizar
+                            </button>
+                            <button class="btn btn-secondary" onclick="exportUsers()">
+                                <i class="fas fa-download"></i> Exportar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Búsqueda y filtros -->
+                    <div class="search-container">
+                        <input type="text" id="user-search" class="search-input" placeholder="Buscar usuarios por nombre o email..." onkeyup="searchUsers()">
+                        <select id="user-filter" class="search-input" onchange="filterUsers()" style="max-width: 200px;">
+                            <option value="">Todos los usuarios</option>
+                            <option value="active">Activos</option>
+                            <option value="inactive">Inactivos</option>
+                        </select>
+                    </div>
+                    
+                    <div class="users-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Teléfono</th>
+                                    <th>Fecha Registro</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body">
+                                <tr>
+                                    <td colspan="7" class="loading">Cargando usuarios...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <!-- Paginación -->
+                        <div id="users-pagination" class="pagination"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gestión de Órdenes -->
+            <section id="ordenes" class="admin-section">
+                <div class="container">
+                    <h2>Gestión de Órdenes</h2>
+                    
+                    <div class="users-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID Orden</th>
+                                    <th>Usuario</th>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                    <th>Items</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-table-body">
+                                <tr>
+                                    <td colspan="7" class="loading">Cargando órdenes...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Estadísticas Reales -->
+            <section id="stats" class="admin-section">
+                <div class="container">
+                    <h2>Estadísticas</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Registros por Mes</h3>
+                            <div class="chart-container" id="registrations-chart">
+                                <canvas id="registrationChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Top Clases Reservadas</h3>
+                            <div id="top-classes" class="activity-list">
+                                <div class="loading">Cargando estadísticas...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Modal para Editar Usuario -->
+        <div id="edit-user-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <h3>Editar Usuario</h3>
+                    <span class="close" onclick="closeEditUserModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-user-form">
+                        <input type="hidden" id="edit-user-id">
+                        
+                        <div class="form-group">
+                            <label for="edit-fullname">Nombre Completo</label>
+                            <input type="text" id="edit-fullname" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit-email">Email</label>
+                            <input type="email" id="edit-email" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit-phone">Teléfono</label>
+                            <input type="tel" id="edit-phone" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit-status">Estado</label>
+                            <select id="edit-status">
+                                <option value="active">Activo</option>
+                                <option value="inactive">Inactivo</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeEditUserModal()">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para Ver Detalles de Orden -->
+        <div id="order-details-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <h3>Detalles de la Orden</h3>
+                    <span class="close" onclick="closeOrderDetailsModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div id="order-details-content">
+                        <!-- Contenido dinámico -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Variables globales
+            let allUsers = [];
+            let filteredUsers = [];
+            let currentPage = 1;
+            const usersPerPage = 10;
+
+            // Cargar datos al iniciar
+            document.addEventListener('DOMContentLoaded', function() {
+                loadDashboardStats();
+                loadUsers();
+                loadOrders();
+                loadStatistics();
+            });
+
+            // Función para mostrar alertas
+            function showCustomAlert(message, type = 'success') {
+                const alert = document.getElementById('global-alert');
+                const alertMessage = document.getElementById('alert-message');
+                
+                alertMessage.textContent = message;
+                alert.className = `alert alert-${type} show`;
+                
+                setTimeout(() => {
+                    alert.classList.remove('show');
+                }, 5000);
+            }
+
+            // Cargar estadísticas del dashboard
+            async function loadDashboardStats() {
+                try {
+                    const response = await fetch('/api/admin/dashboard-stats');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        document.getElementById('total-users').textContent = data.stats.totalUsers;
+                        document.getElementById('total-reservas').textContent = data.stats.activeReservations;
+                        document.getElementById('total-ordenes').textContent = data.stats.monthlyOrders;
+                        document.getElementById('total-ingresos').textContent = `$${data.stats.monthlyRevenue.toLocaleString()}`;
+                    }
+                } catch (error) {
+                    console.error('Error cargando estadísticas:', error);
+                }
+            }
+
+            // Cargar usuarios con paginación
+            async function loadUsers() {
+                try {
+                    const response = await fetch('/api/admin/users');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        allUsers = data.users;
+                        filteredUsers = [...allUsers];
+                        displayUsers();
+                        setupPagination();
+                    } else {
+                        throw new Error(data.message);
+                    }
+                } catch (error) {
+                    console.error('Error cargando usuarios:', error);
+                    document.getElementById('users-table-body').innerHTML = 
+                        '<tr><td colspan="7" class="error">Error cargando usuarios</td></tr>';
+                }
+            }
+
+            // Mostrar usuarios con paginación
+            function displayUsers() {
+                const tbody = document.getElementById('users-table-body');
+                
+                if (filteredUsers.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="no-data">No hay usuarios que mostrar</td></tr>';
+                    return;
+                }
+
+                const startIndex = (currentPage - 1) * usersPerPage;
+                const endIndex = startIndex + usersPerPage;
+                const usersToShow = filteredUsers.slice(startIndex, endIndex);
+
+                tbody.innerHTML = usersToShow.map(user => `
+                    <tr>
+                        <td>${user._id.slice(-6)}</td>
+                        <td>${user.fullName}</td>
+                        <td>${user.email}</td>
+                        <td>${user.phone}</td>
+                        <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+                        <td><span class="status active">Activo</span></td>
+                        <td>
+                            <button class="btn-table-action" onclick="editUser('${user._id}')" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-table-action delete" onclick="deleteUser('${user._id}')" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // Configurar paginación
+            function setupPagination() {
+                const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+                const pagination = document.getElementById('users-pagination');
+                
+                if (totalPages <= 1) {
+                    pagination.innerHTML = '';
+                    return;
+                }
+
+                let paginationHTML = '';
+                
+                // Botón anterior
+                if (currentPage > 1) {
+                    paginationHTML += `<button onclick="changePage(${currentPage - 1})">Anterior</button>`;
+                }
+                
+                // Números de página
+                for (let i = 1; i <= totalPages; i++) {
+                    if (i === currentPage || i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                        paginationHTML += `<button class="${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+                    } else if (i === currentPage - 2 || i === currentPage + 2) {
+                        paginationHTML += '<span>...</span>';
+                    }
+                }
+                
+                // Botón siguiente
+                if (currentPage < totalPages) {
+                    paginationHTML += `<button onclick="changePage(${currentPage + 1})">Siguiente</button>`;
+                }
+                
+                pagination.innerHTML = paginationHTML;
+            }
+
+            // Cambiar página
+            function changePage(page) {
+                currentPage = page;
+                displayUsers();
+                setupPagination();
+            }
+
+            // Buscar usuarios
+            function searchUsers() {
+                const searchTerm = document.getElementById('user-search').value.toLowerCase();
+                filteredUsers = allUsers.filter(user => 
+                    user.fullName.toLowerCase().includes(searchTerm) || 
+                    user.email.toLowerCase().includes(searchTerm)
+                );
+                currentPage = 1;
+                displayUsers();
+                setupPagination();
+            }
+
+            // Filtrar usuarios
+            function filterUsers() {
+                const filter = document.getElementById('user-filter').value;
+                // Por ahora todos los usuarios están activos, pero se puede implementar
+                filteredUsers = [...allUsers];
+                currentPage = 1;
+                displayUsers();
+                setupPagination();
+            }
+
+            // Editar usuario
+            function editUser(userId) {
+                const user = allUsers.find(u => u._id === userId);
+                if (!user) return;
+
+                document.getElementById('edit-user-id').value = user._id;
+                document.getElementById('edit-fullname').value = user.fullName;
+                document.getElementById('edit-email').value = user.email;
+                document.getElementById('edit-phone').value = user.phone;
+                document.getElementById('edit-status').value = 'active';
+
+                document.getElementById('edit-user-modal').classList.add('show');
+            }
+
+            // Cerrar modal de edición
+            function closeEditUserModal() {
+                document.getElementById('edit-user-modal').classList.remove('show');
+            }
+
+            // Manejar envío del formulario de edición
+            document.getElementById('edit-user-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const userId = document.getElementById('edit-user-id').value;
+                const formData = {
+                    fullName: document.getElementById('edit-fullname').value,
+                    email: document.getElementById('edit-email').value,
+                    phone: document.getElementById('edit-phone').value,
+                    status: document.getElementById('edit-status').value
+                };
+
+                try {
+                    const response = await fetch(`/api/admin/users/${userId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        showCustomAlert('Usuario actualizado correctamente', 'success');
+                        closeEditUserModal();
+                        loadUsers();
+                    } else {
+                        showAshowCustomAlertlert(result.message || 'Error al actualizar usuario', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showCustomAlert('Error de conexión', 'error');
+                }
+            });
+
+            // Eliminar usuario
+            async function deleteUser(userId) {
+                if (!confirm('¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.')) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/admin/users/${userId}`, {
+                        method: 'DELETE'
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        showCustomAlert('Usuario eliminado correctamente', 'success');
+                        loadUsers();
+                    } else {
+                        showCustomAlert(result.message || 'Error al eliminar usuario', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showCustomAlert('Error de conexión', 'error');
+                }
+            }
+
+            // Cargar órdenes
+            async function loadOrders() {
+                try {
+                    const response = await fetch('/api/admin/orders');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        displayOrders(data.orders);
+                    } else {
+                        throw new Error(data.message);
+                    }
+                } catch (error) {
+                    console.error('Error cargando órdenes:', error);
+                    document.getElementById('orders-table-body').innerHTML = 
+                        '<tr><td colspan="7" class="error">Error cargando órdenes</td></tr>';
+                }
+            }
+
+            // Mostrar órdenes
+            function displayOrders(orders) {
+                const tbody = document.getElementById('orders-table-body');
+                
+                if (orders.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="no-data">No hay órdenes registradas</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = orders.map(order => `
+                    <tr>
+                        <td>#${order._id.slice(-6)}</td>
+                        <td>${order.userInfo?.fullName || 'Usuario eliminado'}</td>
+                        <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+                        <td>$${order.total.toLocaleString()}</td>
+                        <td>${order.items.length} items</td>
+                        <td><span class="status active">Completada</span></td>
+                        <td>
+                            <button class="btn-table-action" onclick="viewOrderDetails('${order._id}')" title="Ver detalles">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // Ver detalles de orden
+            async function viewOrderDetails(orderId) {
+                try {
+                    const response = await fetch(`/api/admin/orders/${orderId}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const order = data.order;
+                        const content = document.getElementById('order-details-content');
+                        
+                        content.innerHTML = `
+                            <div class="form-group">
+                                <label>ID de Orden:</label>
+                                <p>#${order._id}</p>
+                            </div>
+                            <div class="form-group">
+                                <label>Cliente:</label>
+                                <p>${order.userInfo?.fullName || 'Usuario eliminado'} (${order.userInfo?.email || 'N/A'})</p>
+                            </div>
+                            <div class="form-group">
+                                <label>Fecha:</label>
+                                <p>${new Date(order.createdAt).toLocaleDateString()}</p>
+                            </div>
+                            <div class="form-group">
+                                <label>Productos:</label>
+                                <div class="order-items">
+                                    ${order.items.map(item => `
+                                        <div class="order-item" style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--violeta-medio);">
+                                            <span>${item.name}</span>
+                                            <span>${item.quantity} x $${item.price.toLocaleString()} = $${(item.quantity * item.price).toLocaleString()}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Total:</label>
+                                <p style="font-size: 1.2rem; font-weight: bold; color: var(--violeta-claro);">$${order.total.toLocaleString()}</p>
+                            </div>
+                        `;
+                        
+                        document.getElementById('order-details-modal').classList.add('show');
+                    } else {
+                        showCustomAlert('Error al cargar detalles de la orden', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showCustomAlert('Error de conexión', 'error');
+                }
+            }
+
+            // Cerrar modal de detalles de orden
+            function closeOrderDetailsModal() {
+                document.getElementById('order-details-modal').classList.remove('show');
+            }
+
+            // Cargar estadísticas
+            async function loadStatistics() {
+                try {
+                    const response = await fetch('/api/admin/statistics');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        displayTopClasses(data.stats.topClasses);
+                    }
+                } catch (error) {
+                    console.error('Error cargando estadísticas:', error);
+                }
+            }
+
+            // Mostrar top clases
+            function displayTopClasses(topClasses) {
+                const container = document.getElementById('top-classes');
+                
+                if (!topClasses || topClasses.length === 0) {
+                    container.innerHTML = '<div class="no-data">No hay datos de reservas</div>';
+                    return;
+                }
+
+                const maxReservations = Math.max(...topClasses.map(c => c.count));
+                
+                container.innerHTML = topClasses.map(classData => `
+                    <div class="activity-item">
+                        <span class="day">${classData._id}</span>
+                        <div class="activity-bar">
+                            <div class="bar" style="width: ${(classData.count / maxReservations) * 100}%"></div>
+                        </div>
+                        <span class="percentage">${classData.count} reservas</span>
+                    </div>
+                `).join('');
+            }
+
+            // Funciones auxiliares
+            function refreshUsers() {
+                const btn = event.target;
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = '<div class="loading-spinner"></div> Actualizando...';
+                btn.disabled = true;
+                
+                loadUsers().finally(() => {
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+                });
+            }
+
+            function exportUsers() {
+                if (allUsers.length === 0) {
+                    showCustomAlert('No hay usuarios para exportar', 'error');
+                    return;
+                }
+
+                const csvContent = [
+                    ['ID', 'Nombre', 'Email', 'Teléfono', 'Fecha Registro'].join(','),
+                    ...allUsers.map(user => [
+                        user._id.slice(-6),
+                        user.fullName,
+                        user.email,
+                        user.phone,
+                        new Date(user.createdAt).toLocaleDateString()
+                    ].join(','))
+                ].join('\n');
+
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `usuarios_fitzone_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                
+                showCustomAlert('Usuarios exportados correctamente', 'success');
+            }
+
+            // Cerrar modales al hacer clic fuera
+            window.addEventListener('click', function(event) {
+                const modals = document.querySelectorAll('.modal-overlay');
+                modals.forEach(modal => {
+                    if (event.target === modal) {
+                        modal.classList.remove('show');
+                    }
+                });
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Escape para cerrar modales
+                if (e.key === 'Escape') {
+                    const openModal = document.querySelector('.modal-overlay.show');
+                    if (openModal) {
+                        openModal.classList.remove('show');
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>

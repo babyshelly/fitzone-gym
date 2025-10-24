@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Mi Dashboard - FitZone</title>
+        <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234b1c71'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='%23dbb6ee' font-family='Arial, sans-serif' font-weight='bold'>F</text></svg>">
+        <link rel="stylesheet" href="/css/style.css">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        <script src="/js/alerts.js"></script>
+    </head>
+    <body>
+        <!-- Header del Dashboard -->
+        <header class="header">
+            <nav class="navbar">
+                <div class="nav-container">
+                    <div class="logo">
+                        <i class="fas fa-dumbbell"></i>
+                        <span>FitZone</span>
+                    </div>
+                    <ul class="nav-menu">
+                        <li><a href="#perfil">Mi Perfil</a></li>
+                        <li><a href="#clases">Mis Clases</a></li>
+                        <li><a href="#horarios">Horarios</a></li>
+                        <li><a href="/tienda">Tienda</a></li>
+                        <li><a href="/" class="btn-logout">Cerrar Sesión</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Dashboard Principal -->
+        <main class="dashboard-main">
+            <!-- Bienvenida -->
+            <section class="welcome-section">
+                <div class="container">
+                    <div class="welcome-content">
+                        <h1>¡Bienvenido de vuelta, <span class="user-name">Usuario</span>! 💪</h1>
+                        <p>Estamos listos para ayudarte a alcanzar tus objetivos fitness</p>
+                    </div>
+                    <div class="quick-stats">
+                    <div class="stat-card">
+                        <i class="fas fa-calendar-check"></i>
+                        <span class="stat-number" id="classes-this-month">0</span>
+                        <span class="stat-label">Reservas Activas</span>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-dumbbell"></i>
+                        <span class="stat-number" id="total-trainings">0</span>
+                        <span class="stat-label">Entrenamientos</span>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span class="stat-number" id="member-days">0</span>
+                        <span class="stat-label">Días de Miembro</span>
+                    </div>
+                </div>
+
+                <script>
+                    // Buscar esta función y reemplazarla:
+                    async function loadDashboardStats() {
+                        try {
+                            const response = await fetch('/api/user/stats/improved'); // Cambiar URL
+                            const data = await response.json();
+                            
+                            if (data.success) {
+                                // Si es usuario nuevo, mostrar mensajes personalizados
+                                if (data.stats.isNewUser) {
+                                    document.getElementById('classes-this-month').textContent = data.stats.activeReservations || 0;
+                                    document.getElementById('total-trainings').textContent = '¡Comienza hoy!';
+                                    document.getElementById('member-days').textContent = data.stats.memberDays;
+                                } else {
+                                    document.getElementById('classes-this-month').textContent = data.stats.activeReservations || 0;
+                                    document.getElementById('total-trainings').textContent = data.stats.completedTrainings || 0;
+                                    document.getElementById('member-days').textContent = data.stats.memberDays;
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error cargando stats:', error);
+                        }
+                    }
+
+                    // Llamar al cargar
+                    document.addEventListener('DOMContentLoaded', function() {
+                        loadDashboardStats();
+                    });
+                </script>
+            </section>
+            <!-- ==================== AGREGAR ESTA SECCIÓN AL DASHBOARD.HTML ==================== -->
+            <!-- Colocar después de la sección de bienvenida y antes de "Mi Perfil" -->
+
+            <!-- Sección de Membresía y Calendario -->
+            <section id="membresia-activa" class="membership-calendar-section">
+                <div class="container">
+                    <!-- Información de Membresía -->
+                    <div class="membership-info-card">
+                        <div class="membership-header">
+                            <div class="membership-icon">
+                                <i class="fas fa-id-card"></i>
+                            </div>
+                            <div class="membership-details">
+                                <h3 id="membership-plan-name">Cargando...</h3>
+                                <p id="membership-status-text">Verificando estado...</p>
+                            </div>
+                            <div class="membership-badge" id="membership-badge">
+                                <i class="fas fa-check-circle"></i>
+                                <span>ACTIVA</span>
+                            </div>
+                        </div>
+
+                        <div class="membership-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <div>
+                                    <span class="stat-label">Días Restantes</span>
+                                    <span class="stat-value" id="days-remaining">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-clock"></i>
+                                <div>
+                                    <span class="stat-label">Vence el</span>
+                                    <span class="stat-value" id="expiry-date">--/--/----</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-dollar-sign"></i>
+                                <div>
+                                    <span class="stat-label">Precio Mensual</span>
+                                    <span class="stat-value" id="membership-price">$0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alerta de Renovación (si está por vencer) -->
+                    <div id="renewal-alert" class="renewal-alert" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div class="alert-content">
+                            <h4>¡Tu membresía está por vencer!</h4>
+                            <p id="renewal-message">Renueva ahora para seguir disfrutando de nuestros servicios.</p>
+                        </div>
+                        <button class="btn-renew" onclick="renewMembership()">
+                            <i class="fas fa-sync"></i> Renovar Ahora
+                        </button>
+                    </div>
+
+                    <!-- Calendario Mensual -->
+                    <div class="calendar-container">
+                        <div class="calendar-header">
+                            <button class="calendar-nav" onclick="changeMonth(-1)">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <h3 id="calendar-month-year">Mes Año</h3>
+                            <button class="calendar-nav" onclick="changeMonth(1)">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+
+                        <div class="calendar-weekdays">
+                            <div class="weekday">Dom</div>
+                            <div class="weekday">Lun</div>
+                            <div class="weekday">Mar</div>
+                            <div class="weekday">Mié</div>
+                            <div class="weekday">Jue</div>
+                            <div class="weekday">Vie</div>
+                            <div class="weekday">Sáb</div>
+                        </div>
+
+                        <div class="calendar-days" id="calendar-days">
+                            <!-- Los días se generarán dinámicamente -->
+                        </div>
+
+                        <!-- Leyenda del Calendario -->
+                        <div class="calendar-legend">
+                            <div class="legend-item">
+                                <div class="legend-color available"></div>
+                                <span>Día Habilitado</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color today"></div>
+                                <span>Hoy</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color expiring"></div>
+                                <span>Vencimiento</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color disabled"></div>
+                                <span>No Disponible</span>
+                            </div>
+                            
+                            <!-- Leyenda de Clases -->
+                            <div style="width: 100%; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 1rem; padding-top: 1rem;">
+                                <h4 style="color: var(--violeta-claro); margin-bottom: 0.5rem; font-size: 0.9rem;">Clases Reservadas:</h4>
+                                <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.5rem;">
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: #22c55e;"></div>
+                                        <span>F.E.C</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: #ef4444;"></div>
+                                        <span>Yoga</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: #3b82f6;"></div>
+                                        <span>Spinning</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background: #f59e0b;"></div>
+                                        <span>Pilates</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información Adicional según Tipo de Membresía -->
+                    <div id="membership-extra-info" class="membership-extra-info">
+                        <!-- Se llenará dinámicamente según el tipo de membresía -->
+                    </div>
+                </div>
+            </section>
+
+            <script>
+               // ============== FUNCIONES DEL CALENDARIO (mantener las que ya tienes) ==============
+                // Variables globales para el calendario
+                let currentDate = new Date();
+                let membershipData = null;
+                let trainingDays = [];
+                let userReservations = [];
+
+                const monthNames = [
+                    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                ];
+
+                const dayNames = {
+                    'domingo': 0,
+                    'lunes': 1,
+                    'martes': 2,
+                    'miercoles': 3,
+                    'jueves': 4,
+                    'viernes': 5,
+                    'sabado': 6
+                };
+
+                // Cargar información de membresía
+                async function loadMembershipInfo() {
+                    try {
+                        const response = await fetch('/api/user/membership');
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            membershipData = data.membership;
+                            displayMembershipInfo();
+                            generateCalendar();
+                        } else {
+                            showNoMembershipMessage();
+                        }
+                    } catch (error) {
+                        console.error('Error cargando membresía:', error);
+                        showErrorMessage();
+                    }
+                }
+
+                // Mostrar información de la membresía
+                function displayMembershipInfo() {
+                    if (!membershipData) return;
+                    
+                    const planNames = {
+                        'mes-libre': 'Mes Libre',
+                        'dos-personas': 'Membresía para 2 Personas',
+                        'tres-veces': '3 Veces por Semana',
+                        'semanal': 'Semanal',
+                        'dia-clase': 'Día o Clase',
+                        'jubilados': 'Membresía Jubilados'
+                    };
+                    
+                    document.getElementById('membership-plan-name').textContent = planNames[membershipData.planType] || 'Membresía';
+                    
+                    const daysRemaining = membershipData.daysRemaining;
+                    document.getElementById('days-remaining').textContent = daysRemaining;
+                    
+                    const expiryDate = new Date(membershipData.endDate);
+                    document.getElementById('expiry-date').textContent = expiryDate.toLocaleDateString('es-ES');
+                    
+                    document.getElementById('membership-price').textContent = `$${membershipData.price.toLocaleString()}`;
+                    
+                    const statusBadge = document.getElementById('membership-badge');
+                    const statusText = document.getElementById('membership-status-text');
+                    
+                    if (membershipData.isExpired) {
+                        statusBadge.className = 'membership-badge expired';
+                        statusBadge.innerHTML = '<i class="fas fa-times-circle"></i><span>EXPIRADA</span>';
+                        statusText.textContent = 'Tu membresía ha expirado';
+                        statusText.style.color = '#ef4444';
+                    } else if (membershipData.isExpiringSoon) {
+                        statusBadge.className = 'membership-badge warning';
+                        statusBadge.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>POR VENCER</span>';
+                        statusText.textContent = `Vence en ${daysRemaining} días`;
+                        statusText.style.color = '#f59e0b';
+                        
+                        const renewalAlert = document.getElementById('renewal-alert');
+                        renewalAlert.style.display = 'flex';
+                        document.getElementById('renewal-message').textContent = 
+                            `Tu membresía vence en ${daysRemaining} días. Renueva ahora para seguir disfrutando de nuestros servicios.`;
+                    } else {
+                        statusBadge.className = 'membership-badge active';
+                        statusBadge.innerHTML = '<i class="fas fa-check-circle"></i><span>ACTIVA</span>';
+                        statusText.textContent = `Tenés ${daysRemaining} días de acceso`;
+                        statusText.style.color = '#22c55e';
+                    }
+                    
+                    if (membershipData.planType === 'tres-veces' && membershipData.trainingDays) {
+                        trainingDays = membershipData.trainingDays;
+                        showTrainingDaysInfo();
+                    }
+                }
+
+                function showTrainingDaysInfo() {
+                    const extraInfo = document.getElementById('membership-extra-info');
+                    extraInfo.innerHTML = `
+                        <div class="training-days-info">
+                            <h4><i class="fas fa-calendar-check"></i> Tus Días de Entrenamiento</h4>
+                            <div class="training-days-list">
+                                ${trainingDays.map(day => `
+                                    <div class="training-day-badge">
+                                        <i class="fas fa-dumbbell"></i>
+                                        ${day.charAt(0).toUpperCase() + day.slice(1)}
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <p class="training-days-note">Solo puedes asistir estos días según tu membresía.</p>
+                        </div>
+                    `;
+                    extraInfo.style.display = 'block';
+                }
+
+                async function loadUserReservations() {
+                    try {
+                        const response = await fetch('/api/my-reservations');
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            userReservations = data.reservations;
+                            if (membershipData) {
+                                generateCalendar();
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error cargando reservas:', error);
+                        userReservations = [];
+                    }
+                }
+
+                function generateCalendar() {
+                    const year = currentDate.getFullYear();
+                    const month = currentDate.getMonth();
+                    
+                    document.getElementById('calendar-month-year').textContent = `${monthNames[month]} ${year}`;
+                    
+                    const firstDay = new Date(year, month, 1);
+                    const lastDay = new Date(year, month + 1, 0);
+                    const daysInMonth = lastDay.getDate();
+                    const startingDayOfWeek = firstDay.getDay();
+                    
+                    const calendarDays = document.getElementById('calendar-days');
+                    calendarDays.innerHTML = '';
+                    
+                    for (let i = 0; i < startingDayOfWeek; i++) {
+                        const emptyDay = document.createElement('div');
+                        emptyDay.className = 'calendar-day empty';
+                        calendarDays.appendChild(emptyDay);
+                    }
+                    
+                    const today = new Date();
+                    const expiryDate = new Date(membershipData.endDate);
+                    
+                    for (let day = 1; day <= daysInMonth; day++) {
+                        const dayElement = document.createElement('div');
+                        const currentDayDate = new Date(year, month, day);
+                        
+                        dayElement.className = 'calendar-day';
+                        dayElement.textContent = day;
+                        
+                        const isToday = currentDayDate.toDateString() === today.toDateString();
+                        if (isToday) {
+                            dayElement.classList.add('today');
+                        }
+                        
+                        if (currentDayDate.toDateString() === expiryDate.toDateString()) {
+                            dayElement.classList.add('expiry-day');
+                            dayElement.innerHTML += '<div class="expiry-indicator"><i class="fas fa-exclamation-triangle"></i></div>';
+                        }
+                        
+                        if (isDayAvailable(currentDayDate)) {
+                            dayElement.classList.add('available');
+                            
+                            if (currentDayDate > expiryDate) {
+                                dayElement.classList.remove('available');
+                                dayElement.classList.add('expired');
+                            }
+                        } else {
+                            dayElement.classList.add('disabled');
+                        }
+                        
+                        const reservation = getReservationForDate(currentDayDate);
+                        if (reservation) {
+                            const classIndicator = document.createElement('div');
+                            classIndicator.className = 'class-indicator';
+                            classIndicator.style.backgroundColor = getClassColor(reservation.className);
+                            classIndicator.innerHTML = `<i class="fas fa-dumbbell"></i>`;
+                            classIndicator.title = `${reservation.className} - ${reservation.time}`;
+                            dayElement.appendChild(classIndicator);
+                        }
+                        
+                        if (currentDayDate < today && !isToday) {
+                            dayElement.classList.add('past');
+                        }
+                        
+                        calendarDays.appendChild(dayElement);
+                    }
+                }
+
+                function getReservationForDate(date) {
+                    if (!userReservations || userReservations.length === 0) return null;
+                    
+                    return userReservations.find(reservation => {
+                        const reservationDate = new Date(reservation.date);
+                        return reservationDate.toDateString() === date.toDateString();
+                    });
+                }
+
+                function getClassColor(className) {
+                    const classColors = {
+                        'F.E.C': '#22c55e',
+                        'Yoga': '#ef4444',
+                        'Spinning': '#3b82f6',
+                        'Pilates': '#f59e0b'
+                    };
+                    return classColors[className] || '#7f4ca5';
+                }
+
+                function isDayAvailable(date) {
+                    if (!membershipData) return false;
+                    
+                    const startDate = new Date(membershipData.startDate);
+                    const endDate = new Date(membershipData.endDate);
+                    
+                    if (date < startDate || date > endDate) {
+                        return false;
+                    }
+                    
+                    switch (membershipData.planType) {
+                        case 'mes-libre':
+                        case 'dos-personas':
+                        case 'semanal':
+                        case 'jubilados':
+                            return true;
+                            
+                        case 'tres-veces':
+                            const dayOfWeek = date.getDay();
+                            const dayName = Object.keys(dayNames).find(key => dayNames[key] === dayOfWeek);
+                            return trainingDays.includes(dayName);
+                            
+                        case 'dia-clase':
+                            return date.toDateString() === startDate.toDateString();
+                            
+                        default:
+                            return false;
+                    }
+                }
+
+                function changeMonth(direction) {
+                    currentDate.setMonth(currentDate.getMonth() + direction);
+                    generateCalendar();
+                }
+
+                function renewMembership() {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('info', 'Renovación de Membresía', 
+                            'Funcionalidad de renovación en desarrollo. Por favor contacta con recepción para renovar tu membresía.'
+                        );
+                    } else {
+                        alert('Funcionalidad de renovación en desarrollo. Por favor contacta con recepción para renovar tu membresía.');
+                    }
+                }
+
+                function showNoMembershipMessage() {
+                    const section = document.getElementById('membresia-activa');
+                    section.innerHTML = `
+                        <div class="container">
+                            <div class="no-membership-message">
+                                <i class="fas fa-id-card"></i>
+                                <h3>No tienes una membresía activa</h3>
+                                <p>Adquiere una membresía para comenzar a entrenar con nosotros</p>
+                                <a href="/#membresias" class="btn-primary">
+                                    <i class="fas fa-shopping-cart"></i> Ver Membresías
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                function showErrorMessage() {
+                    const section = document.getElementById('membresia-activa');
+                    section.innerHTML = `
+                        <div class="container">
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <h3>Error al cargar información</h3>
+                                <p>Hubo un problema al cargar tu membresía. Por favor recarga la página.</p>
+                                <button class="btn-primary" onclick="location.reload()">
+                                    <i class="fas fa-sync"></i> Recargar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            </script>
+
+            <!-- Mi Perfil -->
+            <section id="perfil" class="profile-section">
+                <div class="container">
+                    <h2>Mi Perfil</h2>
+                    <div class="profile-grid">
+                        <div class="profile-card">
+                            <div class="profile-info">
+                                <div class="profile-avatar">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                                <div class="profile-details">
+                                    <h3 id="profileName">Juan Pérez</h3>
+                                    <p>Miembro Premium</p>
+                                    <p><i class="fas fa-envelope"></i> juan@email.com</p>
+                                    <p><i class="fas fa-phone"></i> (11) 1234-5678</p>
+                                </div>
+                            </div>
+                            <div class="membership-status">
+                                <h4>Estado de Membresía</h4>
+                                <div class="status-active">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Activa hasta: 15/12/2024</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mis Clases Reservadas -->
+            <section id="clases" class="my-classes-section">
+                <div class="container">
+                    <h2>Mis Clases Reservadas</h2>
+                    <div class="classes-list">
+                        <div class="class-reservation">
+                            <div class="class-info">
+                                <h4>F.E.C</h4>
+                                <p><i class="fas fa-calendar"></i> Lunes 18/09</p>
+                                <p><i class="fas fa-clock"></i> 10:00 - 11:00 AM</p>
+                            </div>
+                            <div class="class-actions">
+                                <button class="btn-cancel">Cancelar</button>
+                            </div>
+                        </div>
+                        
+                        <div class="class-reservation">
+                            <div class="class-info">
+                                <h4>Yoga</h4>
+                                <p><i class="fas fa-calendar"></i> Martes 19/09</p>
+                                <p><i class="fas fa-clock"></i> 9:00 - 10:00 AM</p>
+                            </div>
+                            <div class="class-actions">
+                                <button class="btn-cancel">Cancelar</button>
+                            </div>
+                        </div>
+
+                        <div class="class-reservation">
+                            <div class="class-info">
+                                <h4>Spinning</h4>
+                                <p><i class="fas fa-calendar"></i> Miércoles 20/09</p>
+                                <p><i class="fas fa-clock"></i> 7:00 - 8:00 PM</p>
+                            </div>
+                            <div class="class-actions">
+                                <button class="btn-cancel">Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="reserve-new">
+                        <button class="btn-primary">Reservar Nueva Clase</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Horarios Disponibles -->
+            <section id="horarios" class="available-schedule">
+                <div class="container">
+                    <h2>Horarios Disponibles</h2>
+                    <div class="schedule-week">
+                        <div class="day-schedule">
+                            <h4>Hoy - Martes</h4>
+                            <div class="time-slots">
+                                <div class="time-slot available">
+                                    <span class="time">9:00 AM</span>
+                                    <span class="class">Yoga</span>
+                                    <button class="btn-reserve">Reservar</button>
+                                </div>
+                                <div class="time-slot available">
+                                    <span class="time">6:00 PM</span>
+                                    <span class="class">F.E.C</span>
+                                    <button class="btn-reserve">Reservar</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="day-schedule">
+                            <h4>Mañana - Miércoles</h4>
+                            <div class="time-slots">
+                                <div class="time-slot available">
+                                    <span class="time">10:00 AM</span>
+                                    <span class="class">F.E.C</span>
+                                    <button class="btn-reserve">Reservar</button>
+                                </div>
+                                <div class="time-slot available">
+                                    <span class="time">7:00 PM</span>
+                                    <span class="class">Spinning</span>
+                                    <button class="btn-reserve">Reservar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <script>
+            // ==================== REEMPLAZAR TODO EL SCRIPT DE dashboard.html ====================
+            // Desde <script> hasta /script al final del archivo
+
+            // Script actualizado para dashboard con reservas funcionales
+            document.addEventListener('DOMContentLoaded', function() {
+                loadUserData();
+                loadMyReservations();
+                loadAvailableClasses();
+                loadDashboardStats();
+                loadMembershipInfo();
+                loadUserReservations();
+            });
+
+            // Cargar datos del usuario
+            async function loadUserData() {
+                try {
+                    const response = await fetch('/api/user');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        document.querySelector('.user-name').textContent = data.user.fullName;
+                        document.getElementById('profileName').textContent = data.user.fullName;
+                        
+                        const emailElement = document.querySelector('.profile-details p:nth-child(3)');
+                        const phoneElement = document.querySelector('.profile-details p:nth-child(4)');
+                        
+                        if (emailElement) emailElement.innerHTML = `<i class="fas fa-envelope"></i> ${data.user.email}`;
+                        if (phoneElement) phoneElement.innerHTML = `<i class="fas fa-phone"></i> ${data.user.phone}`;
+                    }
+                } catch (error) {
+                    console.error('Error cargando datos del usuario:', error);
+                }
+            }
+
+            // Cargar estadísticas del dashboard
+            async function loadDashboardStats() {
+                try {
+                    const response = await fetch('/api/user/stats/improved');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        if (data.stats.isNewUser) {
+                            document.getElementById('classes-this-month').textContent = data.stats.activeReservations || 0;
+                            document.getElementById('total-trainings').textContent = '¡Comienza hoy!';
+                            document.getElementById('member-days').textContent = data.stats.memberDays;
+                        } else {
+                            document.getElementById('classes-this-month').textContent = data.stats.activeReservations || 0;
+                            document.getElementById('total-trainings').textContent = data.stats.completedTrainings || 0;
+                            document.getElementById('member-days').textContent = data.stats.memberDays;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error cargando stats:', error);
+                }
+            }
+
+            // Cargar mis reservas
+            async function loadMyReservations() {
+                try {
+                    const response = await fetch('/api/my-reservations');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        displayMyReservations(data.reservations);
+                    } else {
+                        console.error('Error cargando reservas:', data.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+
+            // REEMPLAZAR la función displayMyReservations en dashboard.html
+
+            function displayMyReservations(reservations) {
+                const container = document.querySelector('.classes-list');
+                
+                // Filtrar solo reservas futuras o de hoy
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Resetear hora para comparar solo fecha
+                
+                const futureReservations = reservations.filter(reservation => {
+                    const reservationDate = new Date(reservation.date);
+                    reservationDate.setHours(0, 0, 0, 0);
+                    return reservationDate >= today; // Solo mostrar de hoy en adelante
+                });
+                
+                if (futureReservations.length === 0) {
+                    container.innerHTML = `
+                        <div class="no-reservations">
+                            <p>No tienes reservas actualmente</p>
+                            <button class="btn-primary" onclick="showAvailableClasses()">Ver Clases Disponibles</button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Ordenar por fecha (más próximas primero)
+                futureReservations.sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                container.innerHTML = futureReservations.map(reservation => `
+                    <div class="class-reservation">
+                        <div class="class-info">
+                            <h4>${reservation.className}</h4>
+                            <p><i class="fas fa-calendar"></i> ${formatDate(reservation.date)}</p>
+                            <p><i class="fas fa-clock"></i> ${reservation.time}</p>
+                            <p><i class="fas fa-user-tie"></i> ${reservation.classId?.instructor || 'Instructor FitZone'}</p>
+                        </div>
+                        <div class="class-actions">
+                            <button class="btn-cancel" onclick="cancelReservation('${reservation._id}')">
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Cargar clases disponibles - VERSIÓN CORREGIDA
+            async function loadAvailableClasses() {
+                try {
+                    const response = await fetch('/api/classes');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        console.log('Clases cargadas:', data.classes); // Debug
+                        displayAvailableClasses(data.classes);
+                    }
+                } catch (error) {
+                    console.error('Error cargando clases:', error);
+                }
+            }
+
+            // REEMPLAZAR la función displayAvailableClasses en dashboard.html
+
+            function displayAvailableClasses(classes) {
+                const container = document.querySelector('.schedule-week');
+                
+                container.innerHTML = classes.map(classItem => {
+                    return `
+                    <div class="day-schedule">
+                        <h4>${classItem.name}</h4>
+                        <p class="class-schedule"><i class="fas fa-calendar"></i> ${classItem.schedule}</p>
+                        <p class="class-instructor"><i class="fas fa-user-tie"></i> ${classItem.instructor}</p>
+                        <p class="class-capacity"><i class="fas fa-users"></i> Capacidad: ${classItem.capacity} personas</p>
+                        
+                        <div class="reserve-options" style="margin-top: 1.5rem;">
+                            <label style="color: var(--violeta-claro); font-weight: 600; margin-bottom: 0.5rem; display: block;">Selecciona fecha:</label>
+                            <select class="date-selector" id="date-${classItem._id}" style="width: 100%; padding: 0.8rem; border: 2px solid var(--violeta-medio); border-radius: 8px; background: var(--negro); color: var(--blanco); margin-bottom: 0.8rem;" onchange="updateTimeOptions('${classItem._id}', this.value)">
+                                <option value="">Seleccionar fecha...</option>
+                                ${generateDateOptionsForClass(classItem)}
+                            </select>
+                            
+                            <label style="color: var(--violeta-claro); font-weight: 600; margin-bottom: 0.5rem; display: block;">Selecciona horario:</label>
+                            <select class="time-selector" id="time-${classItem._id}" style="width: 100%; padding: 0.8rem; border: 2px solid var(--violeta-medio); border-radius: 8px; background: var(--negro); color: var(--blanco); margin-bottom: 0.8rem;">
+                                <option value="">Primero selecciona una fecha...</option>
+                            </select>
+                            
+                            <button class="btn-reserve" onclick="reserveClass('${classItem._id}', '${classItem.name}')" style="width: 100%;">
+                                <i class="fas fa-check"></i> Reservar
+                            </button>
+                        </div>
+                    </div>
+                `}).join('');
+            }
+
+            // Generar opciones de fecha para una clase - VERSIÓN CORREGIDA
+            function generateDateOptionsForClass(classItem) {
+                let options = '';
+                const today = new Date();
+                
+                const dayMap = {
+                    'Lunes': 1, 'Martes': 2, 'Miércoles': 3, 
+                    'Jueves': 4, 'Viernes': 5, 'Sábado': 6, 'Domingo': 0
+                };
+                
+                const classDays = [];
+                if (classItem.scheduleDetails) {
+                    classItem.scheduleDetails.forEach(schedule => {
+                        const dayNum = dayMap[schedule.day];
+                        if (dayNum !== undefined && !classDays.includes(dayNum)) {
+                            classDays.push(dayNum);
+                        }
+                    });
+                }
+                
+                // Generar próximos 30 días que coincidan con días de clase
+                for (let i = 0; i < 30; i++) {
+                    const date = new Date(today);
+                    date.setDate(date.getDate() + i);
+                    
+                    const dayOfWeek = date.getDay();
+                    
+                    if (classDays.includes(dayOfWeek)) {
+                        const dateString = date.toISOString().split('T')[0];
+                        const displayDate = date.toLocaleDateString('es-ES', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        });
+                        options += `<option value="${dateString}">${displayDate}</option>`;
+                    }
+                }
+                
+                return options || '<option value="">No hay fechas disponibles</option>';
+            }
+
+            // Actualizar opciones de horario - NUEVA FUNCIÓN
+            function updateTimeOptions(classId, selectedDate) {
+                const timeSelector = document.getElementById(`time-${classId}`);
+                
+                if (!selectedDate) {
+                    timeSelector.innerHTML = '<option value="">Primero selecciona una fecha...</option>';
+                    return;
+                }
+                
+                // Buscar la clase
+                fetch('/api/classes')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const classItem = data.classes.find(c => c._id === classId);
+                            
+                            if (!classItem || !classItem.scheduleDetails) {
+                                timeSelector.innerHTML = '<option value="">No hay horarios disponibles</option>';
+                                return;
+                            }
+                            
+                            const date = new Date(selectedDate + 'T00:00:00');
+                            const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                            const dayName = dayNames[date.getDay()];
+                            
+                            const availableTimes = classItem.scheduleDetails.filter(schedule => schedule.day === dayName);
+                            
+                            if (availableTimes.length === 0) {
+                                timeSelector.innerHTML = '<option value="">No hay horarios para este día</option>';
+                                return;
+                            }
+                            
+                            timeSelector.innerHTML = '<option value="">Seleccionar horario...</option>' +
+                                availableTimes.map(schedule => 
+                                    `<option value="${schedule.time}">${schedule.time}</option>`
+                                ).join('');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        timeSelector.innerHTML = '<option value="">Error cargando horarios</option>';
+                    });
+            }
+
+            // Reservar clase - VERSIÓN CORREGIDA Y SIMPLIFICADA
+            async function reserveClass(classId, className) {
+                try {
+                    const dateSelector = document.getElementById(`date-${classId}`);
+                    const timeSelector = document.getElementById(`time-${classId}`);
+                    
+                    if (!dateSelector || !timeSelector) {
+                        console.error('Selectores no encontrados');
+                        return;
+                    }
+                    
+                    const selectedDate = dateSelector.value;
+                    const selectedTime = timeSelector.value;
+                    
+                    if (!selectedDate) {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('warning', 'Fecha Requerida', 'Por favor selecciona una fecha');
+                        } else {
+                            alert('Por favor selecciona una fecha');
+                        }
+                        return;
+                    }
+                    
+                    if (!selectedTime) {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('warning', 'Horario Requerido', 'Por favor selecciona un horario');
+                        } else {
+                            alert('Por favor selecciona un horario');
+                        }
+                        return;
+                    }
+                    
+                    const response = await fetch('/api/reserve-class', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            classId: classId,
+                            date: selectedDate,
+                            time: selectedTime
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', '¡Reserva Exitosa!', 
+                                `Tu clase de ${className} ha sido reservada para el ${new Date(selectedDate).toLocaleDateString('es-ES')} a las ${selectedTime}`,
+                                () => {
+                                    loadMyReservations();
+                                    if (typeof loadUserReservations === 'function') {
+                                        loadUserReservations();
+                                    }
+                                }
+                            );
+                        } else {
+                            alert(`¡Reserva exitosa para ${className}!`);
+                            loadMyReservations();
+                        }
+                    } else {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('error', 'Error en Reserva', result.message || 'No se pudo completar la reserva');
+                        } else {
+                            alert(result.message || 'Error al reservar la clase');
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error de Conexión', 'No se pudo conectar con el servidor. Intenta nuevamente.');
+                    } else {
+                        alert('Error de conexión. Intenta nuevamente.');
+                    }
+                }
+            }
+
+            // Cancelar reserva
+            async function cancelReservation(reservationId) {
+                const confirmCancel = typeof showConfirmAlert === 'function' 
+                    ? await new Promise(resolve => {
+                        showConfirmAlert(
+                            'Cancelar Reserva',
+                            '¿Estás seguro de que quieres cancelar esta reserva?',
+                            () => resolve(true),
+                            () => resolve(false)
+                        );
+                    })
+                    : confirm('¿Estás seguro de que quieres cancelar esta reserva?');
+                
+                if (!confirmCancel) return;
+                
+                try {
+                    const response = await fetch(`/api/cancel-reservation/${reservationId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', 'Reserva Cancelada', 'Tu reserva ha sido cancelada exitosamente', () => {
+                                loadMyReservations();
+                                if (typeof loadUserReservations === 'function') {
+                                    loadUserReservations();
+                                }
+                            });
+                        } else {
+                            alert('Reserva cancelada exitosamente');
+                            loadMyReservations();
+                        }
+                    } else {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('error', 'Error', result.message || 'No se pudo cancelar la reserva');
+                        } else {
+                            alert(result.message || 'Error al cancelar la reserva');
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error de Conexión', 'No se pudo cancelar la reserva. Intenta nuevamente.');
+                    } else {
+                        alert('Error de conexión. Intenta nuevamente.');
+                    }
+                }
+            }
+
+            // Función auxiliar para formatear fechas
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('es-ES', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+
+            // Mostrar clases disponibles
+            function showAvailableClasses() {
+                document.getElementById('horarios').scrollIntoView({ behavior: 'smooth' });
+            }
+
+            // Cerrar sesión
+            document.querySelector('.btn-logout').addEventListener('click', async function(e) {
+                e.preventDefault();
+                
+                const confirmLogout = typeof showConfirmAlert === 'function'
+                    ? await new Promise(resolve => {
+                        showConfirmAlert(
+                            'Cerrar Sesión',
+                            '¿Estás seguro de que quieres cerrar sesión?',
+                            () => resolve(true),
+                            () => resolve(false)
+                        );
+                    })
+                    : confirm('¿Estás seguro de que quieres cerrar sesión?');
+                
+                if (!confirmLogout) return;
+                
+                try {
+                    const response = await fetch('/api/logout', {
+                        method: 'POST'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', 'Sesión Cerrada', '¡Hasta pronto!', () => {
+                                window.location.href = '/';
+                            });
+                        } else {
+                            alert('Sesión cerrada. ¡Hasta pronto!');
+                            window.location.href = '/';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error cerrando sesión:', error);
+                    window.location.href = '/';
+                }
+            });
+        </script>
+    </body>
+</html>

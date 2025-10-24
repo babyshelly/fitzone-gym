@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitZone Gym - Tu gimnasio de confianza</title>
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234b1c71'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='%23dbb6ee' font-family='Arial, sans-serif' font-weight='bold'>F</text></svg>">
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="logo">
+                    <i class="fas fa-dumbbell"></i>
+                    <span>FitZone</span>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="#inicio">Inicio</a></li>
+                    <li><a href="#servicios">Servicios</a></li>
+                    <li><a href="#horarios">Horarios</a></li>
+                    <li><a href="#tienda">Tienda</a></li>
+                    <li><a href="/login" class="btn-login">Iniciar Sesión</a></li>
+                    <li><a href="/register" class="btn-register">Registrarse</a></li>
+                </ul>
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="inicio" class="hero">
+        <div class="hero-content">
+            <h1>Transforma tu vida en <span class="highlight">FitZone</span></h1>
+            <p>El gimnasio donde tus objetivos se vuelven realidad. Equipamiento de última generación, entrenadores profesionales y un ambiente motivador.</p>
+            <div class="hero-buttons">
+                <a href="/register" class="btn-primary">¡Únete Ahora!</a>
+                <a href="#servicios" class="btn-secondary">Ver Servicios</a>
+            </div>
+        </div>
+        <div class="hero-image">
+            <i class="fas fa-dumbbell hero-icon"></i>
+        </div>
+    </section>
+
+    <!-- Sección de Membresías y Precios -->
+    <!-- Agregar después de la sección Hero en index.html -->
+
+    <section id="membresias" class="memberships-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Nuestras Membresías</h2>
+                <p>Elige el plan que mejor se adapte a tu estilo de vida</p>
+            </div>
+            
+            <div class="memberships-grid">
+                <!-- Membresía Mes Libre -->
+                <div class="membership-card popular">
+                    <div class="card-badge">MÁS POPULAR</div>
+                    <div class="card-icon">
+                        <i class="fas fa-infinity"></i>
+                    </div>
+                    <h3>Mes Libre</h3>
+                    <div class="price">
+                        <span class="currency">$</span>
+                        <span class="amount">32.000</span>
+                        <span class="period">/mes</span>
+                    </div>
+                    <ul class="features">
+                        <li><i class="fas fa-check"></i> Acceso ilimitado todos los días</li>
+                        <li><i class="fas fa-check"></i> Todas las clases grupales</li>
+                        <li><i class="fas fa-check"></i> Uso de todas las instalaciones</li>
+                        <li><i class="fas fa-check"></i> Horario completo</li>
+                    </ul>
+                    <a href="/register?plan=mes-libre" class="btn-membership">Seleccionar Plan</a>
+                </div>
+
+                <!-- Membresía 2 Personas -->
+                <div class="membership-card">
+                    <div class="card-icon">
+                        <i class="fas fa-user-friends"></i>
+                    </div>
+                    <h3>2 Personas</h3>
+                    <div class="price">
+                        <span class="currency">$</span>
+                        <span class="amount">28.000</span>
+                        <span class="period">c/u por mes</span>
+                    </div>
+                    <ul class="features">
+                        <li><i class="fas fa-check"></i> Para 2 personas</li>
+                        <li><i class="fas fa-check"></i> Acceso ilimitado</li>
+                        <li><i class="fas fa-check"></i> Código compartido</li>
+                        <li><i class="fas fa-check"></i> Ahorro del 12.5%</li>
+                    </ul>
+                    <a href="/register?plan=dos-personas" class="btn-membership">Seleccionar Plan</a>
+                </div>
+
+                <!-- Membresía 3 Veces por Semana -->
+                <div class="membership-card">
+                    <div class="card-icon">
+                        <i class="fas fa-calendar-week"></i>
+                    </div>
+                    <h3>3 Veces por Semana</h3>
+                    <div class="price">
+                        <span class="currency">$</span>
+                        <span class="amount">24.000</span>
+                        <span class="period">/mes</span>
+                    </div>
+                    <ul class="features">
+                        <li><i class="fas fa-check"></i> 3 días por semana</li>
+                        <li><i class="fas fa-check"></i> Eliges tus días</li>
+                        <li><i class="fas fa-check"></i> Horario flexible</li>
+                        <li><i class="fas fa-check"></i> Ideal para comenzar</li>
+                    </ul>
+                    <a href="/register?plan=tres-veces" class="btn-membership">Seleccionar Plan</a>
+                </div>
+
+                <!-- Membresía Día o Clase -->
+                <div class="membership-card">
+                    <div class="card-icon">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <h3>Día o Clase</h3>
+                    <div class="price">
+                        <span class="currency">$</span>
+                        <span class="amount">5.000</span>
+                        <span class="period">/día</span>
+                    </div>
+                    <ul class="features">
+                        <li><i class="fas fa-check"></i> Pago por día o clase</li>
+                        <li><i class="fas fa-check"></i> Sin compromiso mensual</li>
+                        <li><i class="fas fa-check"></i> Flexibilidad total</li>
+                        <li><i class="fas fa-check"></i> Ideal para probar</li>
+                    </ul>
+                    <a href="/register?plan=dia-clase" class="btn-membership">Seleccionar Plan</a>
+                </div>
+                
+                <!-- Membresía Semanal -->
+                <div class="membership-card">
+                    <div class="card-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h3>Semanal</h3>
+                    <div class="price">
+                        <span class="currency">$</span>
+                        <span class="amount">11.500</span>
+                        <span class="period">/semana</span>
+                    </div>
+                    <ul class="features">
+                        <li><i class="fas fa-check"></i> Acceso por 1 semana completa</li>
+                        <li><i class="fas fa-check"></i> Todas las clases incluidas</li>
+                        <li><i class="fas fa-check"></i> Horario flexible</li>
+                        <li><i class="fas fa-check"></i> Sin compromiso mensual</li>
+                    </ul>
+                    <a href="/register?plan=semanal" class="btn-membership">Seleccionar Plan</a>
+                </div>
+            
+                <!-- Membresía Jubilados -->
+                <div class="membership-card special">
+                    <div class="card-badge special-badge">ESPECIAL</div>
+                    <div class="card-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3>Jubilados</h3>
+                    <div class="price">
+                        <span class="currency">$</span>
+                        <span class="amount">20.000</span>
+                        <span class="period">/mes</span>
+                    </div>
+                    <ul class="features">
+                        <li><i class="fas fa-check"></i> Mayores de 60/65 años</li>
+                        <li><i class="fas fa-check"></i> Acceso ilimitado</li>
+                        <li><i class="fas fa-check"></i> Descuento especial 37.5%</li>
+                        <li><i class="fas fa-check"></i> Requiere verificación</li>
+                    </ul>
+                    <a href="/register?plan=jubilados" class="btn-membership">Seleccionar Plan</a>
+                </div>
+            </div>
+
+            <!-- Información Adicional -->
+            <div class="membership-info">
+                <div class="info-card">
+                    <i class="fas fa-credit-card"></i>
+                    <h4>Métodos de Pago</h4>
+                    <p>Efectivo, Transferencia, Tarjeta o Mercado Pago</p>
+                </div>
+                <div class="info-card">
+                    <i class="fas fa-calendar-check"></i>
+                    <h4>Sin Permanencia</h4>
+                    <p>Cancela cuando quieras sin penalización</p>
+                </div>
+                <div class="info-card">
+                    <i class="fas fa-shield-alt"></i>
+                    <h4>Garantía Total</h4>
+                    <p>7 días de prueba o te devolvemos tu dinero</p>
+                </div>
+            </div>
+
+            <!-- Comparativa de Planes -->
+            <div class="plans-comparison">
+                <h3>Comparativa de Planes</h3>
+                <div class="comparison-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Características</th>
+                                <th>Mes Libre</th>
+                                <th>2 Personas</th>
+                                <th>3 Veces</th>
+                                <th>Semanal</th>
+                                <th>Día/Clase</th>
+                                <th>Jubilados</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Acceso al gimnasio</td>
+                                <td><i class="fas fa-check text-success"></i></td>
+                                <td><i class="fas fa-check text-success"></i></td>
+                                <td><i class="fas fa-check text-success"></i></td>
+                                <td><i class="fas fa-check text-success"></i></td>
+                                <td><i class="fas fa-check text-success"></i></td>
+                                <td><i class="fas fa-check text-success"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Clases grupales</td>
+                                <td><i class="fas fa-check text-success"></i></td>
+                                <td><i class="fas fa-check text-success"></i></td>
+                                <td><i class="fas fa-check text-success"></i></td>
+                                <td><i class="fas fa-check text-success"></i></td>
+                                <td><i class="fas fa-check text-success"></i></td>
+                                <td><i class="fas fa-check text-success"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Duración</td>
+                                <td>1 mes</td>
+                                <td>1 mes</td>
+                                <td>1 mes</td>
+                                <td>7 días</td>
+                                <td>1 día</td>
+                                <td>1 mes</td>
+                            </tr>
+                            <tr>
+                                <td>Días por semana</td>
+                                <td>Ilimitado</td>
+                                <td>Ilimitado</td>
+                                <td>3 días</td>
+                                <td>Ilimitado</td>
+                                <td>1 día</td>
+                                <td>Ilimitado</td>
+                            </tr>
+                            <tr>
+                                <td>Usuarios</td>
+                                <td>1</td>
+                                <td>2</td>
+                                <td>1</td>
+                                <td>1</td>
+                                <td>1</td>
+                                <td>1</td>
+                            </tr>
+                            <tr>
+                                <td>Precio</td>
+                                <td>$32.000</td>
+                                <td>$28.000 c/u</td>
+                                <td>$24.000</td>
+                                <td>$11.500</td>
+                                <td>$5.000</td>
+                                <td>$20.000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+    // Smooth scroll para los enlaces de membresías
+    document.querySelectorAll('.btn-membership').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = this.getAttribute('href');
+            
+            // Guardar el plan seleccionado en localStorage
+            const plan = new URL(url, window.location.href).searchParams.get('plan');
+            localStorage.setItem('selectedPlan', plan);
+            
+            // Redirigir a registro
+            window.location.href = url;
+        });
+    });
+
+    // Animación de entrada para las tarjetas
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }, index * 100);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.membership-card').forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = 'all 0.6s ease';
+        observer.observe(card);
+    });
+    </script>
+
+    <!-- Servicios -->
+    <section id="servicios" class="services">
+        <div class="container">
+            <h2>Nuestros Servicios</h2>
+            <div class="services-grid">
+                <div class="service-card">
+                    <i class="fas fa-dumbbell"></i>
+                    <h3>Musculación</h3>
+                    <p>Equipos de última generación para todos los niveles de entrenamiento.</p>
+                </div>
+                <div class="service-card">
+                    <i class="fas fa-running"></i>
+                    <h3>Cardio</h3>
+                    <p>Zona de cardio completa con cintas, bicicletas y elípticas modernas.</p>
+                </div>
+                <div class="service-card">
+                    <i class="fas fa-users"></i>
+                    <h3>Clases Grupales</h3>
+                    <p>F.E.C, Yoga, Spinning y más clases dirigidas por profesionales.</p>
+                </div>
+                <div class="service-card">
+                    <i class="fas fa-user-tie"></i>
+                    <h3>Entrenador Personal</h3>
+                    <p>Sesiones personalizadas adaptadas a tus objetivos específicos.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Horarios -->
+    <section id="horarios" class="schedule">
+        <div class="container">
+            <h2>Horarios de Atención</h2>
+            <div class="schedule-grid">
+                <div class="schedule-card">
+                    <h3>Lunes a Viernes</h3>
+                    <p><i class="fas fa-clock"></i> 7:00 AM - 22:00 PM</p>
+                </div>
+                <div class="schedule-card">
+                    <h3>Sábados</h3>
+                    <p><i class="fas fa-clock"></i> 7:00 AM - 20:00 PM</p>
+                </div>
+                <div class="schedule-card">
+                    <h3>Domingos y Feriados</h3>
+                    <p><i class="fas fa-clock"></i> 8:00 AM - 18:00 PM</p>
+                </div>
+            </div>
+            
+            <div class="class-schedule">
+                <h3>Cronograma de Clases</h3>
+                <div class="classes-grid">
+                    <div class="class-item">
+                        <span class="class-name">F.E.C</span>
+                        <span class="class-time">Lunes y Miércoles: 10:00 AM - 11:00 AM / 18:00 PM - 19:00 PM</span>
+                    </div>
+                    <div class="class-item">
+                        <span class="class-name">Yoga</span>
+                        <span class="class-time">Martes y Jueves: 9:00 AM - 10:00 AM / 19:00 PM - 20:00 PM</span>
+                    </div>
+                    <div class="class-item">
+                        <span class="class-name">Spinning</span>
+                        <span class="class-time">Miércoles y Viernes: 8:00 AM - 9:00 AM / 19:00 PM - 20:00 PM</span>
+                    </div>
+                    <div class="class-item">
+                        <span class="class-name">Pilates</span>
+                        <span class="class-time">Martes y Viernes: 11:00 AM - 12:00 PM / 17:00 PM - 18:00 PM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tienda Preview -->
+    <section id="tienda" class="store-preview">
+        <div class="container">
+            <h2>Nuestra Tienda</h2>
+            <p>Encuentra todo lo que necesitas para complementar tu entrenamiento</p>
+            <div class="store-grid">
+                <div class="product-card" data-animation="fade-in" role="button" tabindex="0" onclick="goToStoreCategory('suplementos')">
+                    <i class="fas fa-flask" aria-hidden="true"></i>
+                    <h3>Suplementos</h3>
+                    <p>Proteínas, creatina y más</p>
+                </div>
+                <div class="product-card" data-animation="fade-in" role="button" tabindex="0" onclick="goToStoreCategory('ropa')">
+                    <i class="fas fa-tshirt" aria-hidden="true"></i>
+                    <h3>Ropa Deportiva</h3>
+                    <p>Vestimenta cómoda para entrenar</p>
+                </div>
+                <div class="product-card" data-animation="fade-in" role="button" tabindex="0" onclick="goToStoreCategory('accesorios')">
+                    <i class="fas fa-dumbbell" aria-hidden="true"></i>
+                    <h3>Accesorios</h3>
+                    <p>Guantes, cinturones y más</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="logo">
+                        <i class="fas fa-dumbbell"></i>
+                        <span>FitZone</span>
+                    </div>
+                    <p>Tu gimnasio de confianza desde 2025</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Contacto</h3>
+                    <p><i class="fas fa-phone"></i> (11) 54642009/ (11) 21708945</p>
+                    <p><i class="fas fa-envelope"></i> info@fitzone.com</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Jose Equiza 123, Buenos Aires</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Síguenos</h3>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==================== AGREGAR AL FINAL DE index.html ANTES DE </body> ==================== -->
+
+    <!-- Modal de Login Requerido -->
+    <div id="login-required-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Cuenta Requerida</h3>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 2rem;">
+                <i class="fas fa-user-lock" style="font-size: 4rem; color: var(--violeta-claro); margin-bottom: 1rem;"></i>
+                <p style="color: var(--gris-claro); margin-bottom: 2rem;">
+                    Para realizar compras en nuestra tienda necesitas tener una cuenta en FitZone.
+                </p>
+            </div>
+            <div class="modal-actions" style="display: flex; gap: 1rem; padding: 1.5rem 2rem;">
+                <button class="btn-secondary" onclick="closeLoginModal()" style="flex: 1;">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button class="btn-secondary" onclick="goToLogin()" style="flex: 1;">
+                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                </button>
+                <button class="btn-primary" onclick="goToRegister()" style="flex: 1;">
+                    <i class="fas fa-user-plus"></i> Registrarse
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función para verificar si el usuario está logueado
+        async function checkUserSession() {
+            try {
+                const response = await fetch('/api/user');
+                const data = await response.json();
+                return data.success;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        // Función para ir a tienda con categoría
+        async function goToStoreCategory(category) {
+            const isLoggedIn = await checkUserSession();
+            
+            if (isLoggedIn) {
+                window.location.href = `/tienda?category=${category}`;
+            } else {
+                document.getElementById('login-required-modal').style.display = 'flex';
+            }
+        }
+
+        function closeLoginModal() {
+            document.getElementById('login-required-modal').style.display = 'none';
+        }
+
+        function goToLogin() {
+            window.location.href = '/login';
+        }
+
+        function goToRegister() {
+            window.location.href = '/register';
+        }
+
+        // Cerrar modal al hacer clic fuera
+        window.addEventListener('click', function(e) {
+            const modal = document.getElementById('login-required-modal');
+            if (e.target === modal) {
+                closeLoginModal();
+            }
+        });
+    </script>
+    
+</body>
+</html>

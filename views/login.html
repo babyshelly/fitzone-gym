@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Iniciar Sesión - FitZone</title>
+        <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234b1c71'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='%23dbb6ee' font-family='Arial, sans-serif' font-weight='bold'>F</text></svg>">
+        <link rel="stylesheet" href="/css/style.css">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        <script src="/js/alerts.js"></script>
+    </head>
+    <body>
+        <!-- Header simple -->
+        <header class="header">
+            <nav class="navbar">
+                <div class="nav-container">
+                    <div class="logo">
+                        <i class="fas fa-dumbbell"></i>
+                        <span>FitZone</span>
+                    </div>
+                    <ul class="nav-menu">
+                        <li><a href="/">Volver al Inicio</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Formulario de Login -->
+        <main class="login-main">
+            <div class="login-container">
+                <div class="login-box">
+                    <div class="login-header">
+                        <i class="fas fa-user-circle"></i>
+                        <h2>Iniciar Sesión</h2>
+                        <p>Accede a tu cuenta de FitZone</p>
+                    </div>
+
+                    <form class="login-form" id="loginForm">
+                        <div class="input-group">
+                            <label for="email">Correo Electrónico</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="password">Contraseña</label>
+                            <input type="password" id="password" name="password" required>
+                        </div>
+
+                        <button type="submit" class="btn-login-form">Iniciar Sesión</button>
+                    </form>
+
+                    <div class="login-footer">
+                        <p>¿No tienes cuenta? <a href="/register">Regístrate aquí</a></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Cargar sistema de alertas -->
+        <script src="/js/alerts.js"></script>
+        
+        <script>
+            // Script para login con alertas personalizadas
+            document.getElementById('loginForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const submitBtn = document.querySelector('.btn-login-form');
+                
+                if (!email || !password) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Datos Incompletos', 'Por favor completa todos los campos');
+                    } else {
+                        alert('Por favor completa todos los campos');
+                    }
+                    return;
+                }
+                
+                // Deshabilitar botón durante la petición
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Iniciando sesión...';
+                
+                try {
+                    // Intentar login
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email, password })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Verificar estado de membresía
+                        try {
+                            const membershipCheck = await fetch('/api/check-membership-status', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ userId: result.userId })
+                            });
+                            
+                            const membershipStatus = await membershipCheck.json();
+                            
+                            // Si la membresía está expirada, bloquear acceso
+                            if (membershipStatus.membershipStatus === 'expired') {
+                                if (typeof showCustomAlert === 'function') {
+                                    showCustomAlert('error', 'Membresía Expirada', 
+                                        `Tu membresía ha expirado hace ${membershipStatus.daysExpired} días.<br><br>` +
+                                        `Por favor renueva tu membresía para continuar accediendo.<br><br>` +
+                                        `Contacta con recepción o visita nuestras instalaciones.`
+                                    );
+                                } else {
+                                    alert(`⚠️ Tu membresía ha expirado hace ${membershipStatus.daysExpired} días.\n\nPor favor renueva tu membresía para continuar accediendo.\n\nContacta con recepción o visita nuestras instalaciones.`);
+                                }
+                                
+                                // Cerrar la sesión que se acabó de crear
+                                await fetch('/api/logout', { method: 'POST' });
+                                
+                                submitBtn.disabled = false;
+                                submitBtn.textContent = 'Iniciar Sesión';
+                                return;
+                            }
+                            
+                            // Si está por vencer, mostrar advertencia pero permitir acceso
+                            if (membershipStatus.membershipStatus === 'expiring_soon') {
+                                if (typeof showCustomAlert === 'function') {
+                                    showCustomAlert('warning', '¡Atención!', 
+                                        `Tu membresía vence en ${membershipStatus.daysRemaining} días.<br><br>` +
+                                        `Te recomendamos renovarla pronto para evitar interrupciones.`,
+                                        () => {
+                                            // Redirigir después de cerrar la alerta
+                                            window.location.href = result.redirectUrl || '/dashboard';
+                                        }
+                                    );
+                                } else {
+                                    alert(`⚠️ ¡Atención!\n\nTu membresía vence en ${membershipStatus.daysRemaining} días.\n\nTe recomendamos renovarla pronto para evitar interrupciones.`);
+                                    window.location.href = result.redirectUrl || '/dashboard';
+                                }
+                                return;
+                            }
+                        } catch (membershipError) {
+                            console.log('No se pudo verificar membresía:', membershipError);
+                            // Continuar con el login normal si hay error
+                        }
+                        
+                        // Login exitoso
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', '¡Login Exitoso!', 
+                                'Bienvenido a FitZone. Redirigiendo...',
+                                () => {
+                                    window.location.href = result.redirectUrl || '/dashboard';
+                                }
+                            );
+                        } else {
+                            alert('¡Login exitoso! Redirigiendo...');
+                            window.location.href = result.redirectUrl || '/dashboard';
+                        }
+                        
+                    } else {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('error', 'Error de Login', 
+                                result.message || 'Credenciales incorrectas. Por favor verifica tu email y contraseña.'
+                            );
+                        } else {
+                            alert(result.message || 'Error en el login');
+                        }
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Iniciar Sesión';
+                    }
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error de Conexión', 
+                            'No se pudo conectar con el servidor. Por favor verifica tu conexión e intenta nuevamente.'
+                        );
+                    } else {
+                        alert('Error de conexión. Intenta nuevamente.');
+                    }
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Iniciar Sesión';
+                }
+            });
+
+            // Demo quick login (opcional - puedes eliminarlo en producción)
+            async function quickLogin(type) {
+                if (type === 'admin') {
+                    document.getElementById('email').value = 'admin@fitzone.com';
+                    document.getElementById('password').value = 'admin123';
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('info', 'Credenciales de Admin', 
+                            'Credenciales de administrador cargadas. Haz clic en "Iniciar Sesión"'
+                        );
+                    } else {
+                        alert('Credenciales de administrador cargadas. Haz clic en "Iniciar Sesión"');
+                    }
+                } else if (type === 'user') {
+                    try {
+                        const randomNum = Math.floor(Math.random() * 10000);
+                        const demoUser = {
+                            fullName: `Usuario Demo ${randomNum}`,
+                            email: `demo${randomNum}@fitzone.com`,
+                            phone: `(11) ${String(randomNum).padStart(4, '0')}-${String(randomNum).padStart(4, '0')}`,
+                            password: 'demo123'
+                        };
+
+                        const registerResponse = await fetch('/api/register', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(demoUser)
+                        });
+
+                        const registerResult = await registerResponse.json();
+
+                        if (registerResult.success) {
+                            // Auto-login del usuario demo
+                            const loginResponse = await fetch('/api/login', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    email: demoUser.email,
+                                    password: demoUser.password
+                                })
+                            });
+
+                            const loginResult = await loginResponse.json();
+
+                            if (loginResult.success) {
+                                if (typeof showCustomAlert === 'function') {
+                                    showCustomAlert('success', 'Usuario Demo Creado', 
+                                        '¡Usuario demo creado e iniciado exitosamente!',
+                                        () => {
+                                            window.location.href = loginResult.redirectUrl || '/dashboard';
+                                        }
+                                    );
+                                } else {
+                                    alert('¡Usuario demo creado e iniciado exitosamente!');
+                                    window.location.href = loginResult.redirectUrl || '/dashboard';
+                                }
+                            } else {
+                                document.getElementById('email').value = demoUser.email;
+                                document.getElementById('password').value = demoUser.password;
+                                if (typeof showCustomAlert === 'function') {
+                                    showCustomAlert('info', 'Usuario Creado', 
+                                        'Usuario creado. Las credenciales han sido cargadas automáticamente.'
+                                    );
+                                } else {
+                                    alert('Usuario creado pero error en login automático');
+                                }
+                            }
+                        } else {
+                            if (typeof showCustomAlert === 'function') {
+                                showCustomAlert('error', 'Error', 
+                                    registerResult.message || 'Error creando usuario demo'
+                                );
+                            } else {
+                                alert(registerResult.message || 'Error creando usuario demo');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('error', 'Error de Conexión', 
+                                'Error de conexión creando usuario demo'
+                            );
+                        } else {
+                            alert('Error de conexión creando usuario demo');
+                        }
+                    }
+                }
+            }
+        </script>
+    </body>
+</html>

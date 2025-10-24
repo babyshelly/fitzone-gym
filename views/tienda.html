@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Tienda FitZone - Productos Fitness</title>
+        <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234b1c71'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='%23dbb6ee' font-family='Arial, sans-serif' font-weight='bold'>F</text></svg>">
+        <link rel="stylesheet" href="/css/style.css">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        <script src="/js/alerts.js"></script>
+    </head>
+    <body>
+        <!-- Header -->
+        <header class="header">
+            <nav class="navbar">
+                <div class="nav-container">
+                    <div class="logo">
+                        <i class="fas fa-dumbbell"></i>
+                        <span>FitZone</span>
+                    </div>
+                    <ul class="nav-menu">
+                        <li><a href="/">Inicio</a></li>
+                        <li><a href="/dashboard">Dashboard</a></li>
+                        <li><a href="#" class="cart-btn" onclick="openCart()">
+                            <i class="fas fa-shopping-cart"></i>
+                            Carrito (<span id="cart-count">0</span>)
+                        </a></li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Hero de la tienda -->
+        <section class="store-hero">
+            <div class="container">
+                <h1>Tienda FitZone</h1>
+                <p>Todo lo que necesitas para potenciar tu entrenamiento</p>
+            </div>
+        </section>
+
+        <!-- Filtros -->
+        <section class="filters-section">
+            <div class="container">
+                <div class="filters">
+                    <button class="filter-btn active" onclick="showProducts('all', this)">Todos</button>
+                    <button class="filter-btn" onclick="showProducts('suplementos', this)">Suplementos</button>
+                    <button class="filter-btn" onclick="showProducts('ropa', this)">Ropa Deportiva</button>
+                    <button class="filter-btn" onclick="showProducts('accesorios', this)">Accesorios</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Productos -->
+        <section class="products-section">
+            <div class="container">
+                <div class="products-grid">
+                    <!-- Suplementos -->
+                    <div class="product-card suplementos">
+                        <div class="product-image">
+                            <i class="fas fa-capsules"></i>
+                        </div>
+                        <div class="product-info">
+                            <h3>Proteína Whey</h3>
+                            <p>Proteína de alta calidad para recuperación muscular</p>
+                            <div class="product-price">$15.990</div>
+                            <button class="btn-add-cart" onclick="addProduct(1, 'Proteína Whey', 15990)">
+                                Agregar al Carrito
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="product-card suplementos">
+                        <div class="product-image">
+                            <i class="fas fa-flask"></i>
+                        </div>
+                        <div class="product-info">
+                            <h3>Creatina</h3>
+                            <p>Aumenta tu fuerza y potencia en entrenamientos</p>
+                            <div class="product-price">$8.990</div>
+                            <button class="btn-add-cart" onclick="addProduct(2, 'Creatina', 8990)">
+                                Agregar al Carrito
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="product-card suplementos">
+                        <div class="product-image">
+                            <i class="fas fa-prescription-bottle"></i>
+                        </div>
+                        <div class="product-info">
+                            <h3>Pre-Workout</h3>
+                            <p>Energía y concentración para tus entrenamientos</p>
+                            <div class="product-price">$12.990</div>
+                            <button class="btn-add-cart" onclick="addProduct(3, 'Pre-Workout', 12990)">
+                                Agregar al Carrito
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Ropa Deportiva -->
+                    <div class="product-card ropa">
+                        <div class="product-image">
+                            <i class="fas fa-tshirt"></i>
+                        </div>
+                        <div class="product-info">
+                            <h3>Remera FitZone</h3>
+                            <p>Remera oficial de algodón premium</p>
+                            <div class="product-price">$6.990</div>
+                            <button class="btn-add-cart" onclick="addProduct(4, 'Remera FitZone', 6990)">
+                                Agregar al Carrito
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="product-card ropa">
+                        <div class="product-image">
+                            <i class="fas fa-running"></i>
+                        </div>
+                        <div class="product-info">
+                            <h3>Short Deportivo</h3>
+                            <p>Comodidad y flexibilidad para entrenar</p>
+                            <div class="product-price">$4.990</div>
+                            <button class="btn-add-cart" onclick="addProduct(5, 'Short Deportivo', 4990)">
+                                Agregar al Carrito
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="product-card ropa">
+                        <div class="product-image">
+                            <i class="fas fa-shoe-prints"></i>
+                        </div>
+                        <div class="product-info">
+                            <h3>Zapatillas Training</h3>
+                            <p>Soporte y estabilidad para todos los ejercicios</p>
+                            <div class="product-price">$25.990</div>
+                            <button class="btn-add-cart" onclick="addProduct(6, 'Zapatillas Training', 25990)">
+                                Agregar al Carrito
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Accesorios -->
+                    <div class="product-card accesorios">
+                        <div class="product-image">
+                            <i class="fas fa-mitten"></i>
+                        </div>
+                        <div class="product-info">
+                            <h3>Guantes de Entrenamiento</h3>
+                            <p>Protección y mejor agarre para tus manos</p>
+                            <div class="product-price">$3.990</div>
+                            <button class="btn-add-cart" onclick="addProduct(7, 'Guantes de Entrenamiento', 3990)">
+                                Agregar al Carrito
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="product-card accesorios">
+                        <div class="product-image">
+                            <i class="fas fa-dumbbell"></i>
+                        </div>
+                        <div class="product-info">
+                            <h3>Cinturón de Fuerza</h3>
+                            <p>Soporte lumbar para levantamientos pesados</p>
+                            <div class="product-price">$7.990</div>
+                            <button class="btn-add-cart" onclick="addProduct(8, 'Cinturón de Fuerza', 7990)">
+                                Agregar al Carrito
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="product-card accesorios">
+                        <div class="product-image">
+                            <i class="fas fa-water"></i>
+                        </div>
+                        <div class="product-info">
+                            <h3>Shaker FitZone</h3>
+                            <p>Botella mezcladora oficial con logo FitZone</p>
+                            <div class="product-price">$2.990</div>
+                            <button class="btn-add-cart" onclick="addProduct(9, 'Shaker FitZone', 2990)">
+                                Agregar al Carrito
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Carrito Modal -->
+        <div id="cart-modal" class="cart-modal" style="display: none;">
+            <div class="cart-content">
+                <div class="cart-header">
+                    <h2>Mi Carrito</h2>
+                    <span class="close-cart" onclick="closeCart()">&times;</span>
+                </div>
+                <div class="cart-items" id="cart-items">
+                    <p class="empty-cart">Tu carrito está vacío</p>
+                </div>
+                <div class="cart-footer">
+                    <div class="cart-total">
+                        <strong>Total: $<span id="cart-total">0</span></strong>
+                    </div>
+                    <div class="cart-actions">
+                        <button class="btn-clear-cart" onclick="clearCart()">Vaciar Carrito</button>
+                        <button class="btn-checkout" onclick="finalizePurchase()">Finalizar Compra</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-section">
+                        <div class="logo">
+                            <i class="fas fa-dumbbell"></i>
+                            <span>FitZone</span>
+                        </div>
+                        <p>Tu gimnasio de confianza desde 2024</p>
+                    </div>
+                    <div class="footer-section">
+                        <h3>Contacto</h3>
+                        <p><i class="fas fa-phone"></i> (11) 1234-5678</p>
+                        <p><i class="fas fa-envelope"></i> info@fitzone.com</p>
+                        <p><i class="fas fa-map-marker-alt"></i> Av. Fitness 123, Buenos Aires</p>
+                    </div>
+                    <div class="footer-section">
+                        <h3>Síguenos</h3>
+                        <div class="social-links">
+                            <a href="#"><i class="fab fa-facebook"></i></a>
+                            <a href="#"><i class="fab fa-instagram"></i></a>
+                            <a href="#"><i class="fab fa-twitter"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <script>
+            // ==================== SCRIPT CORREGIDO PARA tienda.html ====================
+        // Reemplazar el <script> completo al final de tienda.html
+
+            let cart = [];
+
+            // Filtrar productos
+            function showProducts(category, button) {
+                const products = document.querySelectorAll('.product-card');
+                const buttons = document.querySelectorAll('.filter-btn');
+                
+                buttons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                products.forEach(product => {
+                    if (category === 'all' || product.classList.contains(category)) {
+                        product.style.display = 'block';
+                    } else {
+                        product.style.display = 'none';
+                    }
+                });
+            }
+
+            // Agregar producto al carrito
+            function addProduct(id, name, price) {
+                addToLocalCart(id, name, price);
+                updateCartDisplay();
+                
+                // Usar sistema de alertas personalizado
+                if (typeof showCustomAlert === 'function') {
+                    showCustomAlert('success', 'Producto Agregado', `${name} ha sido agregado al carrito`);
+                } else {
+                    // Fallback si alerts.js no está cargado
+                    showNotification(`${name} agregado al carrito`);
+                }
+            }
+
+            // Agregar a carrito local
+            function addToLocalCart(id, name, price) {
+                const existing = cart.find(item => item.productId === id);
+                if (existing) {
+                    existing.quantity += 1;
+                } else {
+                    cart.push({ productId: id, name: name, price: price, quantity: 1 });
+                }
+                localStorage.setItem('fitzone_cart', JSON.stringify(cart));
+            }
+
+            // Actualizar carrito
+            function updateCartDisplay() {
+                const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+                const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                
+                const countElement = document.getElementById('cart-count');
+                const totalElement = document.getElementById('cart-total');
+                
+                if (countElement) countElement.textContent = totalItems;
+                if (totalElement) totalElement.textContent = totalPrice.toLocaleString();
+                
+                const cartItems = document.getElementById('cart-items');
+                
+                if (cartItems) {
+                    if (cart.length === 0) {
+                        cartItems.innerHTML = '<p class="empty-cart">Tu carrito está vacío</p>';
+                    } else {
+                        cartItems.innerHTML = cart.map(item => `
+                            <div class="cart-item">
+                                <div class="item-info">
+                                    <h4>${item.name}</h4>
+                                    <p>$${item.price.toLocaleString()} x ${item.quantity}</p>
+                                </div>
+                                <div class="item-actions">
+                                    <button onclick="changeQuantity(${item.productId}, -1)">-</button>
+                                    <span>${item.quantity}</span>
+                                    <button onclick="changeQuantity(${item.productId}, 1)">+</button>
+                                    <button onclick="removeItem(${item.productId})" class="remove-btn">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            }
+
+            // Cambiar cantidad
+            function changeQuantity(productId, change) {
+                const item = cart.find(item => item.productId === productId);
+                if (item) {
+                    item.quantity += change;
+                    if (item.quantity <= 0) {
+                        removeItem(productId);
+                        return;
+                    }
+                    localStorage.setItem('fitzone_cart', JSON.stringify(cart));
+                    updateCartDisplay();
+                }
+            }
+
+            // Remover item
+            function removeItem(productId) {
+                cart = cart.filter(item => item.productId !== productId);
+                localStorage.setItem('fitzone_cart', JSON.stringify(cart));
+                updateCartDisplay();
+            }
+
+            // Vaciar carrito
+            function clearCart() {
+                if (typeof showConfirmAlert === 'function') {
+                    showConfirmAlert(
+                        'Vaciar Carrito',
+                        '¿Estás seguro de que quieres vaciar el carrito?',
+                        () => {
+                            cart = [];
+                            localStorage.removeItem('fitzone_cart');
+                            updateCartDisplay();
+                            showCustomAlert('success', 'Carrito Vaciado', 'Tu carrito ha sido vaciado correctamente');
+                        }
+                    );
+                } else {
+                    if (confirm('¿Vaciar carrito?')) {
+                        cart = [];
+                        localStorage.removeItem('fitzone_cart');
+                        updateCartDisplay();
+                    }
+                }
+            }
+
+            // Finalizar compra - FUNCIÓN CORREGIDA
+            function finalizePurchase() {
+                if (cart.length === 0) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Carrito Vacío', 'Tu carrito está vacío. Agrega productos antes de finalizar la compra.');
+                    } else {
+                        alert('Tu carrito está vacío');
+                    }
+                    return;
+                }
+                
+                // Guardar carrito en localStorage para checkout
+                localStorage.setItem('fitzone_cart', JSON.stringify(cart));
+                
+                // Redirigir a checkout
+                window.location.href = '/checkout';
+            }
+
+            // Carrito modal
+            function openCart() {
+                const modal = document.getElementById('cart-modal');
+                if (modal) {
+                    modal.style.display = 'block';
+                }
+            }
+
+            function closeCart() {
+                const modal = document.getElementById('cart-modal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+            }
+
+            // Notificación simple (fallback)
+            function showNotification(message) {
+                const notification = document.createElement('div');
+                notification.className = 'cart-notification';
+                notification.textContent = message;
+                notification.style.cssText = `
+                    position: fixed; top: 100px; right: 20px; z-index: 1001;
+                    background: #7f4ca5; color: white; padding: 1rem;
+                    border-radius: 8px; animation: slideIn 0.3s ease;
+                `;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => notification.remove(), 2000);
+            }
+
+            // Cargar carrito al iniciar
+            window.onload = function() {
+                cart = JSON.parse(localStorage.getItem('fitzone_cart') || '[]');
+                updateCartDisplay();
+            };
+
+            // Cerrar modal al hacer clic fuera
+            window.onclick = function(event) {
+                const modal = document.getElementById('cart-modal');
+                if (event.target === modal) {
+                    closeCart();
+                }
+            };
+        </script>
+    </body>
+</html>

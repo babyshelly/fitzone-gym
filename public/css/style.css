@@ -1,0 +1,4919 @@
+/* Colores simples para FitZone */
+:root {
+    --violeta-oscuro: #4b1c71;
+    --violeta-medio: #7f4ca5;
+    --violeta-claro: #b57edc;
+    --violeta-muy-claro: #dbb6ee;
+    --negro: #1a1a1a;
+    --gris-oscuro: #333;
+    --gris-claro: #666;
+    --blanco: #fff;
+}
+
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--negro);
+    color: var(--blanco);
+    line-height: 1.6;
+}
+
+/* Contenedor general */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header */
+.header {
+    background-color: var(--violeta-oscuro);
+    padding: 1rem 0;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--blanco);
+}
+
+.logo i {
+    margin-right: 10px;
+    color: var(--violeta-muy-claro);
+}
+
+.nav-menu {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+}
+
+.nav-menu a {
+    color: var(--blanco);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.nav-menu a:hover {
+    background-color: var(--violeta-medio);
+}
+
+.btn-login {
+    border: 2px solid var(--violeta-claro);
+}
+
+.btn-register {
+    background-color: var(--violeta-claro);
+    color: var(--violeta-oscuro);
+    font-weight: bold;
+}
+
+/* Hero Section */
+.hero {
+    background-color: var(--gris-oscuro);
+    padding: 120px 20px 60px;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+}
+
+.hero-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.hero-content h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--blanco);
+}
+
+.highlight {
+    color: var(--violeta-claro);
+}
+
+.hero-content p {
+    font-size: 1.1rem;
+    color: var(--gris-claro);
+    margin-bottom: 2rem;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-primary {
+    background-color: var(--violeta-medio);
+    color: var(--blanco);
+    padding: 1rem 2rem;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: var(--violeta-oscuro);
+}
+
+.btn-secondary {
+    border: 2px solid var(--violeta-claro);
+    color: var(--violeta-claro);
+    padding: 1rem 2rem;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: all 0.3s;
+}
+
+.btn-secondary:hover {
+    background-color: var(--violeta-claro);
+    color: var(--violeta-oscuro);
+}
+
+.hero-icon {
+    font-size: 10rem;
+    color: var(--violeta-medio);
+    text-align: center;
+}
+
+/* Secciones */
+.services, .schedule, .store-preview {
+    padding: 60px 20px;
+}
+
+.services {
+    background-color: var(--negro);
+}
+
+.schedule {
+    background-color: var(--gris-oscuro);
+}
+
+.store-preview {
+    background-color: var(--negro);
+}
+
+/* Títulos de sección */
+.services h2, .schedule h2, .store-preview h2 {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+    color: var(--violeta-claro);
+}
+
+/* Grids */
+.services-grid, .schedule-grid, .store-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+/* Cards de servicios */
+.service-card {
+    background-color: var(--gris-oscuro);
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+    border: 2px solid var(--violeta-medio);
+}
+
+.service-card i {
+    font-size: 3rem;
+    color: var(--violeta-claro);
+    margin-bottom: 1rem;
+}
+
+.service-card h3 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: var(--blanco);
+}
+
+.service-card p {
+    color: var(--gris-claro);
+}
+
+/* Cards de horarios */
+.schedule-card {
+    background-color: var(--violeta-oscuro);
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.schedule-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: var(--violeta-muy-claro);
+}
+
+.schedule-card p {
+    font-size: 1.1rem;
+    color: var(--blanco);
+}
+
+/* Cronograma de clases */
+.class-schedule {
+    background-color: var(--gris-oscuro);
+    padding: 2rem;
+    border-radius: 10px;
+    margin-top: 3rem;
+}
+
+.class-schedule h3 {
+    text-align: center;
+    color: var(--violeta-claro);
+    margin-bottom: 2rem;
+}
+
+.class-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background-color: var(--negro);
+    border-radius: 5px;
+    border-left: 4px solid var(--violeta-medio);
+}
+
+.class-name {
+    font-weight: bold;
+    color: var(--violeta-claro);
+}
+
+.class-time {
+    color: var(--gris-claro);
+}
+
+/* Cards de tienda */
+.product-card {
+    background-color: var(--gris-oscuro);
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+    border: 2px solid var(--violeta-medio);
+}
+
+.product-card i {
+    font-size: 3rem;
+    color: var(--violeta-claro);
+    margin-bottom: 1rem;
+}
+
+.product-card h3 {
+    margin-bottom: 1rem;
+    color: var(--blanco);
+}
+
+.product-card p {
+    color: var(--gris-claro);
+}
+
+/* Footer */
+.footer {
+    background-color: var(--violeta-oscuro);
+    padding: 3rem 0;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.footer-section h3 {
+    color: var(--violeta-muy-claro);
+    margin-bottom: 1rem;
+}
+
+.footer-section p {
+    color: var(--gris-claro);
+    margin-bottom: 0.5rem;
+}
+
+.social-links {
+    display: flex;
+    gap: 1rem;
+}
+
+.social-links a {
+    color: var(--violeta-claro);
+    font-size: 1.5rem;
+    text-decoration: none;
+}
+
+.social-links a:hover {
+    color: var(--blanco);
+}
+
+/* Responsive básico */
+@media (max-width: 768px) {
+    .hero-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+    
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+    
+    .hero-icon {
+        font-size: 6rem;
+    }
+    
+    .nav-menu {
+        display: none;
+    }
+    
+    .class-item {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+/* Estilos para páginas de Login y Registro */
+.login-main {
+    min-height: 100vh;
+    background-color: var(--negro);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 20px 60px;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-box {
+    background-color: var(--gris-oscuro);
+    padding: 3rem;
+    border-radius: 15px;
+    border: 2px solid var(--violeta-medio);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.login-header i {
+    font-size: 4rem;
+    color: var(--violeta-claro);
+    margin-bottom: 1rem;
+}
+
+.login-header h2 {
+    color: var(--blanco);
+    margin-bottom: 0.5rem;
+    font-size: 2rem;
+}
+
+.login-header p {
+    color: var(--gris-claro);
+    font-size: 1rem;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    color: var(--violeta-claro);
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.input-group input {
+    padding: 1rem;
+    border: 2px solid var(--violeta-medio);
+    border-radius: 8px;
+    background-color: var(--negro);
+    color: var(--blanco);
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--violeta-claro);
+}
+
+.input-group input::placeholder {
+    color: var(--gris-claro);
+}
+
+.btn-login-form {
+    background-color: var(--violeta-medio);
+    color: var(--blanco);
+    padding: 1rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 1rem;
+}
+
+.btn-login-form:hover {
+    background-color: var(--violeta-oscuro);
+}
+
+.login-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--violeta-medio);
+}
+
+.login-footer p {
+    color: var(--gris-claro);
+}
+
+.login-footer a {
+    color: var(--violeta-claro);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.login-footer a:hover {
+    color: var(--violeta-muy-claro);
+}
+
+/* Responsive para login */
+@media (max-width: 768px) {
+    .login-box {
+        padding: 2rem;
+        margin: 0 10px;
+    }
+    
+    .login-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .login-header i {
+        font-size: 3rem;
+    }
+}
+/* Estilos adicionales para el registro */
+.register-container {
+    max-width: 450px;
+}
+
+.checkbox-group {
+    margin: 1rem 0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    color: var(--gris-claro);
+    font-size: 0.9rem;
+    cursor: pointer;
+    line-height: 1.4;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--violeta-medio);
+}
+
+.terms-link {
+    color: var(--violeta-claro);
+    text-decoration: none;
+}
+
+.terms-link:hover {
+    text-decoration: underline;
+}
+
+/* Ajustes responsive para registro */
+@media (max-width: 768px) {
+    .checkbox-label {
+        font-size: 0.8rem;
+    }
+    
+    .checkbox-label input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+    }
+}
+/* Estilos para Dashboard */
+.dashboard-main {
+    padding-top: 80px;
+    background-color: var(--negro);
+    min-height: 100vh;
+}
+
+/* Sección de bienvenida */
+.welcome-section {
+    background: linear-gradient(135deg, var(--violeta-oscuro), var(--gris-oscuro));
+    padding: 3rem 0;
+    color: var(--blanco);
+}
+
+.welcome-content {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.welcome-content h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.user-name {
+    color: var(--violeta-muy-claro);
+}
+
+.welcome-content p {
+    font-size: 1.2rem;
+    color: var(--gris-claro);
+}
+
+/* Estadísticas rápidas */
+.quick-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.stat-card {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+    border: 2px solid var(--violeta-medio);
+}
+
+.stat-card i {
+    font-size: 2.5rem;
+    color: var(--violeta-claro);
+    margin-bottom: 1rem;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--blanco);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--gris-claro);
+    font-size: 0.9rem;
+}
+
+/* Secciones del dashboard */
+.profile-section, .my-classes-section, .available-schedule {
+    padding: 3rem 0;
+}
+
+.profile-section {
+    background-color: var(--gris-oscuro);
+}
+
+.my-classes-section {
+    background-color: var(--negro);
+}
+
+.available-schedule {
+    background-color: var(--gris-oscuro);
+}
+
+.profile-section h2, .my-classes-section h2, .available-schedule h2 {
+    color: var(--violeta-claro);
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+/* Perfil */
+.profile-card {
+    background-color: var(--negro);
+    padding: 2rem;
+    border-radius: 15px;
+    border: 2px solid var(--violeta-medio);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.profile-avatar i {
+    font-size: 5rem;
+    color: var(--violeta-claro);
+}
+
+.profile-details h3 {
+    color: var(--blanco);
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.profile-details p {
+    color: var(--gris-claro);
+    margin-bottom: 0.3rem;
+}
+
+.membership-status {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--violeta-medio);
+}
+
+.membership-status h4 {
+    color: var(--violeta-claro);
+    margin-bottom: 1rem;
+}
+
+.status-active {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+/* Clases reservadas */
+.classes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.class-reservation {
+    background-color: var(--gris-oscuro);
+    padding: 1.5rem;
+    border-radius: 10px;
+    border-left: 4px solid var(--violeta-medio);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.class-info h4 {
+    color: var(--violeta-claro);
+    margin-bottom: 0.5rem;
+}
+
+.class-info p {
+    color: var(--gris-claro);
+    margin-bottom: 0.2rem;
+}
+
+.class-info i {
+    margin-right: 0.5rem;
+    color: var(--violeta-medio);
+}
+
+.btn-cancel {
+    background-color: #dc3545;
+    color: var(--blanco);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-cancel:hover {
+    background-color: #c82333;
+}
+
+.reserve-new {
+    text-align: center;
+}
+
+/* Horarios disponibles */
+.schedule-week {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.day-schedule {
+    background-color: var(--negro);
+    padding: 2rem;
+    border-radius: 10px;
+    border: 2px solid var(--violeta-medio);
+}
+
+.day-schedule h4 {
+    color: var(--violeta-claro);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.time-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.time-slot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: var(--gris-oscuro);
+    border-radius: 8px;
+    border-left: 4px solid var(--violeta-claro);
+}
+
+.time-slot .time {
+    font-weight: bold;
+    color: var(--blanco);
+}
+
+.time-slot .class {
+    color: var(--violeta-claro);
+}
+
+.btn-reserve {
+    background-color: var(--violeta-medio);
+    color: var(--blanco);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+}
+
+.btn-reserve:hover {
+    background-color: var(--violeta-oscuro);
+}
+
+.btn-logout {
+    background-color: #dc3545 !important;
+    border: 2px solid #dc3545 !important;
+}
+
+.btn-logout:hover {
+    background-color: #c82333 !important;
+    border-color: #c82333 !important;
+}
+
+/* Responsive para dashboard */
+@media (max-width: 768px) {
+    .welcome-content h1 {
+        font-size: 2rem;
+    }
+    
+    .quick-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .profile-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .class-reservation {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .schedule-week {
+        grid-template-columns: 1fr;
+    }
+    
+    .time-slot {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+}
+/* Estilos para la Tienda */
+.store-hero {
+    background: linear-gradient(135deg, var(--violeta-oscuro), var(--violeta-medio));
+    padding: 120px 20px 60px;
+    text-align: center;
+    color: var(--blanco);
+}
+
+.store-hero h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.store-hero p {
+    font-size: 1.2rem;
+    color: var(--gris-claro);
+}
+
+/* Filtros */
+.filters-section {
+    background-color: var(--gris-oscuro);
+    padding: 2rem 0;
+}
+
+.filters {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    background-color: var(--negro);
+    color: var(--violeta-claro);
+    border: 2px solid var(--violeta-medio);
+    padding: 0.8rem 1.5rem;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: bold;
+}
+
+.filter-btn:hover {
+    background-color: var(--violeta-medio);
+    color: var(--blanco);
+}
+
+.filter-btn.active {
+    background-color: var(--violeta-claro);
+    color: var(--violeta-oscuro);
+    border-color: var(--violeta-claro);
+}
+
+/* Productos */
+.products-section {
+    background-color: var(--negro);
+    padding: 4rem 0;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.product-card {
+    background-color: var(--gris-oscuro);
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    border: 2px solid var(--violeta-medio);
+    transition: all 0.3s;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--violeta-claro);
+    box-shadow: 0 10px 25px rgba(127, 76, 165, 0.3);
+}
+
+.product-image {
+    margin-bottom: 1.5rem;
+}
+
+.product-image i {
+    font-size: 4rem;
+    color: var(--violeta-claro);
+}
+
+.product-info h3 {
+    color: var(--blanco);
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.product-info p {
+    color: var(--gris-claro);
+    margin-bottom: 1.5rem;
+    line-height: 1.4;
+}
+
+.product-price {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--violeta-claro);
+    margin-bottom: 1.5rem;
+}
+
+.btn-add-cart {
+    background-color: var(--violeta-medio);
+    color: var(--blanco);
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    width: 100%;
+}
+
+.btn-add-cart:hover {
+    background-color: var(--violeta-oscuro);
+}
+
+/* Carrito Modal */
+.cart-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+}
+
+.cart-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--gris-oscuro);
+    padding: 2rem;
+    border-radius: 15px;
+    border: 2px solid var(--violeta-medio);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.cart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--violeta-medio);
+    padding-bottom: 1rem;
+}
+
+.cart-header h2 {
+    color: var(--violeta-claro);
+    margin: 0;
+}
+
+.close-cart {
+    font-size: 2rem;
+    color: var(--violeta-claro);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close-cart:hover {
+    color: var(--blanco);
+}
+
+.cart-items {
+    margin-bottom: 2rem;
+}
+
+.empty-cart {
+    text-align: center;
+    color: var(--gris-claro);
+    font-style: italic;
+    padding: 2rem 0;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background-color: var(--negro);
+    border-radius: 8px;
+    border-left: 4px solid var(--violeta-claro);
+}
+
+.cart-item .item-info h4 {
+    color: var(--blanco);
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.cart-item .item-info p {
+    color: var(--violeta-claro);
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.item-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.item-actions button {
+    background-color: var(--violeta-medio);
+    color: var(--blanco);
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.item-actions button:hover {
+    background-color: var(--violeta-oscuro);
+}
+
+.remove-btn {
+    background-color: #dc3545 !important;
+}
+
+.remove-btn:hover {
+    background-color: #c82333 !important;
+}
+
+.cart-footer {
+    border-top: 2px solid var(--violeta-medio);
+    padding-top: 1rem;
+}
+
+.cart-total {
+    text-align: center;
+    font-size: 1.3rem;
+    color: var(--violeta-claro);
+    margin-bottom: 1rem;
+}
+
+.cart-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.btn-clear-cart, .btn-checkout {
+    flex: 1;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-clear-cart {
+    background-color: #dc3545;
+    color: var(--blanco);
+}
+
+.btn-clear-cart:hover {
+    background-color: #c82333;
+}
+
+.btn-checkout {
+    background-color: var(--violeta-medio);
+    color: var(--blanco);
+}
+
+.btn-checkout:hover {
+    background-color: var(--violeta-oscuro);
+}
+
+.cart-btn {
+    background-color: var(--violeta-claro) !important;
+    color: var(--violeta-oscuro) !important;
+    font-weight: bold !important;
+}
+
+/* Notificación del carrito */
+.cart-notification {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    background-color: var(--violeta-medio);
+    color: var(--blanco);
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    z-index: 1001;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive para tienda */
+@media (max-width: 768px) {
+    .store-hero h1 {
+        font-size: 2rem;
+    }
+    
+    .filters {
+        justify-content: center;
+    }
+    
+    .filter-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .products-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .cart-content {
+        width: 95%;
+        padding: 1.5rem;
+    }
+    
+    .cart-actions {
+        flex-direction: column;
+    }
+    
+    .cart-item {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+}
+/* Estilos para Panel de Administración */
+.admin-main {
+    padding-top: 80px;
+    background-color: var(--negro);
+    min-height: 100vh;
+}
+
+/* Overview Cards */
+.admin-overview {
+    background: linear-gradient(135deg, var(--violeta-oscuro), var(--violeta-medio));
+    padding: 3rem 0;
+}
+
+.admin-overview h1 {
+    text-align: center;
+    color: var(--blanco);
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+}
+
+.overview-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.overview-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border: 2px solid var(--violeta-claro);
+    transition: transform 0.3s ease;
+}
+
+.overview-card:hover {
+    transform: translateY(-5px);
+}
+
+.overview-card i {
+    font-size: 3rem;
+    color: var(--violeta-muy-claro);
+}
+
+.card-content h3 {
+    font-size: 2rem;
+    color: var(--blanco);
+    margin-bottom: 0.5rem;
+}
+
+.card-content p {
+    color: white;
+    font-size: 0.9rem;
+}
+
+/* Secciones Admin */
+.admin-section {
+    padding: 4rem 0;
+}
+
+.admin-section:nth-child(even) {
+    background-color: var(--gris-oscuro);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.section-header h2 {
+    color: var(--violeta-claro);
+    font-size: 2rem;
+}
+
+.section-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.section-actions button {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Tabla de usuarios */
+.users-table-container {
+    overflow-x: auto;
+    background-color: var(--negro);
+    border-radius: 10px;
+    border: 2px solid var(--violeta-medio);
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--violeta-medio);
+}
+
+.admin-table th {
+    background-color: var(--violeta-oscuro);
+    color: var(--blanco);
+    font-weight: bold;
+}
+
+.admin-table td {
+    color: var(--gris-claro);
+}
+
+.admin-table tr:hover {
+    background-color: rgba(127, 76, 165, 0.1);
+}
+
+.status {
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.status.active {
+    background-color: #4CAF50;
+    color: var(--blanco);
+}
+
+.btn-table-action {
+    background: none;
+    border: none;
+    color: var(--violeta-claro);
+    cursor: pointer;
+    padding: 0.5rem;
+    margin: 0 0.2rem;
+    border-radius: 5px;
+    transition: all 0.3s;
+}
+
+.btn-table-action:hover {
+    background-color: var(--violeta-medio);
+    color: var(--blanco);
+}
+
+.btn-table-action.delete:hover {
+    background-color: #dc3545;
+}
+
+.loading, .error, .no-data {
+    text-align: center;
+    padding: 2rem;
+    color: var(--gris-claro);
+    font-style: italic;
+}
+
+.error {
+    color: #dc3545;
+}
+
+/* Estadísticas */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+}
+
+.stat-card {
+    background-color: var(--negro);
+    border-radius: 15px;
+    padding: 2rem;
+    border: 2px solid var(--violeta-medio);
+}
+
+.stat-card h3 {
+    color: var(--violeta-claro);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.chart-container {
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gris-claro);
+    font-style: italic;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.day {
+    min-width: 80px;
+    color: var(--blanco);
+    font-weight: bold;
+}
+
+.activity-bar {
+    flex: 1;
+    height: 20px;
+    background-color: var(--gris-oscuro);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.bar {
+    height: 100%;
+    background: linear-gradient(45deg, var(--violeta-medio), var(--violeta-claro));
+    transition: width 0.3s ease;
+}
+
+.percentage {
+    min-width: 40px;
+    text-align: right;
+    color: var(--violeta-claro);
+    font-weight: bold;
+}
+
+/* Gestión de Clases */
+.classes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.class-admin-card {
+    background-color: var(--negro);
+    border-radius: 15px;
+    padding: 2rem;
+    border: 2px solid var(--violeta-medio);
+    position: relative;
+}
+
+.class-info h4 {
+    color: var(--violeta-claro);
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.class-info p {
+    color: var(--gris-claro);
+    margin-bottom: 0.5rem;
+}
+
+.class-info i {
+    color: var(--violeta-medio);
+    margin-right: 0.5rem;
+    width: 16px;
+}
+
+.class-status {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.class-status.active {
+    background-color: #4CAF50;
+    color: var(--blanco);
+}
+
+.class-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-edit, .btn-delete {
+    background: none;
+    border: 2px solid var(--violeta-medio);
+    color: var(--violeta-claro);
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-edit:hover {
+    background-color: var(--violeta-medio);
+    color: var(--blanco);
+}
+
+.btn-delete:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: var(--blanco);
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.modal-content {
+    background-color: var(--gris-oscuro);
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 15px;
+    border: 2px solid var(--violeta-medio);
+    width: 90%;
+    max-width: 500px;
+}
+
+.modal-header {
+    background-color: var(--violeta-oscuro);
+    padding: 1.5rem 2rem;
+    border-radius: 13px 13px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    color: var(--blanco);
+    margin: 0;
+}
+
+.close {
+    color: var(--violeta-muy-claro);
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close:hover {
+    color: var(--blanco);
+}
+
+.add-class-form {
+    padding: 2rem;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+}
+
+.modal-actions button {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+/* Responsive Admin */
+@media (max-width: 768px) {
+    .overview-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .overview-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .section-actions {
+        justify-content: center;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .classes-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .activity-item {
+        flex-wrap: wrap;
+    }
+    
+    .admin-table {
+        font-size: 0.8rem;
+    }
+    
+    .admin-table th,
+    .admin-table td {
+        padding: 0.5rem;
+    }
+}
+/* Estilos adicionales para Sistema de Reservas */
+.no-reservations {
+    text-align: center;
+    padding: 3rem;
+    background-color: var(--gris-oscuro);
+    border-radius: 10px;
+    border: 2px solid var(--violeta-medio);
+}
+
+.no-reservations p {
+    color: var(--gris-claro);
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+.class-schedule {
+    color: var(--violeta-claro);
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.class-instructor, .class-capacity {
+    color: var(--gris-claro);
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+.class-instructor i, .class-capacity i {
+    color: var(--violeta-medio);
+    margin-right: 0.5rem;
+}
+
+.reserve-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.date-selector {
+    width: 100%;
+    padding: 0.8rem;
+    border: 2px solid var(--violeta-medio);
+    border-radius: 8px;
+    background-color: var(--negro);
+    color: var(--blanco);
+    font-size: 0.9rem;
+    box-sizing: border-box;
+}
+
+.date-selector:focus {
+    outline: none;
+    border-color: var(--violeta-claro);
+}
+
+.btn-reserve {
+    background-color: var(--violeta-medio);
+    color: var(--blanco);
+    border: none;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.btn-reserve:hover {
+    background-color: var(--violeta-oscuro);
+}
+
+/* Mejoras en las reservas existentes */
+.class-reservation .class-info p {
+    margin-bottom: 0.3rem;
+}
+
+.class-reservation .class-info h4 {
+    margin-bottom: 0.8rem;
+}
+
+/* Responsive para reservas */
+@media (max-width: 768px) {
+    .reserve-options {
+        flex-direction: column;
+    }
+    
+    .date-selector {
+        font-size: 0.8rem;
+    }
+    
+    .btn-reserve {
+        width: 100%;
+    }
+    
+    .day-schedule {
+        margin-bottom: 2rem;
+    }
+}
+/* Estilos adicionales para el panel mejorado */
+ .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-box {
+            background-color: var(--gris-oscuro);
+            border-radius: 15px;
+            border: 2px solid var(--violeta-medio);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s ease;
+        }
+
+        .modal-header {
+            background-color: var(--violeta-oscuro);
+            padding: 1.5rem 2rem;
+            border-radius: 13px 13px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--violeta-claro);
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid var(--violeta-medio);
+            border-radius: 8px;
+            background-color: var(--negro);
+            color: var(--blanco);
+            font-size: 1rem;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--violeta-claro);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--violeta-medio);
+            color: var(--blanco);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--violeta-oscuro);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--violeta-claro);
+            border: 2px solid var(--violeta-medio);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--violeta-medio);
+            color: var(--blanco);
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: var(--blanco);
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        .alert-success {
+            background-color: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            color: #4CAF50;
+        }
+
+        .alert-error {
+            background-color: rgba(220, 53, 69, 0.2);
+            border: 1px solid #dc3545;
+            color: #dc3545;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--violeta-medio);
+            background-color: var(--negro);
+            color: var(--violeta-claro);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pagination button:hover, .pagination button.active {
+            background-color: var(--violeta-medio);
+            color: var(--blanco);
+        }
+
+        .search-container {
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.8rem;
+            border: 2px solid var(--violeta-medio);
+            border-radius: 8px;
+            background-color: var(--negro);
+            color: var(--blanco);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--violeta-medio);
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .search-input {
+                min-width: 100%;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+/* ==================== SECCIÓN DE MEMBRESÍAS ==================== */
+
+.memberships-section {
+    padding: 80px 20px;
+    background: linear-gradient(135deg, var(--negro) 0%, var(--gris-oscuro) 100%);
+    position: relative;
+}
+
+.memberships-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 50" fill="none" stroke="%23ffffff" stroke-width="0.5" opacity="0.03"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/></svg>');
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+    position: relative;
+    z-index: 2;
+}
+
+.section-header h2 {
+    font-size: 2.5rem;
+    color: var(--violeta-claro);
+    margin-bottom: 1rem;
+}
+
+.section-header p {
+    font-size: 1.2rem;
+    color: var(--gris-claro);
+}
+
+/* Grid de Membresías */
+.memberships-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 4rem;
+    position: relative;
+    z-index: 2;
+}
+
+/* Tarjeta de Membresía */
+.membership-card {
+    background: var(--gris-oscuro);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    border: 2px solid var(--violeta-medio);
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.membership-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--violeta-medio), var(--violeta-claro));
+}
+
+.membership-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    border-color: var(--violeta-claro);
+    box-shadow: 0 20px 40px rgba(127, 76, 165, 0.3);
+}
+
+/* Tarjeta Popular */
+.membership-card.popular {
+    border-color: var(--violeta-claro);
+    box-shadow: 0 10px 30px rgba(127, 76, 165, 0.2);
+    transform: scale(1.05);
+}
+
+.membership-card.popular::before {
+    height: 6px;
+}
+
+/* Tarjeta Especial (Jubilados) */
+.membership-card.special {
+    border-color: #f59e0b;
+}
+
+.membership-card.special::before {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+/* Badge */
+.card-badge {
+    position: absolute;
+    top: 20px;
+    right: -35px;
+    background: linear-gradient(45deg, var(--violeta-medio), var(--violeta-claro));
+    color: white;
+    padding: 5px 40px;
+    transform: rotate(45deg);
+    font-size: 0.75rem;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.card-badge.special-badge {
+    background: linear-gradient(45deg, #f59e0b, #fbbf24);
+}
+
+/* Icono de la Tarjeta */
+.card-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    background: linear-gradient(135deg, var(--violeta-medio), var(--violeta-claro));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    box-shadow: 0 4px 16px rgba(127, 76, 165, 0.3);
+    transition: all 0.3s ease;
+}
+
+.membership-card:hover .card-icon {
+    transform: rotate(360deg) scale(1.1);
+}
+
+.membership-card.special .card-icon {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+}
+
+/* Título */
+.membership-card h3 {
+    font-size: 1.5rem;
+    color: var(--blanco);
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+/* Precio */
+.price {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.price .currency {
+    font-size: 1.5rem;
+    color: var(--violeta-claro);
+    vertical-align: super;
+}
+
+.price .amount {
+    font-size: 3rem;
+    font-weight: bold;
+    color: var(--violeta-claro);
+    line-height: 1;
+}
+
+.price .period {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--gris-claro);
+    margin-top: 0.5rem;
+}
+
+/* Features */
+.features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem 0;
+}
+
+.features li {
+    padding: 0.75rem 0;
+    color: var(--gris-claro);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.features li:last-child {
+    border-bottom: none;
+}
+
+.features li i {
+    color: var(--violeta-claro);
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* Botón de Membresía */
+.btn-membership {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--violeta-medio), var(--violeta-oscuro));
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-membership:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(127, 76, 165, 0.4);
+    background: linear-gradient(135deg, var(--violeta-claro), var(--violeta-medio));
+}
+
+.membership-card.popular .btn-membership {
+    background: linear-gradient(135deg, var(--violeta-claro), var(--violeta-medio));
+}
+
+.membership-card.special .btn-membership {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+}
+
+/* Información Adicional */
+.membership-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin: 4rem 0;
+    position: relative;
+    z-index: 2;
+}
+
+.info-card {
+    background: var(--gris-oscuro);
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.info-card:hover {
+    border-color: var(--violeta-medio);
+    transform: translateY(-5px);
+}
+
+.info-card i {
+    font-size: 2.5rem;
+    color: var(--violeta-claro);
+    margin-bottom: 1rem;
+}
+
+.info-card h4 {
+    color: var(--blanco);
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.info-card p {
+    color: var(--gris-claro);
+    font-size: 0.95rem;
+}
+
+/* Tabla Comparativa */
+.plans-comparison {
+    background: var(--gris-oscuro);
+    padding: 3rem;
+    border-radius: 20px;
+    border: 2px solid var(--violeta-medio);
+    margin-top: 4rem;
+    position: relative;
+    z-index: 2;
+}
+
+.plans-comparison h3 {
+    text-align: center;
+    color: var(--violeta-claro);
+    font-size: 2rem;
+    margin-bottom: 2rem;
+}
+
+.comparison-table {
+    overflow-x: auto;
+}
+
+.comparison-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.comparison-table thead {
+    background: var(--violeta-oscuro);
+}
+
+.comparison-table th {
+    padding: 1rem;
+    color: var(--blanco);
+    font-weight: 600;
+    text-align: left;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.comparison-table td {
+    padding: 1rem;
+    color: var(--gris-claro);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.comparison-table tbody tr:hover {
+    background: rgba(127, 76, 165, 0.1);
+}
+
+.comparison-table .text-success {
+    color: #22c55e;
+    font-size: 1.2rem;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .memberships-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+    
+    .membership-card.popular {
+        transform: scale(1);
+    }
+}
+
+@media (max-width: 768px) {
+    .section-header h2 {
+        font-size: 2rem;
+    }
+    
+    .memberships-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .membership-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .price .amount {
+        font-size: 2.5rem;
+    }
+    
+    .membership-info {
+        grid-template-columns: 1fr;
+    }
+    
+    .plans-comparison {
+        padding: 1.5rem;
+    }
+    
+    .comparison-table {
+        font-size: 0.85rem;
+    }
+    
+    .comparison-table th,
+    .comparison-table td {
+        padding: 0.75rem 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-badge {
+        font-size: 0.65rem;
+        padding: 4px 35px;
+    }
+    
+    .price .amount {
+        font-size: 2rem;
+    }
+    
+    .features li {
+        font-size: 0.9rem;
+    }
+}
+/* ==================== SISTEMA DE REGISTRO CON MEMBRESÍAS ==================== */
+
+.register-main {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--negro) 0%, var(--gris-oscuro) 100%);
+    padding: 120px 20px 60px;
+}
+
+.register-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Progress Steps */
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background: var(--gris-oscuro);
+    border-radius: 15px;
+    border: 2px solid var(--violeta-medio);
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+}
+
+.step-number {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--negro);
+    border: 3px solid var(--violeta-medio);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--violeta-medio);
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.step.active .step-number {
+    background: var(--violeta-medio);
+    color: var(--blanco);
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(127, 76, 165, 0.5);
+}
+
+.step.completed .step-number {
+    background: #22c55e;
+    border-color: #22c55e;
+    color: var(--blanco);
+}
+
+.step.completed .step-number::after {
+    content: '\f00c';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+}
+
+.step-label {
+    color: var(--gris-claro);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.step.active .step-label {
+    color: var(--violeta-claro);
+}
+
+.step-line {
+    flex: 1;
+    height: 3px;
+    background: var(--violeta-medio);
+    opacity: 0.3;
+    margin: 0 1rem;
+}
+
+/* Register Steps */
+.register-step {
+    display: none;
+}
+
+.register-step.active {
+    display: block;
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.step-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.step-header h2 {
+    color: var(--violeta-claro);
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.step-header p {
+    color: var(--gris-claro);
+    font-size: 1.1rem;
+}
+
+/* Membership Selector */
+.memberships-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.membership-option {
+    background: var(--gris-oscuro);
+    padding: 2rem 1.5rem;
+    border-radius: 15px;
+    border: 2px solid var(--violeta-medio);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.membership-option:hover {
+    transform: translateY(-5px);
+    border-color: var(--violeta-claro);
+    box-shadow: 0 10px 30px rgba(127, 76, 165, 0.3);
+}
+
+.membership-option.selected {
+    border-color: var(--violeta-claro);
+    background: linear-gradient(135deg, rgba(127, 76, 165, 0.2), rgba(75, 28, 113, 0.2));
+    box-shadow: 0 0 30px rgba(127, 76, 165, 0.4);
+}
+
+.membership-option i {
+    font-size: 3rem;
+    color: var(--violeta-claro);
+    margin-bottom: 1rem;
+}
+
+.membership-option h3 {
+    color: var(--blanco);
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.membership-option .price {
+    color: var(--violeta-claro);
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.membership-option ul {
+    list-style: none;
+    padding: 0;
+    color: var(--gris-claro);
+    font-size: 0.9rem;
+}
+
+.membership-option ul li {
+    margin: 0.3rem 0;
+}
+
+/* Join Code Section */
+.membership-join-code {
+    text-align: center;
+    padding: 2rem;
+    background: var(--gris-oscuro);
+    border-radius: 15px;
+    border: 2px dashed var(--violeta-medio);
+}
+
+.membership-join-code p {
+    color: var(--gris-claro);
+    margin-bottom: 1rem;
+}
+
+/* Forms */
+.register-form {
+    background: var(--gris-oscuro);
+    padding: 2.5rem;
+    border-radius: 15px;
+    border: 2px solid var(--violeta-medio);
+    margin-bottom: 2rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.form-group label {
+    display: block;
+    color: var(--violeta-claro);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.8rem;
+    border: 2px solid var(--violeta-medio);
+    border-radius: 8px;
+    background-color: var(--negro);
+    color: var(--blanco);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--violeta-claro);
+    box-shadow: 0 0 0 3px rgba(183, 126, 220, 0.2);
+}
+
+/* Two Person Info */
+.two-person-info {
+    background: rgba(127, 76, 165, 0.1);
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-left: 4px solid var(--violeta-claro);
+}
+
+.two-person-info i {
+    font-size: 2rem;
+    color: var(--violeta-claro);
+}
+
+.two-person-info p {
+    color: var(--gris-claro);
+    margin: 0;
+}
+
+.register-form h3 {
+    color: var(--violeta-claro);
+    margin: 2rem 0 1.5rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--violeta-medio);
+}
+
+/* Days Selector */
+.days-selector {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid var(--violeta-medio);
+}
+
+.days-selector h3 {
+    color: var(--violeta-claro);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.day-option {
+    position: relative;
+    cursor: pointer;
+}
+
+.day-option input[type="checkbox"] {
+    display: none;
+}
+
+.day-option span {
+    display: block;
+    padding: 1rem;
+    background: var(--negro);
+    border: 2px solid var(--violeta-medio);
+    border-radius: 10px;
+    text-align: center;
+    color: var(--blanco);
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.day-option input[type="checkbox"]:checked + span {
+    background: var(--violeta-medio);
+    border-color: var(--violeta-claro);
+    transform: scale(1.05);
+}
+
+.day-option input[type="checkbox"]:disabled + span {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.days-counter {
+    text-align: center;
+    color: var(--gris-claro);
+    font-size: 1.1rem;
+}
+
+.days-counter span {
+    color: var(--violeta-claro);
+    font-weight: bold;
+    font-size: 1.3rem;
+}
+
+/* Validation Info */
+.validation-info {
+    background: rgba(245, 158, 11, 0.1);
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-top: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-left: 4px solid #f59e0b;
+}
+
+.validation-info i {
+    font-size: 2rem;
+    color: #f59e0b;
+}
+
+.validation-info p {
+    color: var(--gris-claro);
+    margin: 0;
+}
+
+/* Join Code Form */
+.join-code-info {
+    text-align: center;
+    padding: 2rem;
+    background: rgba(127, 76, 165, 0.1);
+    border-radius: 15px;
+    margin-bottom: 2rem;
+}
+
+.join-code-info i {
+    font-size: 3rem;
+    color: var(--violeta-claro);
+    margin-bottom: 1rem;
+}
+
+.join-code-info h3 {
+    color: var(--blanco);
+    margin-bottom: 1rem;
+}
+
+.join-code-info p {
+    color: var(--gris-claro);
+}
+
+.code-verified {
+    background: rgba(34, 197, 94, 0.1);
+    padding: 2rem;
+    border-radius: 15px;
+    border: 2px solid #22c55e;
+    text-align: center;
+}
+
+.code-verified i {
+    font-size: 3rem;
+    color: #22c55e;
+    margin-bottom: 1rem;
+}
+
+.code-verified h4 {
+    color: #22c55e;
+    margin-bottom: 1rem;
+}
+
+.code-verified p {
+    color: var(--gris-claro);
+    margin: 0.5rem 0;
+}
+
+/* Payment Summary */
+.payment-summary {
+    background: var(--gris-oscuro);
+    padding: 2rem;
+    border-radius: 15px;
+    border: 2px solid var(--violeta-medio);
+    margin-bottom: 2rem;
+}
+
+.payment-summary h3 {
+    color: var(--violeta-claro);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--gris-claro);
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.summary-item.total {
+    font-size: 1.3rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--violeta-medio);
+    color: var(--blanco);
+}
+
+.summary-item strong {
+    color: var(--violeta-claro);
+}
+
+/* Payment Methods */
+.payment-methods {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.payment-option {
+    cursor: pointer;
+}
+
+.payment-option input[type="radio"] {
+    display: none;
+}
+
+.payment-card {
+    background: var(--gris-oscuro);
+    padding: 2rem;
+    border-radius: 15px;
+    border: 2px solid var(--violeta-medio);
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.payment-option input[type="radio"]:checked + .payment-card {
+    border-color: var(--violeta-claro);
+    background: linear-gradient(135deg, rgba(127, 76, 165, 0.2), rgba(75, 28, 113, 0.2));
+    box-shadow: 0 0 30px rgba(127, 76, 165, 0.4);
+}
+
+.payment-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--violeta-claro);
+}
+
+.payment-card i {
+    font-size: 2.5rem;
+    color: var(--violeta-claro);
+    margin-bottom: 1rem;
+}
+
+.payment-card h4 {
+    color: var(--blanco);
+    margin-bottom: 0.5rem;
+}
+
+.payment-card p {
+    color: var(--gris-claro);
+    font-size: 0.9rem;
+}
+
+.recargo-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #f59e0b;
+    color: var(--negro);
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+/* Terms Acceptance */
+.terms-acceptance {
+    background: var(--gris-oscuro);
+    padding: 1.5rem;
+    border-radius: 10px;
+    border: 2px solid var(--violeta-medio);
+    margin-bottom: 2rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    color: var(--gris-claro);
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.checkbox-label a {
+    color: var(--violeta-claro);
+    text-decoration: none;
+}
+
+.checkbox-label a:hover {
+    text-decoration: underline;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--violeta-medio), var(--violeta-oscuro));
+    color: var(--blanco);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(127, 76, 165, 0.4);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--violeta-claro);
+    border: 2px solid var(--violeta-medio);
+}
+
+.btn-secondary:hover {
+    background: var(--violeta-medio);
+    color: var(--blanco);
+}
+
+.btn-copy {
+    background: var(--violeta-medio);
+    color: var(--blanco);
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+}
+
+.btn-copy:hover {
+    background: var(--violeta-oscuro);
+}
+
+/* Code Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-box {
+    background: var(--gris-oscuro);
+    border-radius: 20px;
+    border: 2px solid var(--violeta-medio);
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    background: var(--violeta-oscuro);
+    padding: 1.5rem;
+    border-radius: 18px 18px 0 0;
+}
+
+.modal-header h3 {
+    color: var(--blanco);
+    margin: 0;
+    text-align: center;
+}
+
+.modal-body {
+    padding: 2rem;
+    text-align: center;
+}
+
+.success-icon i {
+    font-size: 4rem;
+    color: #22c55e;
+    margin-bottom: 1rem;
+}
+
+.modal-body p {
+    color: var(--gris-claro);
+    margin: 1rem 0;
+}
+
+.generated-code h4 {
+    color: var(--violeta-claro);
+    margin: 2rem 0 1rem 0;
+}
+
+.code-display {
+    background: var(--negro);
+    padding: 1.5rem;
+    border-radius: 10px;
+    border: 2px dashed var(--violeta-claro);
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--violeta-claro);
+    letter-spacing: 2px;
+    font-family: 'Courier New', monospace;
+}
+
+.code-instructions {
+    font-size: 0.9rem;
+    margin-top: 1rem;
+}
+
+.modal-actions {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .progress-steps {
+        padding: 1.5rem 1rem;
+    }
+
+    .step-number {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .step-label {
+        font-size: 0.75rem;
+    }
+
+    .step-line {
+        margin: 0 0.5rem;
+    }
+
+    .step-header h2 {
+        font-size: 2rem;
+    }
+
+    .memberships-selector {
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .days-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .payment-methods {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+}
+/* ==================== CALENDARIO DE MEMBRESÍA ==================== */
+/* Agregar al final de style.css */
+
+.membership-calendar-section {
+    padding: 3rem 0;
+    background-color: var(--gris-oscuro);
+}
+
+/* Tarjeta de Información de Membresía */
+.membership-info-card {
+    background: linear-gradient(135deg, var(--violeta-oscuro), var(--violeta-medio));
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.membership-info-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(30%, -30%);
+}
+
+.membership-header {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.membership-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.membership-details {
+    flex: 1;
+}
+
+.membership-details h3 {
+    color: white;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.membership-details p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+}
+
+.membership-badge {
+    padding: 0.8rem 1.5rem;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: bold;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.membership-badge.active {
+    background: #22c55e;
+    color: white;
+}
+
+.membership-badge.warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.membership-badge.expired {
+    background: #ef4444;
+    color: white;
+}
+
+.membership-badge i {
+    font-size: 1.2rem;
+}
+
+/* Estadísticas de Membresía */
+.membership-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1.5rem;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+}
+
+.stat-item i {
+    font-size: 2rem;
+    color: white;
+}
+
+.stat-item .stat-label {
+    display: block;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    margin-bottom: 0.3rem;
+}
+
+.stat-item .stat-value {
+    display: block;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Alerta de Renovación */
+.renewal-alert {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 191, 36, 0.2));
+    border: 2px solid #f59e0b;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    animation: pulse-alert 2s infinite;
+}
+
+@keyframes pulse-alert {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 15px rgba(245, 158, 11, 0);
+    }
+}
+
+.renewal-alert i {
+    font-size: 2.5rem;
+    color: #f59e0b;
+    flex-shrink: 0;
+}
+
+.renewal-alert .alert-content {
+    flex: 1;
+}
+
+.renewal-alert h4 {
+    color: var(--blanco);
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.renewal-alert p {
+    color: var(--gris-claro);
+    margin: 0;
+}
+
+.btn-renew {
+    background: #f59e0b;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.btn-renew:hover {
+    background: #d97706;
+    transform: translateY(-2px);
+}
+
+/* Calendario */
+.calendar-container {
+    background: var(--negro);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 2px solid var(--violeta-medio);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--violeta-medio);
+}
+
+.calendar-header h3 {
+    color: var(--violeta-claro);
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.calendar-nav {
+    background: var(--violeta-medio);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-nav:hover {
+    background: var(--violeta-claro);
+    transform: scale(1.1);
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.weekday {
+    text-align: center;
+    color: var(--violeta-claro);
+    font-weight: bold;
+    font-size: 0.9rem;
+    padding: 0.5rem;
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    border: 2px solid transparent;
+}
+
+.calendar-day.empty {
+    cursor: default;
+}
+
+/* Estados de los días */
+.calendar-day.available {
+    background: var(--violeta-medio);
+    color: white;
+    border-color: var(--violeta-claro);
+}
+
+.calendar-day.available:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(127, 76, 165, 0.5);
+}
+
+.calendar-day.today {
+    background: var(--violeta-claro);
+    color: white;
+    box-shadow: 0 0 20px rgba(183, 126, 220, 0.5);
+    animation: pulse-today 2s infinite;
+}
+
+@keyframes pulse-today {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.calendar-day.expiry-day {
+    background: #ef4444;
+    color: white;
+    border-color: #dc2626;
+}
+
+.calendar-day.disabled {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--gris-claro);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.calendar-day.past {
+    opacity: 0.6;
+}
+
+.calendar-day.expired {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    text-decoration: line-through;
+}
+
+.expiry-indicator {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 0.6rem;
+    color: white;
+}
+
+/* Leyenda del Calendario */
+.calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.legend-color {
+    width: 25px;
+    height: 25px;
+    border-radius: 5px;
+    border: 2px solid transparent;
+}
+
+.legend-color.available {
+    background: var(--violeta-medio);
+    border-color: var(--violeta-claro);
+}
+
+.legend-color.today {
+    background: var(--violeta-claro);
+}
+
+.legend-color.expiring {
+    background: #ef4444;
+}
+
+.legend-color.disabled {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.legend-item span {
+    color: var(--gris-claro);
+    font-size: 0.9rem;
+}
+
+/* Información Extra de Membresía */
+.membership-extra-info {
+    margin-top: 2rem;
+    display: none;
+}
+
+.training-days-info {
+    background: var(--negro);
+    border-radius: 15px;
+    padding: 2rem;
+    border: 2px solid var(--violeta-medio);
+}
+
+.training-days-info h4 {
+    color: var(--violeta-claro);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.training-days-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.training-day-badge {
+    background: var(--violeta-medio);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.training-days-note {
+    color: var(--gris-claro);
+    font-size: 0.9rem;
+    font-style: italic;
+    margin-top: 1rem;
+}
+
+/* Mensaje cuando no hay membresía */
+.no-membership-message,
+.error-message {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--negro);
+    border-radius: 20px;
+    border: 2px solid var(--violeta-medio);
+}
+
+.no-membership-message i,
+.error-message i {
+    font-size: 4rem;
+    color: var(--violeta-claro);
+    margin-bottom: 1.5rem;
+}
+
+.no-membership-message h3,
+.error-message h3 {
+    color: var(--blanco);
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.no-membership-message p,
+.error-message p {
+    color: var(--gris-claro);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .membership-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .membership-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 2rem;
+    }
+
+    .membership-details h3 {
+        font-size: 1.5rem;
+    }
+
+    .membership-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .renewal-alert {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .btn-renew {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .calendar-container {
+        padding: 1rem;
+    }
+
+    .calendar-header h3 {
+        font-size: 1.2rem;
+    }
+
+    .calendar-nav {
+        width: 35px;
+        height: 35px;
+    }
+
+    .weekday {
+        font-size: 0.8rem;
+        padding: 0.3rem;
+    }
+
+    .calendar-day {
+        font-size: 0.85rem;
+    }
+
+    .calendar-legend {
+        gap: 1rem;
+        font-size: 0.85rem;
+    }
+
+    .legend-color {
+        width: 20px;
+        height: 20px;
+    }
+
+    .training-days-list {
+        justify-content: center;
+    }
+
+    .training-day-badge {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .membership-info-card {
+        padding: 1.5rem;
+    }
+
+    .membership-details h3 {
+        font-size: 1.2rem;
+    }
+
+    .membership-badge {
+        font-size: 0.8rem;
+        padding: 0.6rem 1rem;
+    }
+
+    .stat-item {
+        padding: 1rem;
+    }
+
+    .stat-item i {
+        font-size: 1.5rem;
+    }
+
+    .stat-item .stat-value {
+        font-size: 1.2rem;
+    }
+
+    .calendar-days {
+        gap: 0.3rem;
+    }
+
+    .calendar-day {
+        font-size: 0.75rem;
+    }
+}
+/* ==================== CALENDARIO DE MEMBRESÍA ==================== */
+/* Agregar al final de style.css */
+
+.membership-calendar-section {
+    padding: 3rem 0;
+    background-color: var(--gris-oscuro);
+}
+
+/* Tarjeta de Información de Membresía */
+.membership-info-card {
+    background: linear-gradient(135deg, var(--violeta-oscuro), var(--violeta-medio));
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.membership-info-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(30%, -30%);
+}
+
+.membership-header {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.membership-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.membership-details {
+    flex: 1;
+}
+
+.membership-details h3 {
+    color: white;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.membership-details p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+}
+
+.membership-badge {
+    padding: 0.8rem 1.5rem;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: bold;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.membership-badge.active {
+    background: #22c55e;
+    color: white;
+}
+
+.membership-badge.warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.membership-badge.expired {
+    background: #ef4444;
+    color: white;
+}
+
+.membership-badge i {
+    font-size: 1.2rem;
+}
+
+/* Estadísticas de Membresía */
+.membership-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1.5rem;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+}
+
+.stat-item i {
+    font-size: 2rem;
+    color: white;
+}
+
+.stat-item .stat-label {
+    display: block;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    margin-bottom: 0.3rem;
+}
+
+.stat-item .stat-value {
+    display: block;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Alerta de Renovación */
+.renewal-alert {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 191, 36, 0.2));
+    border: 2px solid #f59e0b;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    animation: pulse-alert 2s infinite;
+}
+
+@keyframes pulse-alert {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 15px rgba(245, 158, 11, 0);
+    }
+}
+
+.renewal-alert i {
+    font-size: 2.5rem;
+    color: #f59e0b;
+    flex-shrink: 0;
+}
+
+.renewal-alert .alert-content {
+    flex: 1;
+}
+
+.renewal-alert h4 {
+    color: var(--blanco);
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.renewal-alert p {
+    color: var(--gris-claro);
+    margin: 0;
+}
+
+.btn-renew {
+    background: #f59e0b;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.btn-renew:hover {
+    background: #d97706;
+    transform: translateY(-2px);
+}
+
+/* Calendario */
+.calendar-container {
+    background: var(--negro);
+    border-radius: 20px;
+    padding: 1.5rem;
+    border: 2px solid var(--violeta-medio);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 2px solid var(--violeta-medio);
+}
+
+.calendar-header h3 {
+    color: var(--violeta-claro);
+    font-size: 1.3rem;
+    margin: 0;
+}
+
+.calendar-nav {
+    background: var(--violeta-medio);
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-nav:hover {
+    background: var(--violeta-claro);
+    transform: scale(1.1);
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.3rem;
+    margin-bottom: 0.8rem;
+}
+
+.weekday {
+    text-align: center;
+    color: var(--violeta-claro);
+    font-weight: bold;
+    font-size: 0.85rem;
+    padding: 0.4rem;
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.3rem;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    border: 2px solid transparent;
+    min-height: 40px;
+}
+
+.calendar-day.empty {
+    cursor: default;
+}
+
+/* Estados de los días */
+.calendar-day.available {
+    background: var(--violeta-medio);
+    color: white;
+    border-color: var(--violeta-claro);
+}
+
+.calendar-day.available:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(127, 76, 165, 0.5);
+}
+
+.calendar-day.today {
+    background: var(--violeta-claro);
+    color: white;
+    box-shadow: 0 0 20px rgba(183, 126, 220, 0.5);
+    animation: pulse-today 2s infinite;
+}
+
+@keyframes pulse-today {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.calendar-day.expiry-day {
+    background: #ef4444;
+    color: white;
+    border-color: #dc2626;
+}
+
+.calendar-day.disabled {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--gris-claro);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.calendar-day.past {
+    opacity: 0.6;
+}
+
+.calendar-day.expired {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    text-decoration: line-through;
+}
+
+.expiry-indicator {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 0.6rem;
+    color: white;
+}
+
+/* Leyenda del Calendario */
+.calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.legend-color {
+    width: 25px;
+    height: 25px;
+    border-radius: 5px;
+    border: 2px solid transparent;
+}
+
+.legend-color.available {
+    background: var(--violeta-medio);
+    border-color: var(--violeta-claro);
+}
+
+.legend-color.today {
+    background: var(--violeta-claro);
+}
+
+.legend-color.expiring {
+    background: #ef4444;
+}
+
+.legend-color.disabled {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.legend-item span {
+    color: var(--gris-claro);
+    font-size: 0.9rem;
+}
+
+/* Información Extra de Membresía */
+.membership-extra-info {
+    margin-top: 2rem;
+    display: none;
+}
+
+.training-days-info {
+    background: var(--negro);
+    border-radius: 15px;
+    padding: 2rem;
+    border: 2px solid var(--violeta-medio);
+}
+
+.training-days-info h4 {
+    color: var(--violeta-claro);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.training-days-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.training-day-badge {
+    background: var(--violeta-medio);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.training-days-note {
+    color: var(--gris-claro);
+    font-size: 0.9rem;
+    font-style: italic;
+    margin-top: 1rem;
+}
+
+/* Mensaje cuando no hay membresía */
+.no-membership-message,
+.error-message {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--negro);
+    border-radius: 20px;
+    border: 2px solid var(--violeta-medio);
+}
+
+.no-membership-message i,
+.error-message i {
+    font-size: 4rem;
+    color: var(--violeta-claro);
+    margin-bottom: 1.5rem;
+}
+
+.no-membership-message h3,
+.error-message h3 {
+    color: var(--blanco);
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.no-membership-message p,
+.error-message p {
+    color: var(--gris-claro);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .membership-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .membership-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 2rem;
+    }
+
+    .membership-details h3 {
+        font-size: 1.5rem;
+    }
+
+    .membership-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .renewal-alert {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .btn-renew {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .calendar-container {
+        padding: 1rem;
+    }
+
+    .calendar-header h3 {
+        font-size: 1.2rem;
+    }
+
+    .calendar-nav {
+        width: 35px;
+        height: 35px;
+    }
+
+    .weekday {
+        font-size: 0.8rem;
+        padding: 0.3rem;
+    }
+
+    .calendar-day {
+        font-size: 0.85rem;
+    }
+
+    .calendar-legend {
+        gap: 1rem;
+        font-size: 0.85rem;
+    }
+
+    .legend-color {
+        width: 20px;
+        height: 20px;
+    }
+
+    .training-days-list {
+        justify-content: center;
+    }
+
+    .training-day-badge {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .membership-info-card {
+        padding: 1.5rem;
+    }
+
+    .membership-details h3 {
+        font-size: 1.2rem;
+    }
+
+    .membership-badge {
+        font-size: 0.8rem;
+        padding: 0.6rem 1rem;
+    }
+
+    .stat-item {
+        padding: 1rem;
+    }
+
+    .stat-item i {
+        font-size: 1.5rem;
+    }
+
+    .stat-item .stat-value {
+        font-size: 1.2rem;
+    }
+
+    .calendar-days {
+        gap: 0.3rem;
+    }
+
+    .calendar-day {
+        font-size: 0.75rem;
+    }
+}
+/* ==================== AGREGAR AL FINAL DE style.css ==================== */
+
+/* Sistema de Alertas Personalizado */
+.custom-alert-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+.custom-alert-overlay.show {
+    display: flex;
+}
+
+.custom-alert-box {
+    background: var(--gris-oscuro);
+    border-radius: 20px;
+    border: 3px solid var(--violeta-medio);
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.4s ease;
+}
+
+.custom-alert-header {
+    background: linear-gradient(135deg, var(--violeta-oscuro), var(--violeta-medio));
+    padding: 1.5rem;
+    border-radius: 17px 17px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.custom-alert-icon {
+    font-size: 2rem;
+    color: white;
+}
+
+.custom-alert-header h3 {
+    color: white;
+    margin: 0;
+    font-size: 1.3rem;
+    flex: 1;
+}
+
+.custom-alert-body {
+    padding: 2rem;
+    color: var(--gris-claro);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    text-align: center;
+}
+
+.custom-alert-actions {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.custom-alert-btn {
+    padding: 0.8rem 2rem;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.custom-alert-btn.primary {
+    background: linear-gradient(135deg, var(--violeta-medio), var(--violeta-oscuro));
+    color: white;
+}
+
+.custom-alert-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(127, 76, 165, 0.4);
+}
+
+.custom-alert-btn.secondary {
+    background: transparent;
+    color: var(--violeta-claro);
+    border: 2px solid var(--violeta-medio);
+}
+
+.custom-alert-btn.secondary:hover {
+    background: var(--violeta-medio);
+    color: white;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 480px) {
+    .custom-alert-box {
+        width: 95%;
+    }
+    
+    .custom-alert-actions {
+        flex-direction: column;
+    }
+    
+    .custom-alert-btn {
+        width: 100%;
+    }
+}
+/* ==================== CALENDARIO DE MEMBRESÍA ==================== */
+/* Agregar al final de style.css */
+
+.membership-calendar-section {
+    padding: 3rem 0;
+    background-color: var(--gris-oscuro);
+}
+
+/* Tarjeta de Información de Membresía */
+.membership-info-card {
+    background: linear-gradient(135deg, var(--violeta-oscuro), var(--violeta-medio));
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.membership-info-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(30%, -30%);
+}
+
+.membership-header {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.membership-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.membership-details {
+    flex: 1;
+}
+
+.membership-details h3 {
+    color: white;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.membership-details p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+}
+
+.membership-badge {
+    padding: 0.8rem 1.5rem;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: bold;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.membership-badge.active {
+    background: #22c55e;
+    color: white;
+}
+
+.membership-badge.warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.membership-badge.expired {
+    background: #ef4444;
+    color: white;
+}
+
+.membership-badge i {
+    font-size: 1.2rem;
+}
+
+/* Estadísticas de Membresía */
+.membership-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1.5rem;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+}
+
+.stat-item i {
+    font-size: 2rem;
+    color: white;
+}
+
+.stat-item .stat-label {
+    display: block;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    margin-bottom: 0.3rem;
+}
+
+.stat-item .stat-value {
+    display: block;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Alerta de Renovación */
+.renewal-alert {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 191, 36, 0.2));
+    border: 2px solid #f59e0b;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    animation: pulse-alert 2s infinite;
+}
+
+@keyframes pulse-alert {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 15px rgba(245, 158, 11, 0);
+    }
+}
+
+.renewal-alert i {
+    font-size: 2.5rem;
+    color: #f59e0b;
+    flex-shrink: 0;
+}
+
+.renewal-alert .alert-content {
+    flex: 1;
+}
+
+.renewal-alert h4 {
+    color: var(--blanco);
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.renewal-alert p {
+    color: var(--gris-claro);
+    margin: 0;
+}
+
+.btn-renew {
+    background: #f59e0b;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.btn-renew:hover {
+    background: #d97706;
+    transform: translateY(-2px);
+}
+
+/* Calendario */
+.calendar-container {
+    background: var(--negro);
+    border-radius: 20px;
+    padding: 1.5rem;
+    border: 2px solid var(--violeta-medio);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 2px solid var(--violeta-medio);
+}
+
+.calendar-header h3 {
+    color: var(--violeta-claro);
+    font-size: 1.3rem;
+    margin: 0;
+}
+
+.calendar-nav {
+    background: var(--violeta-medio);
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-nav:hover {
+    background: var(--violeta-claro);
+    transform: scale(1.1);
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.3rem;
+    margin-bottom: 0.8rem;
+}
+
+.weekday {
+    text-align: center;
+    color: var(--violeta-claro);
+    font-weight: bold;
+    font-size: 0.85rem;
+    padding: 0.4rem;
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.3rem;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    border: 2px solid transparent;
+    min-height: 40px;
+}
+
+.calendar-day.empty {
+    cursor: default;
+}
+
+/* Estados de los días */
+.calendar-day.available {
+    background: var(--violeta-medio);
+    color: white;
+    border-color: var(--violeta-claro);
+}
+
+.calendar-day.available:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(127, 76, 165, 0.5);
+}
+
+.calendar-day.today {
+    background: var(--violeta-claro);
+    color: white;
+    box-shadow: 0 0 20px rgba(183, 126, 220, 0.5);
+    animation: pulse-today 2s infinite;
+}
+
+@keyframes pulse-today {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.calendar-day.expiry-day {
+    background: #ef4444;
+    color: white;
+    border-color: #dc2626;
+}
+
+.calendar-day.disabled {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--gris-claro);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.calendar-day.past {
+    opacity: 0.6;
+}
+
+.calendar-day.expired {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    text-decoration: line-through;
+}
+
+.expiry-indicator {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 0.6rem;
+    color: white;
+}
+
+/* Indicador de Clases Reservadas */
+.class-indicator {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    animation: pulseClass 2s infinite;
+}
+
+@keyframes pulseClass {
+    0%, 100% {
+        transform: translateX(-50%) scale(1);
+    }
+    50% {
+        transform: translateX(-50%) scale(1.1);
+    }
+}
+
+.calendar-day:hover .class-indicator {
+    width: 25px;
+    height: 25px;
+    font-size: 0.7rem;
+}
+
+/* Leyenda del Calendario */
+.calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.legend-color {
+    width: 25px;
+    height: 25px;
+    border-radius: 5px;
+    border: 2px solid transparent;
+}
+
+.legend-color.available {
+    background: var(--violeta-medio);
+    border-color: var(--violeta-claro);
+}
+
+.legend-color.today {
+    background: var(--violeta-claro);
+}
+
+.legend-color.expiring {
+    background: #ef4444;
+}
+
+.legend-color.disabled {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.legend-item span {
+    color: var(--gris-claro);
+    font-size: 0.9rem;
+}
+
+/* Información Extra de Membresía */
+.membership-extra-info {
+    margin-top: 2rem;
+    display: none;
+}
+
+.training-days-info {
+    background: var(--negro);
+    border-radius: 15px;
+    padding: 2rem;
+    border: 2px solid var(--violeta-medio);
+}
+
+.training-days-info h4 {
+    color: var(--violeta-claro);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.training-days-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.training-day-badge {
+    background: var(--violeta-medio);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.training-days-note {
+    color: var(--gris-claro);
+    font-size: 0.9rem;
+    font-style: italic;
+    margin-top: 1rem;
+}
+
+/* Mensaje cuando no hay membresía */
+.no-membership-message,
+.error-message {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--negro);
+    border-radius: 20px;
+    border: 2px solid var(--violeta-medio);
+}
+
+.no-membership-message i,
+.error-message i {
+    font-size: 4rem;
+    color: var(--violeta-claro);
+    margin-bottom: 1.5rem;
+}
+
+.no-membership-message h3,
+.error-message h3 {
+    color: var(--blanco);
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.no-membership-message p,
+.error-message p {
+    color: var(--gris-claro);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .membership-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .membership-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 2rem;
+    }
+
+    .membership-details h3 {
+        font-size: 1.5rem;
+    }
+
+    .membership-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .renewal-alert {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .btn-renew {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .calendar-container {
+        padding: 1rem;
+    }
+
+    .calendar-header h3 {
+        font-size: 1.2rem;
+    }
+
+    .calendar-nav {
+        width: 35px;
+        height: 35px;
+    }
+
+    .weekday {
+        font-size: 0.8rem;
+        padding: 0.3rem;
+    }
+
+    .calendar-day {
+        font-size: 0.85rem;
+    }
+
+    .calendar-legend {
+        gap: 1rem;
+        font-size: 0.85rem;
+    }
+
+    .legend-color {
+        width: 20px;
+        height: 20px;
+    }
+
+    .training-days-list {
+        justify-content: center;
+    }
+
+    .training-day-badge {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .membership-info-card {
+        padding: 1.5rem;
+    }
+
+    .membership-details h3 {
+        font-size: 1.2rem;
+    }
+
+    .membership-badge {
+        font-size: 0.8rem;
+        padding: 0.6rem 1rem;
+    }
+
+    .stat-item {
+        padding: 1rem;
+    }
+
+    .stat-item i {
+        font-size: 1.5rem;
+    }
+
+    .stat-item .stat-value {
+        font-size: 1.2rem;
+    }
+
+    .calendar-days {
+        gap: 0.3rem;
+    }
+
+    .calendar-day {
+        font-size: 0.75rem;
+    }
+}

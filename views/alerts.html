@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Sistema de Alertas Personalizado - FitZone</title>
+        <style>
+            :root {
+                --violeta-oscuro: #4b1c71;
+                --violeta-medio: #7f4ca5;
+                --violeta-claro: #b57edc;
+                --violeta-muy-claro: #dbb6ee;
+                --negro: #1a1a1a;
+                --gris-oscuro: #333;
+                --gris-claro: #666;
+                --blanco: #fff;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, var(--negro) 0%, var(--gris-oscuro) 100%);
+                color: var(--blanco);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+
+            .demo-container {
+                max-width: 800px;
+                width: 100%;
+            }
+
+            .demo-header {
+                text-align: center;
+                margin-bottom: 3rem;
+            }
+
+            .demo-header h1 {
+                color: var(--violeta-claro);
+                font-size: 2.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .demo-header p {
+                color: var(--gris-claro);
+                font-size: 1.1rem;
+            }
+
+            .demo-buttons {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 1rem;
+                margin-bottom: 2rem;
+            }
+
+            .demo-btn {
+                padding: 1rem 1.5rem;
+                border: none;
+                border-radius: 10px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                font-size: 1rem;
+            }
+
+            .demo-btn.success {
+                background: linear-gradient(135deg, #22c55e, #16a34a);
+                color: white;
+            }
+
+            .demo-btn.error {
+                background: linear-gradient(135deg, #ef4444, #dc2626);
+                color: white;
+            }
+
+            .demo-btn.warning {
+                background: linear-gradient(135deg, #f59e0b, #d97706);
+                color: white;
+            }
+
+            .demo-btn.info {
+                background: linear-gradient(135deg, var(--violeta-medio), var(--violeta-oscuro));
+                color: white;
+            }
+
+            .demo-btn.confirm {
+                background: linear-gradient(135deg, #3b82f6, #2563eb);
+                color: white;
+            }
+
+            .demo-btn:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 10px 25px rgba(127, 76, 165, 0.4);
+            }
+
+            /* Sistema de Alertas Personalizado */
+            .custom-alert-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.85);
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                animation: fadeIn 0.3s ease;
+                backdrop-filter: blur(5px);
+            }
+
+            .custom-alert-overlay.show {
+                display: flex;
+            }
+
+            .custom-alert-box {
+                background: var(--gris-oscuro);
+                border-radius: 25px;
+                border: 3px solid var(--violeta-medio);
+                max-width: 500px;
+                width: 90%;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                animation: slideUp 0.4s ease;
+                overflow: hidden;
+            }
+
+            .custom-alert-header {
+                padding: 1.5rem;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .custom-alert-header.success {
+                background: linear-gradient(135deg, #22c55e, #16a34a);
+            }
+
+            .custom-alert-header.error {
+                background: linear-gradient(135deg, #ef4444, #dc2626);
+            }
+
+            .custom-alert-header.warning {
+                background: linear-gradient(135deg, #f59e0b, #d97706);
+            }
+
+            .custom-alert-header.info {
+                background: linear-gradient(135deg, var(--violeta-medio), var(--violeta-oscuro));
+            }
+
+            .custom-alert-icon {
+                font-size: 2.5rem;
+                color: white;
+                animation: iconBounce 0.6s ease;
+            }
+
+            @keyframes iconBounce {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.2); }
+            }
+
+            .custom-alert-header h3 {
+                color: white;
+                margin: 0;
+                font-size: 1.4rem;
+                flex: 1;
+            }
+
+            .custom-alert-body {
+                padding: 2rem;
+                color: var(--blanco);
+                font-size: 1.1rem;
+                line-height: 1.6;
+                text-align: center;
+            }
+
+            .custom-alert-actions {
+                padding: 1.5rem 2rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                display: flex;
+                gap: 1rem;
+                justify-content: center;
+            }
+
+            .custom-alert-btn {
+                padding: 0.9rem 2rem;
+                border: none;
+                border-radius: 12px;
+                font-weight: 600;
+                font-size: 1rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .custom-alert-btn.primary {
+                background: linear-gradient(135deg, var(--violeta-medio), var(--violeta-oscuro));
+                color: white;
+            }
+
+            .custom-alert-btn.primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 20px rgba(127, 76, 165, 0.5);
+            }
+
+            .custom-alert-btn.secondary {
+                background: transparent;
+                color: var(--violeta-claro);
+                border: 2px solid var(--violeta-medio);
+            }
+
+            .custom-alert-btn.secondary:hover {
+                background: var(--violeta-medio);
+                color: white;
+            }
+
+            .custom-alert-btn.danger {
+                background: linear-gradient(135deg, #ef4444, #dc2626);
+                color: white;
+            }
+
+            .custom-alert-btn.danger:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 20px rgba(239, 68, 68, 0.5);
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+
+            @keyframes slideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(50px) scale(0.9);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
+            }
+
+            /* Código de ejemplo */
+            .code-section {
+                background: var(--negro);
+                padding: 2rem;
+                border-radius: 15px;
+                border: 2px solid var(--violeta-medio);
+                margin-top: 2rem;
+            }
+
+            .code-section h3 {
+                color: var(--violeta-claro);
+                margin-bottom: 1rem;
+            }
+
+            .code-section pre {
+                background: var(--gris-oscuro);
+                padding: 1.5rem;
+                border-radius: 10px;
+                overflow-x: auto;
+                color: var(--gris-claro);
+                font-family: 'Courier New', monospace;
+                font-size: 0.9rem;
+                line-height: 1.6;
+            }
+
+            .code-section code {
+                color: var(--violeta-muy-claro);
+            }
+
+            @media (max-width: 480px) {
+                .custom-alert-box {
+                    width: 95%;
+                }
+                
+                .custom-alert-actions {
+                    flex-direction: column;
+                }
+                
+                .custom-alert-btn {
+                    width: 100%;
+                    justify-content: center;
+                }
+
+                .demo-buttons {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="demo-container">
+            <div class="demo-header">
+                <h1>🎨 Sistema de Alertas FitZone</h1>
+                <p>Alertas personalizadas con los colores y estilo de FitZone</p>
+            </div>
+
+            <div class="demo-buttons">
+                <button class="demo-btn success" onclick="showCustomAlert('success', '¡Éxito!', 'Tu operación se completó correctamente.')">
+                    ✓ Alerta de Éxito
+                </button>
+
+                <button class="demo-btn error" onclick="showCustomAlert('error', 'Error', 'Hubo un problema con tu solicitud. Por favor intenta nuevamente.')">
+                    ✗ Alerta de Error
+                </button>
+
+                <button class="demo-btn warning" onclick="showCustomAlert('warning', 'Advertencia', 'Tu membresía vence en 3 días. Renueva para seguir disfrutando.')">
+                    ⚠ Alerta de Advertencia
+                </button>
+
+                <button class="demo-btn info" onclick="showCustomAlert('info', 'Información', 'Esta es una alerta informativa con el estilo de FitZone.')">
+                    ℹ Alerta de Info
+                </button>
+
+                <button class="demo-btn confirm" onclick="showConfirmAlert()">
+                    ? Confirmar Acción
+                </button>
+            </div>
+
+            <div class="code-section">
+                <h3>📝 Código de Implementación</h3>
+                <pre><code>// Función para mostrar alertas personalizadas
+    function showCustomAlert(type, title, message, callback) {
+        const overlay = document.createElement('div');
+        overlay.className = 'custom-alert-overlay show';
+        
+        const icons = {
+            success: '✓',
+            error: '✗',
+            warning: '⚠',
+            info: 'ℹ'
+        };
+        
+        overlay.innerHTML = `
+            &lt;div class="custom-alert-box"&gt;
+                &lt;div class="custom-alert-header ${type}"&gt;
+                    &lt;div class="custom-alert-icon"&gt;${icons[type]}&lt;/div&gt;
+                    &lt;h3&gt;${title}&lt;/h3&gt;
+                &lt;/div&gt;
+                &lt;div class="custom-alert-body"&gt;
+                    ${message}
+                &lt;/div&gt;
+                &lt;div class="custom-alert-actions"&gt;
+                    &lt;button class="custom-alert-btn primary" onclick="this.closest('.custom-alert-overlay').remove(); ${callback ? callback : ''}"&gt;
+                        Aceptar
+                    &lt;/button&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        `;
+        
+        document.body.appendChild(overlay);
+    }</code></pre>
+            </div>
+        </div>
+
+        <!-- Sistema de alertas -->
+        <div id="custom-alert-container"></div>
+
+        <script>
+            // Sistema de alertas personalizado para FitZone
+            function showCustomAlert(type, title, message, callback) {
+                const overlay = document.createElement('div');
+                overlay.className = 'custom-alert-overlay show';
+                
+                const icons = {
+                    success: '✓',
+                    error: '✗',
+                    warning: '⚠',
+                    info: 'ℹ'
+                };
+                
+                overlay.innerHTML = `
+                    <div class="custom-alert-box">
+                        <div class="custom-alert-header ${type}">
+                            <div class="custom-alert-icon">${icons[type]}</div>
+                            <h3>${title}</h3>
+                        </div>
+                        <div class="custom-alert-body">
+                            ${message}
+                        </div>
+                        <div class="custom-alert-actions">
+                            <button class="custom-alert-btn primary" onclick="closeAlert(this)">
+                                Aceptar
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(overlay);
+                
+                // Cerrar al hacer clic fuera
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === overlay) {
+                        closeAlert(overlay);
+                    }
+                });
+            }
+
+            // Alerta de confirmación
+            function showConfirmAlert() {
+                const overlay = document.createElement('div');
+                overlay.className = 'custom-alert-overlay show';
+                
+                overlay.innerHTML = `
+                    <div class="custom-alert-box">
+                        <div class="custom-alert-header warning">
+                            <div class="custom-alert-icon">?</div>
+                            <h3>Confirmar Acción</h3>
+                        </div>
+                        <div class="custom-alert-body">
+                            ¿Estás seguro de que deseas continuar con esta acción?
+                        </div>
+                        <div class="custom-alert-actions">
+                            <button class="custom-alert-btn secondary" onclick="closeAlert(this)">
+                                Cancelar
+                            </button>
+                            <button class="custom-alert-btn primary" onclick="confirmAction(this)">
+                                Confirmar
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(overlay);
+            }
+
+            function confirmAction(btn) {
+                showCustomAlert('success', '¡Confirmado!', 'Tu acción ha sido confirmada exitosamente.');
+            }
+
+            function closeAlert(element) {
+                const overlay = element.closest ? element.closest('.custom-alert-overlay') : element;
+                overlay.classList.remove('show');
+                setTimeout(() => overlay.remove(), 300);
+            }
+
+            // Cerrar con tecla Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const openAlert = document.querySelector('.custom-alert-overlay.show');
+                    if (openAlert) {
+                        closeAlert(openAlert);
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>
