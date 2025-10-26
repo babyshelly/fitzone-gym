@@ -1,8 +1,8 @@
 {
-  "name": "proyecto-final",
+  "name": "fitzone-gym",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Sistema de gestión para gimnasio FitZone",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
@@ -10,13 +10,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bcryptjs": "^3.0.2",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.2",
-    "express": "^5.1.0",
-    "express-session": "^1.18.2",
-    "jsonwebtoken": "^9.0.2",
-    "mongodb": "4.1",
-    "mongoose": "^8.18.1"
+    "express": "^4.18.2",
+    "mongoose": "^7.6.3",
+    "bcryptjs": "^2.4.3",
+    "express-session": "^1.17.3"
   }
 }
