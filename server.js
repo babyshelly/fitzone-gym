@@ -2149,7 +2149,7 @@ async function cleanOldReservations() {
 }
 
 // Conectar a MongoDB
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/fitzone';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://abrilcarchedi_db_user:<db_password>@gym-proyecto.vhxnxsq.mongodb.net/?appName=Gym-proyecto';
 mongoose.connect(MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
