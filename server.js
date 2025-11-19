@@ -14,10 +14,14 @@ app.use(express.static('public'));
 
 // Configurar sesiones
 app.use(session({
-    secret: 'fitzone-secret-key',
+    secret: process.env.SESSION_SECRET || require('crypto').randomBytes(32).toString('hex'),
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false }
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 24 horas
+    }
 }));
 
 // Schema del Usuario
@@ -32,6 +36,31 @@ const userSchema = new mongoose.Schema({
 });
 
 const User = mongoose.model('User', userSchema);
+// ==================== Agrega limites de usuarios en pagina simultanea ====================
+// Evitar cargar todos los datos
+app.get('/api/admin/users', requireAuth, requireAdmin, async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+    
+    const users = await User.find({ role: 'user' }, '-password')
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .skip(skip);
+    
+    const total = await User.countDocuments({ role: 'user' });
+    
+    res.json({ 
+        success: true, 
+        users,
+        pagination: {
+            page,
+            limit,
+            total,
+            pages: Math.ceil(total / limit)
+        }
+    });
+});
 
 // Schema de Clases
 // ==================== TAMBIÉN ACTUALIZAR EL classSchema ====================
@@ -407,6 +436,30 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
+// Agregar validación robusta
+const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+};
+
+const validatePhone = (phone) => {
+    const re = /^\(\d{2}\)\s?\d{4}-\d{4}$/;
+    return re.test(phone);
+};
+
+app.post('/api/register', async (req, res) => {
+    const { email, phone } = req.body;
+    
+    if (!validateEmail(email)) {
+        return res.json({ success: false, message: 'Email inválido' });
+    }
+    
+    if (!validatePhone(phone)) {
+        return res.json({ success: false, message: 'Formato de teléfono inválido' });
+    }
+
+});
+
 // ==================== MODIFICAR LA RUTA DE LOGIN EN server.js ====================
 // REEMPLAZAR la ruta app.post('/api/login', ...) existente con esta versión mejorada:
 
@@ -471,6 +524,40 @@ app.post('/api/logout', (req, res) => {
         }
         res.json({ success: true, message: 'Sesión cerrada exitosamente' });
     });
+});
+
+// ==================== RECUPERACION DE CONTRASEÑA ====================
+
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
+
+// Schema para tokens de reset
+const resetTokenSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    token: { type: String, required: true },
+    expiresAt: { type: Date, required: true }
+});
+
+const ResetToken = mongoose.model('ResetToken', resetTokenSchema);
+
+// Ruta para solicitar reset
+app.post('/api/password-reset/request', async (req, res) => {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+        return res.json({ success: false, message: 'Usuario no encontrado' });
+    }
+    
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 3600000); // 1 hora
+    
+    await ResetToken.create({ userId: user._id, token, expiresAt });
+    
+    // Enviar email (configurar nodemailer)
+    // ...
+    
+    res.json({ success: true, message: 'Email enviado' });
 });
 
 // ============== APIs DE ADMIN ==============
@@ -877,8 +964,8 @@ app.post('/api/register-with-membership', async (req, res) => {
         const prices = {
             'mes-libre': 32000,
             'dos-personas': 28000,
-            'tres-veces': 24000,
-            'semanal': 11500,
+            'tres-veces': 15000,
+            'semanal': 20000,
             'dia-clase': 5000,
             'jubilados': 20000
         };
@@ -2020,6 +2107,14 @@ showConfirmAlert(
     }
 );
 */
+// ==================== FIN DE LOS SCHEMAS ====================
+
+// Agregar después de definir los schemas
+userSchema.index({ email: 1 });
+reservationSchema.index({ userId: 1, date: 1 });
+reservationSchema.index({ classId: 1, date: 1, status: 1 });
+membershipSchema.index({ userId: 1, status: 1 });
+membershipSchema.index({ endDate: 1, status: 1 });
 
 // ==================== AGREGAR AL FINAL DE server.js (antes de app.listen) ====================
 
@@ -2063,6 +2158,17 @@ async function checkExpiringMemberships() {
         console.error('Error verificando membresías:', error);
     }
 }
+// historial  de assistencias
+const attendanceSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    reservationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Reservation' },
+    classId: { type: mongoose.Schema.Types.ObjectId, ref: 'Class', required: true },
+    date: { type: Date, required: true },
+    attended: { type: Boolean, default: false },
+    checkedInAt: Date
+});
+
+const Attendance = mongoose.model('Attendance', attendanceSchema);
 
 // Función para marcar membresías expiradas
 async function updateExpiredMemberships() {
