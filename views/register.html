@@ -501,24 +501,21 @@
             </div>
         </main>
 
-        // ==================== SCRIPT CORREGIDO PARA REGISTER.HTML ====================
-    // Reemplazar el script al final de register.html
-
         <script>
+            // ==================== SCRIPT COMPLETAMENTE CORREGIDO ====================
             let selectedMembership = null;
             let selectedDays = [];
             const membershipPrices = {
                 'mes-libre': 32000,
                 'dos-personas': 28000,
                 'tres-veces': 24000,
-                'semanal': 11500,
+                'semanal': 20000,
                 'dia-clase': 5000,
                 'jubilados': 20000
             };
 
-            // IMPORTANTE: Limpiar localStorage y siempre empezar en paso 1
+            // IMPORTANTE: Limpiar localStorage al cargar
             window.addEventListener('DOMContentLoaded', function() {
-                // Limpiar cualquier plan anterior
                 localStorage.removeItem('selectedPlan');
                 selectedMembership = null;
                 
@@ -530,20 +527,23 @@
                 // Siempre empezar en el paso 1
                 goToStep(1);
                 
-                // Si viene un plan por URL, solo marcarlo visualmente pero NO seleccionarlo automáticamente
-                const urlParams = new URLSearchParams(window.location.search);
-                const planFromUrl = urlParams.get('plan');
-                if (planFromUrl) {
-                    const planElement = document.querySelector(`[data-plan="${planFromUrl}"]`);
-                    if (planElement) {
-                        // Solo agregar un borde destacado, no seleccionar
-                        planElement.style.boxShadow = '0 0 30px rgba(183, 126, 220, 0.6)';
-                    }
-                }
+                // Agregar eventos click a TODAS las tarjetas de membresía
+                document.querySelectorAll('.membership-option').forEach(card => {
+                    card.addEventListener('click', function() {
+                        const plan = this.getAttribute('data-plan');
+                        if (plan) {
+                            selectMembership(plan);
+                        }
+                    });
+                });
+                
+                console.log('✅ Eventos de membresía configurados correctamente');
             });
 
-            // Seleccionar membresía
+            // Seleccionar membresía - VERSIÓN MEJORADA
             function selectMembership(plan) {
+                console.log('🎯 Membresía seleccionada:', plan);
+                
                 selectedMembership = plan;
                 localStorage.setItem('selectedPlan', plan);
                 
@@ -552,9 +552,12 @@
                     opt.classList.remove('selected');
                     opt.style.boxShadow = '';
                 });
+                
                 const selectedElement = document.querySelector(`[data-plan="${plan}"]`);
                 if (selectedElement) {
                     selectedElement.classList.add('selected');
+                    selectedElement.style.transform = 'scale(1.05)';
+                    selectedElement.style.boxShadow = '0 0 30px rgba(183, 126, 220, 0.8)';
                 }
                 
                 // Actualizar label
@@ -562,7 +565,7 @@
                     'mes-libre': 'Mes Libre - $32.000/mes',
                     'dos-personas': '2 Personas - $28.000 c/u',
                     'tres-veces': '3 Veces por Semana - $24.000/mes',
-                    'semanal': 'Semanal - $11.500/semana',
+                    'semanal': 'Semanal - $20.000/semana',
                     'dia-clase': 'Día o Clase - $5.000/día',
                     'jubilados': 'Jubilados - $20.000/mes'
                 };
@@ -585,14 +588,27 @@
                 updatePaymentSummary();
                 
                 // Mostrar mensaje de éxito
-                showCustomAlert('success', '¡Membresía Seleccionada!', `Has elegido el plan: ${labels[plan]}`);
+                if (typeof showCustomAlert === 'function') {
+                    showCustomAlert('success', '¡Membresía Seleccionada!', `Has elegido: ${labels[plan]}`);
+                }
+                
+                // IMPORTANTE: Auto-avanzar al paso 2 después de 1 segundo
+                setTimeout(() => {
+                    goToStep(2);
+                }, 1000);
             }
 
-            // Navegación entre pasos
+            // Navegación entre pasos - VERSIÓN MEJORADA
             function goToStep(stepNumber) {
+                console.log('📍 Navegando al paso:', stepNumber);
+                
                 // Validar antes de avanzar
                 if (stepNumber === 2 && !selectedMembership) {
-                    showCustomAlert('warning', 'Membresía Requerida', 'Por favor selecciona una membresía antes de continuar.');
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Membresía Requerida', 'Por favor selecciona una membresía antes de continuar.');
+                    } else {
+                        alert('Por favor selecciona una membresía antes de continuar.');
+                    }
                     return;
                 }
                 
@@ -608,7 +624,10 @@
                 });
                 
                 // Mostrar paso seleccionado
-                document.getElementById(`step-${stepNumber}`).classList.add('active');
+                const targetStep = document.getElementById(`step-${stepNumber}`);
+                if (targetStep) {
+                    targetStep.classList.add('active');
+                }
                 
                 // Actualizar indicadores de progreso
                 document.querySelectorAll('.step').forEach(step => {
@@ -635,7 +654,11 @@
                 if (plan === 'tres-veces') {
                     const checkedDays = document.querySelectorAll('input[name="trainingDays"]:checked');
                     if (checkedDays.length !== 3) {
-                        showCustomAlert('warning', 'Días Incompletos', 'Debes seleccionar exactamente 3 días de entrenamiento.');
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('warning', 'Días Incompletos', 'Debes seleccionar exactamente 3 días de entrenamiento.');
+                        } else {
+                            alert('Debes seleccionar exactamente 3 días de entrenamiento.');
+                        }
                         return false;
                     }
                     selectedDays = Array.from(checkedDays).map(cb => cb.value);
@@ -646,12 +669,20 @@
                     const gender = document.getElementById('gender-jub').value;
                     
                     if (gender === 'femenino' && age < 60) {
-                        showCustomAlert('error', 'Edad No Válida', 'Para la membresía de jubilados, las mujeres deben tener 60 años o más.');
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('error', 'Edad No Válida', 'Para la membresía de jubilados, las mujeres deben tener 60 años o más.');
+                        } else {
+                            alert('Para la membresía de jubilados, las mujeres deben tener 60 años o más.');
+                        }
                         return false;
                     }
                     
                     if (gender === 'masculino' && age < 65) {
-                        showCustomAlert('error', 'Edad No Válida', 'Para la membresía de jubilados, los hombres deben tener 65 años o más.');
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('error', 'Edad No Válida', 'Para la membresía de jubilados, los hombres deben tener 65 años o más.');
+                        } else {
+                            alert('Para la membresía de jubilados, los hombres deben tener 65 años o más.');
+                        }
                         return false;
                     }
                 }
@@ -675,14 +706,17 @@
                 let price = membershipPrices[selectedMembership];
                 const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
                 
-                // Aplicar recargo de Mercado Pago
                 if (paymentMethod === 'mercadopago') {
                     price = price * 1.05;
                 }
                 
-                document.getElementById('summary-membership').textContent = labels[selectedMembership];
-                document.getElementById('summary-price').textContent = `$${price.toLocaleString()}`;
-                document.getElementById('summary-total').textContent = `$${price.toLocaleString()}`;
+                const summaryMembership = document.getElementById('summary-membership');
+                const summaryPrice = document.getElementById('summary-price');
+                const summaryTotal = document.getElementById('summary-total');
+                
+                if (summaryMembership) summaryMembership.textContent = labels[selectedMembership];
+                if (summaryPrice) summaryPrice.textContent = `$${Math.round(price).toLocaleString()}`;
+                if (summaryTotal) summaryTotal.textContent = `$${Math.round(price).toLocaleString()}`;
             }
 
             // Escuchar cambios en método de pago
@@ -696,7 +730,8 @@
             document.addEventListener('change', function(e) {
                 if (e.target.name === 'trainingDays') {
                     const checked = document.querySelectorAll('input[name="trainingDays"]:checked').length;
-                    document.getElementById('days-count').textContent = checked;
+                    const counter = document.getElementById('days-count');
+                    if (counter) counter.textContent = checked;
                     
                     const allCheckboxes = document.querySelectorAll('input[name="trainingDays"]');
                     allCheckboxes.forEach(cb => {
@@ -711,9 +746,12 @@
 
             // Completar registro
             async function completeRegistration() {
-                // Validar términos
                 if (!document.getElementById('terms').checked) {
-                    showCustomAlert('warning', 'Términos Requeridos', 'Debes aceptar los términos y condiciones para continuar.');
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Términos Requeridos', 'Debes aceptar los términos y condiciones para continuar.');
+                    } else {
+                        alert('Debes aceptar los términos y condiciones para continuar.');
+                    }
                     return;
                 }
                 
@@ -778,20 +816,29 @@
                             document.getElementById('generated-code').textContent = result.membershipCode;
                             document.getElementById('code-modal').style.display = 'flex';
                         } else {
-                            showCustomAlert('success', '¡Registro Exitoso!', 'Tu cuenta ha sido creada correctamente. Serás redirigido al login.', 
-                                () => {
-                                    setTimeout(() => {
-                                        window.location.href = '/login';
-                                    }, 1500);
-                                }
-                            );
+                            if (typeof showCustomAlert === 'function') {
+                                showCustomAlert('success', '¡Registro Exitoso!', 'Tu cuenta ha sido creada correctamente.', () => {
+                                    setTimeout(() => window.location.href = '/login', 1500);
+                                });
+                            } else {
+                                alert('¡Registro exitoso! Redirigiendo...');
+                                setTimeout(() => window.location.href = '/login', 1500);
+                            }
                         }
                     } else {
-                        showCustomAlert('error', 'Error en Registro', result.message || 'Hubo un problema al procesar tu registro. Por favor intenta nuevamente.');
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('error', 'Error en Registro', result.message || 'Hubo un problema al procesar tu registro.');
+                        } else {
+                            alert(result.message || 'Error en el registro');
+                        }
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    showCustomAlert('error', 'Error de Conexión', 'No se pudo conectar con el servidor. Verifica tu conexión e intenta nuevamente.');
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error de Conexión', 'No se pudo conectar con el servidor.');
+                    } else {
+                        alert('Error de conexión. Intenta nuevamente.');
+                    }
                 }
             }
 
@@ -807,7 +854,11 @@
                 const code = document.getElementById('join-code').value.trim();
                 
                 if (!code) {
-                    showCustomAlert('warning', 'Código Requerido', 'Por favor ingresa el código de membresía.');
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Código Requerido', 'Por favor ingresa el código de membresía.');
+                    } else {
+                        alert('Por favor ingresa el código de membresía.');
+                    }
                     return;
                 }
                 
@@ -835,11 +886,19 @@
                         `;
                         resultDiv.style.display = 'block';
                     } else {
-                        showCustomAlert('error', 'Código Inválido', result.message || 'El código ingresado no es válido o ya fue utilizado.');
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('error', 'Código Inválido', result.message || 'El código ingresado no es válido.');
+                        } else {
+                            alert(result.message || 'Código inválido');
+                        }
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    showCustomAlert('error', 'Error de Conexión', 'No se pudo verificar el código. Intenta nuevamente.');
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error de Conexión', 'No se pudo verificar el código.');
+                    } else {
+                        alert('Error de conexión');
+                    }
                 }
             }
 
@@ -847,7 +906,11 @@
                 const password = document.getElementById('password-join').value;
                 
                 if (!password) {
-                    showCustomAlert('warning', 'Contraseña Requerida', 'Por favor ingresa una contraseña para tu cuenta.');
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Contraseña Requerida', 'Por favor ingresa una contraseña.');
+                    } else {
+                        alert('Por favor ingresa una contraseña.');
+                    }
                     return;
                 }
                 
@@ -861,52 +924,77 @@
                     const result = await response.json();
                     
                     if (result.success) {
-                        showCustomAlert('success', '¡Cuenta Activada!', 'Tu cuenta ha sido activada exitosamente. Serás redirigido al login.',
-                            () => {
-                                setTimeout(() => {
-                                    window.location.href = '/login';
-                                }, 1500);
-                            }
-                        );
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', '¡Cuenta Activada!', 'Tu cuenta ha sido activada exitosamente.', () => {
+                                setTimeout(() => window.location.href = '/login', 1500);
+                            });
+                        } else {
+                            alert('¡Cuenta activada exitosamente!');
+                            setTimeout(() => window.location.href = '/login', 1500);
+                        }
                     } else {
-                        showCustomAlert('error', 'Error de Activación', result.message || 'No se pudo activar la cuenta. Intenta nuevamente.');
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('error', 'Error de Activación', result.message || 'No se pudo activar la cuenta.');
+                        } else {
+                            alert(result.message || 'Error de activación');
+                        }
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    showCustomAlert('error', 'Error de Conexión', 'No se pudo activar la cuenta. Verifica tu conexión.');
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error de Conexión', 'No se pudo activar la cuenta.');
+                    } else {
+                        alert('Error de conexión');
+                    }
                 }
             }
 
             function copyCode() {
                 const code = document.getElementById('generated-code').textContent;
                 navigator.clipboard.writeText(code).then(() => {
-                    showCustomAlert('success', 'Código Copiado', 'El código ha sido copiado al portapapeles.');
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('success', 'Código Copiado', 'El código ha sido copiado al portapapeles.');
+                    } else {
+                        alert('Código copiado');
+                    }
                 });
             }
 
             function closeCodeModal() {
-                showCustomAlert('success', 'Registro Completo', 'Tu registro ha sido exitoso. Serás redirigido al login.',
-                    () => {
-                        setTimeout(() => {
-                            window.location.href = '/login';
-                        }, 1500);
-                    }
-                );
+                if (typeof showCustomAlert === 'function') {
+                    showCustomAlert('success', 'Registro Completo', 'Tu registro ha sido exitoso.', () => {
+                        setTimeout(() => window.location.href = '/login', 1500);
+                    });
+                } else {
+                    alert('Registro completado');
+                    setTimeout(() => window.location.href = '/login', 1500);
+                }
             }
 
             function showTerms() {
                 event.preventDefault();
-                showCustomAlert('info', 'Términos y Condiciones', 
-                    '1. Membresías renovables mensualmente<br>2. Sin permanencia mínima<br>3. Cancelación disponible con 7 días de anticipación<br>4. Acceso según membresía contratada'
-                );
+                if (typeof showCustomAlert === 'function') {
+                    showCustomAlert('info', 'Términos y Condiciones', 
+                        '1. Membresías renovables mensualmente<br>2. Sin permanencia mínima<br>3. Cancelación disponible con 7 días de anticipación'
+                    );
+                } else {
+                    alert('Términos y Condiciones: Membresías renovables mensualmente. Sin permanencia mínima.');
+                }
             }
 
             function showPrivacy() {
                 event.preventDefault();
-                showCustomAlert('info', 'Política de Privacidad', 
-                    'Tus datos personales están protegidos y solo se utilizarán para gestionar tu membresía en FitZone.'
-                );
+                if (typeof showCustomAlert === 'function') {
+                    showCustomAlert('info', 'Política de Privacidad', 
+                        'Tus datos personales están protegidos y solo se utilizarán para gestionar tu membresía.'
+                    );
+                } else {
+                    alert('Política de Privacidad: Tus datos están protegidos.');
+                }
             }
+
+            console.log('✅ Sistema de registro cargado correctamente');
+            
         </script>
     </body>
 </html>
