@@ -528,7 +528,7 @@ app.post('/api/logout', (req, res) => {
 
 // ==================== RECUPERACION DE CONTRASEÑA ====================
 
-const nodemailer = require('nodemailer');
+//const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
 // Schema para tokens de reset
