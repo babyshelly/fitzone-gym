@@ -20,8 +20,10 @@ app.use(session({
     cookie: { 
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 horas
-    }
+        maxAge: 24 * 60 * 60 * 1000,
+        sameSite: 'lax' // 👈 AGREGAR ESTO
+    },
+    proxy: process.env.NODE_ENV === 'production' // 👈 AGREGAR ESTO
 }));
 
 // Schema del Usuario
@@ -354,35 +356,51 @@ async function initializeData() {
     }
 }
 
-// Middleware de autenticación
+// ============== MIDDLEWARE DE AUTENTICACIÓN CORREGIDO ==============
 function requireAuth(req, res, next) {
-    if (req.session.user) {
+    if (req.session && req.session.user) {
         next();
     } else {
-        res.status(401).json({ success: false, message: 'Acceso no autorizado' });
+        // En lugar de devolver JSON, redirigir al login
+        res.redirect('/login');
     }
 }
 
-// Middleware de admin
+// Middleware de admin CORREGIDO
 function requireAdmin(req, res, next) {
-    if (req.session.user && req.session.user.role === 'admin') {
+    if (req.session && req.session.user && req.session.user.role === 'admin') {
         next();
     } else {
-        res.status(403).json({ success: false, message: 'Acceso denegado. Se requieren permisos de administrador.' });
+        // Redirigir a dashboard si no es admin
+        res.redirect('/dashboard');
     }
 }
 
-// ============== RUTAS HTML ==============
+// ============== RUTAS HTML CORREGIDAS ==============
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'index.html'));
 });
 
 app.get('/login', (req, res) => {
+    // Si ya está logueado, redirigir según rol
+    if (req.session && req.session.user) {
+        if (req.session.user.role === 'admin') {
+            return res.redirect('/admin');
+        }
+        return res.redirect('/dashboard');
+    }
     res.sendFile(path.join(__dirname, 'views', 'login.html'));
 });
 
 app.get('/register', (req, res) => {
+    // Si ya está logueado, redirigir
+    if (req.session && req.session.user) {
+        if (req.session.user.role === 'admin') {
+            return res.redirect('/admin');
+        }
+        return res.redirect('/dashboard');
+    }
     res.sendFile(path.join(__dirname, 'views', 'register.html'));
 });
 
@@ -394,11 +412,12 @@ app.get('/tienda', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'tienda.html'));
 });
 
-app.get('/admin', requireAuth, (req, res) => {
-    if (req.session.user.role !== 'admin') {
-        return res.redirect('/dashboard');
-    }
+app.get('/admin', requireAuth, requireAdmin, (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'admin.html'));
+});
+
+app.get('/checkout', requireAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'checkout.html'));
 });
 
 // ============== APIs BÁSICAS ==============
