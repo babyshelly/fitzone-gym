@@ -14,10 +14,10 @@
         <header class="header">
             <nav class="navbar">
                 <div class="nav-container">
-                    <div class="logo">
+                    <a href="/" class="logo" style="text-decoration: none; color: inherit; display: flex; align-items: center; cursor: pointer;">
                         <i class="fas fa-dumbbell"></i>
                         <span>FitZone</span>
-                    </div>
+                    </a>
                     <ul class="nav-menu">
                         <li><a href="/">Volver al Inicio</a></li>
                     </ul>
@@ -598,11 +598,11 @@
                 }, 1000);
             }
 
-            // Navegación entre pasos - VERSIÓN MEJORADA
+            // Navegación entre pasos - VERSIÓN CON VALIDACIONES MEJORADAS
             function goToStep(stepNumber) {
                 console.log('📍 Navegando al paso:', stepNumber);
                 
-                // Validar antes de avanzar
+                // VALIDACIÓN PASO 1 → 2
                 if (stepNumber === 2 && !selectedMembership) {
                     if (typeof showCustomAlert === 'function') {
                         showCustomAlert('warning', 'Membresía Requerida', 'Por favor selecciona una membresía antes de continuar.');
@@ -612,9 +612,10 @@
                     return;
                 }
                 
+                // VALIDACIÓN PASO 2 → 3
                 if (stepNumber === 3) {
-                    if (!validateCurrentForm()) {
-                        return;
+                    if (!validateStep2Completely()) {
+                        return; // No avanzar si la validación falla
                     }
                 }
                 
@@ -645,6 +646,248 @@
                 
                 // Scroll al inicio
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            // NUEVA FUNCIÓN: Validación completa del Paso 2
+            function validateStep2Completely() {
+                const plan = selectedMembership;
+                
+                // Si es el formulario de código, validar que haya verificado el código
+                const joinCodeForm = document.getElementById('form-join-code');
+                if (joinCodeForm && joinCodeForm.style.display !== 'none') {
+                    const codeResult = document.getElementById('code-result');
+                    if (!codeResult || codeResult.style.display === 'none') {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('warning', 'Código No Verificado', 'Debes verificar tu código de membresía antes de continuar.');
+                        } else {
+                            alert('Debes verificar tu código de membresía antes de continuar.');
+                        }
+                        return false;
+                    }
+                    return true; // Si llegó aquí, el código está verificado
+                }
+                
+                // Validar según el tipo de membresía
+                if (plan === 'dos-personas') {
+                    return validateTwoPersonForm();
+                } else if (plan === 'tres-veces') {
+                    return validateThreeTimesForm();
+                } else if (plan === 'jubilados') {
+                    return validateRetiredForm();
+                } else {
+                    return validateStandardForm();
+                }
+            }
+
+            // Validar formulario estándar (Mes Libre, Día/Clase, Semanal)
+            function validateStandardForm() {
+                const fullName = document.getElementById('fullName')?.value.trim();
+                const email = document.getElementById('email')?.value.trim();
+                const phone = document.getElementById('phone')?.value.trim();
+                const address = document.getElementById('address')?.value.trim();
+                const password = document.getElementById('password')?.value;
+                const confirmPassword = document.getElementById('confirmPassword')?.value;
+                
+                if (!fullName || !email || !phone || !address || !password || !confirmPassword) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Campos Incompletos', 'Por favor completa todos los campos requeridos.');
+                    } else {
+                        alert('Por favor completa todos los campos requeridos.');
+                    }
+                    return false;
+                }
+                
+                if (password !== confirmPassword) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Contraseñas No Coinciden', 'Las contraseñas no coinciden. Por favor verifica.');
+                    } else {
+                        alert('Las contraseñas no coinciden.');
+                    }
+                    return false;
+                }
+                
+                if (password.length < 6) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Contraseña Muy Corta', 'La contraseña debe tener al menos 6 caracteres.');
+                    } else {
+                        alert('La contraseña debe tener al menos 6 caracteres.');
+                    }
+                    return false;
+                }
+                
+                if (!validateEmail(email)) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Email Inválido', 'Por favor ingresa un email válido.');
+                    } else {
+                        alert('Por favor ingresa un email válido.');
+                    }
+                    return false;
+                }
+                
+                return true;
+            }
+
+            // Validar formulario de 2 personas
+            function validateTwoPersonForm() {
+                // Persona 1
+                const fullName1 = document.getElementById('fullName1')?.value.trim();
+                const age1 = document.getElementById('age1')?.value;
+                const email1 = document.getElementById('email1')?.value.trim();
+                const phone1 = document.getElementById('phone1')?.value.trim();
+                const address1 = document.getElementById('address1')?.value.trim();
+                const password1 = document.getElementById('password1')?.value;
+                
+                // Persona 2
+                const fullName2 = document.getElementById('fullName2')?.value.trim();
+                const age2 = document.getElementById('age2')?.value;
+                const email2 = document.getElementById('email2')?.value.trim();
+                const phone2 = document.getElementById('phone2')?.value.trim();
+                const address2 = document.getElementById('address2')?.value.trim();
+                
+                if (!fullName1 || !age1 || !email1 || !phone1 || !address1 || !password1) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Datos Incompletos', 'Por favor completa todos los datos de la primera persona.');
+                    } else {
+                        alert('Por favor completa todos los datos de la primera persona.');
+                    }
+                    return false;
+                }
+                
+                if (!fullName2 || !age2 || !email2 || !phone2 || !address2) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Datos Incompletos', 'Por favor completa todos los datos de la segunda persona.');
+                    } else {
+                        alert('Por favor completa todos los datos de la segunda persona.');
+                    }
+                    return false;
+                }
+                
+                if (!validateEmail(email1) || !validateEmail(email2)) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Email Inválido', 'Por favor verifica que ambos emails sean válidos.');
+                    } else {
+                        alert('Por favor verifica que ambos emails sean válidos.');
+                    }
+                    return false;
+                }
+                
+                if (password1.length < 6) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Contraseña Muy Corta', 'La contraseña debe tener al menos 6 caracteres.');
+                    } else {
+                        alert('La contraseña debe tener al menos 6 caracteres.');
+                    }
+                    return false;
+                }
+                
+                return true;
+            }
+
+            // Validar formulario de 3 veces por semana
+            function validateThreeTimesForm() {
+                const fullName = document.getElementById('fullName-3v')?.value.trim();
+                const email = document.getElementById('email-3v')?.value.trim();
+                const phone = document.getElementById('phone-3v')?.value.trim();
+                const address = document.getElementById('address-3v')?.value.trim();
+                const password = document.getElementById('password-3v')?.value;
+                const confirmPassword = document.getElementById('confirmPassword-3v')?.value;
+                
+                if (!fullName || !email || !phone || !address || !password || !confirmPassword) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Campos Incompletos', 'Por favor completa todos los campos requeridos.');
+                    } else {
+                        alert('Por favor completa todos los campos requeridos.');
+                    }
+                    return false;
+                }
+                
+                if (password !== confirmPassword) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Contraseñas No Coinciden', 'Las contraseñas no coinciden.');
+                    } else {
+                        alert('Las contraseñas no coinciden.');
+                    }
+                    return false;
+                }
+                
+                const checkedDays = document.querySelectorAll('input[name="trainingDays"]:checked');
+                if (checkedDays.length !== 3) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Días Incompletos', 'Debes seleccionar exactamente 3 días de entrenamiento.');
+                    } else {
+                        alert('Debes seleccionar exactamente 3 días de entrenamiento.');
+                    }
+                    return false;
+                }
+                
+                selectedDays = Array.from(checkedDays).map(cb => cb.value);
+                
+                if (!validateEmail(email)) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Email Inválido', 'Por favor ingresa un email válido.');
+                    } else {
+                        alert('Por favor ingresa un email válido.');
+                    }
+                    return false;
+                }
+                
+                return true;
+            }
+
+            // Validar formulario de jubilados
+            function validateRetiredForm() {
+                const fullName = document.getElementById('fullName-jub')?.value.trim();
+                const dni = document.getElementById('dni-jub')?.value.trim();
+                const age = parseInt(document.getElementById('age-jub')?.value);
+                const gender = document.getElementById('gender-jub')?.value;
+                const email = document.getElementById('email-jub')?.value.trim();
+                const phone = document.getElementById('phone-jub')?.value.trim();
+                const address = document.getElementById('address-jub')?.value.trim();
+                const password = document.getElementById('password-jub')?.value;
+                
+                if (!fullName || !dni || !age || !gender || !email || !phone || !address || !password) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Campos Incompletos', 'Por favor completa todos los campos requeridos.');
+                    } else {
+                        alert('Por favor completa todos los campos requeridos.');
+                    }
+                    return false;
+                }
+                
+                if (gender === 'femenino' && age < 60) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Edad No Válida', 'Para la membresía de jubilados, las mujeres deben tener 60 años o más.');
+                    } else {
+                        alert('Para la membresía de jubilados, las mujeres deben tener 60 años o más.');
+                    }
+                    return false;
+                }
+                
+                if (gender === 'masculino' && age < 65) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Edad No Válida', 'Para la membresía de jubilados, los hombres deben tener 65 años o más.');
+                    } else {
+                        alert('Para la membresía de jubilados, los hombres deben tener 65 años o más.');
+                    }
+                    return false;
+                }
+                
+                if (!validateEmail(email)) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Email Inválido', 'Por favor ingresa un email válido.');
+                    } else {
+                        alert('Por favor ingresa un email válido.');
+                    }
+                    return false;
+                }
+                
+                return true;
+            }
+
+            // Función auxiliar para validar email
+            function validateEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
             }
 
             // Validar formulario actual
@@ -850,14 +1093,34 @@
                 document.getElementById('membership-selected-label').textContent = 'Unirse con código de membresía';
             }
 
+            // MEJORAR la función verifyJoinCode para que realmente valide
             async function verifyJoinCode() {
                 const code = document.getElementById('join-code').value.trim();
+                const password = document.getElementById('password-join').value;
                 
                 if (!code) {
                     if (typeof showCustomAlert === 'function') {
                         showCustomAlert('warning', 'Código Requerido', 'Por favor ingresa el código de membresía.');
                     } else {
                         alert('Por favor ingresa el código de membresía.');
+                    }
+                    return;
+                }
+                
+                if (!password) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Contraseña Requerida', 'Por favor ingresa una contraseña.');
+                    } else {
+                        alert('Por favor ingresa una contraseña.');
+                    }
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Contraseña Muy Corta', 'La contraseña debe tener al menos 6 caracteres.');
+                    } else {
+                        alert('La contraseña debe tener al menos 6 caracteres.');
                     }
                     return;
                 }
@@ -887,17 +1150,17 @@
                         resultDiv.style.display = 'block';
                     } else {
                         if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('error', 'Código Inválido', result.message || 'El código ingresado no es válido.');
+                            showCustomAlert('error', 'Código Inválido', result.message || 'El código ingresado no es válido o ya fue utilizado.');
                         } else {
-                            alert(result.message || 'Código inválido');
+                            alert(result.message || 'Código inválido o ya utilizado.');
                         }
                     }
                 } catch (error) {
                     console.error('Error:', error);
                     if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('error', 'Error de Conexión', 'No se pudo verificar el código.');
+                        showCustomAlert('error', 'Error de Conexión', 'No se pudo verificar el código. Intenta nuevamente.');
                     } else {
-                        alert('Error de conexión');
+                        alert('Error de conexión. Intenta nuevamente.');
                     }
                 }
             }
