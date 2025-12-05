@@ -368,6 +368,7 @@
                     const calendarDays = document.getElementById('calendar-days');
                     calendarDays.innerHTML = '';
                     
+                    // Días vacíos al inicio
                     for (let i = 0; i < startingDayOfWeek; i++) {
                         const emptyDay = document.createElement('div');
                         emptyDay.className = 'calendar-day empty';
@@ -405,11 +406,20 @@
                             dayElement.classList.add('disabled');
                         }
                         
+                        // CORREGIDO: Buscar reserva para este día específico
                         const reservation = getReservationForDate(currentDayDate);
                         if (reservation) {
+                            const classColor = getClassColor(reservation.className);
+                            
+                            console.log('🎨 Agregando indicador:', {
+                                dia: day,
+                                clase: reservation.className,
+                                color: classColor
+                            });
+                            
                             const classIndicator = document.createElement('div');
                             classIndicator.className = 'class-indicator';
-                            classIndicator.style.backgroundColor = getClassColor(reservation.className);
+                            classIndicator.style.backgroundColor = classColor;
                             classIndicator.innerHTML = `<i class="fas fa-dumbbell"></i>`;
                             classIndicator.title = `${reservation.className} - ${reservation.time}`;
                             dayElement.appendChild(classIndicator);
@@ -427,19 +437,37 @@
                     if (!userReservations || userReservations.length === 0) return null;
                     
                     return userReservations.find(reservation => {
-                        const reservationDate = new Date(reservation.date);
-                        return reservationDate.toDateString() === date.toDateString();
+                        // Parsear fecha de la reserva correctamente
+                        const [resYear, resMonth, resDay] = reservation.date.split('T')[0].split('-');
+                        const reservationDate = new Date(resYear, resMonth - 1, resDay);
+                        
+                        // Comparar solo año, mes y día (ignorar hora)
+                        return reservationDate.getFullYear() === date.getFullYear() &&
+                            reservationDate.getMonth() === date.getMonth() &&
+                            reservationDate.getDate() === date.getDate();
                     });
                 }
 
                 function getClassColor(className) {
                     const classColors = {
-                        'F.E.C': '#22c55e',
-                        'Yoga': '#ef4444',
-                        'Spinning': '#3b82f6',
-                        'Pilates': '#f59e0b'
+                        'F.E.C': '#22c55e',    // Verde
+                        'Yoga': '#ef4444',      // Rojo
+                        'Spinning': '#3b82f6',  // Azul (estaba mal configurado)
+                        'Pilates': '#f59e0b'    // Amarillo/Naranja
                     };
-                    return classColors[className] || '#7f4ca5';
+                    
+                    // Normalizar nombre de clase (eliminar espacios extra)
+                    const normalizedName = className.trim();
+                    
+                    // Buscar color, con fallback a violeta
+                    const color = classColors[normalizedName];
+                    
+                    if (!color) {
+                        console.warn(`Color no definido para clase: "${normalizedName}"`);
+                        return '#7f4ca5'; // Violeta por defecto
+                    }
+                    
+                    return color;
                 }
 
                 function isDayAvailable(date) {
@@ -715,12 +743,14 @@
                 
                 // Filtrar solo reservas futuras o de hoy
                 const today = new Date();
-                today.setHours(0, 0, 0, 0); // Resetear hora para comparar solo fecha
+                today.setHours(0, 0, 0, 0);
                 
                 const futureReservations = reservations.filter(reservation => {
-                    const reservationDate = new Date(reservation.date);
+                    // Parsear fecha correctamente
+                    const [year, month, day] = reservation.date.split('T')[0].split('-');
+                    const reservationDate = new Date(year, month - 1, day);
                     reservationDate.setHours(0, 0, 0, 0);
-                    return reservationDate >= today; // Solo mostrar de hoy en adelante
+                    return reservationDate >= today;
                 });
                 
                 if (futureReservations.length === 0) {
@@ -736,21 +766,30 @@
                 // Ordenar por fecha (más próximas primero)
                 futureReservations.sort((a, b) => new Date(a.date) - new Date(b.date));
                 
-                container.innerHTML = futureReservations.map(reservation => `
-                    <div class="class-reservation">
-                        <div class="class-info">
-                            <h4>${reservation.className}</h4>
-                            <p><i class="fas fa-calendar"></i> ${formatDate(reservation.date)}</p>
-                            <p><i class="fas fa-clock"></i> ${reservation.time}</p>
-                            <p><i class="fas fa-user-tie"></i> ${reservation.classId?.instructor || 'Instructor FitZone'}</p>
+                container.innerHTML = futureReservations.map(reservation => {
+                    // Log para debug
+                    console.log('📋 Mostrando reserva:', {
+                        clase: reservation.className,
+                        fecha: reservation.date,
+                        fechaFormateada: formatDate(reservation.date)
+                    });
+                    
+                    return `
+                        <div class="class-reservation">
+                            <div class="class-info">
+                                <h4>${reservation.className}</h4>
+                                <p><i class="fas fa-calendar"></i> ${formatDate(reservation.date)}</p>
+                                <p><i class="fas fa-clock"></i> ${reservation.time}</p>
+                                <p><i class="fas fa-user-tie"></i> ${reservation.classId?.instructor || 'Instructor FitZone'}</p>
+                            </div>
+                            <div class="class-actions">
+                                <button class="btn-cancel" onclick="cancelReservation('${reservation._id}')">
+                                    Cancelar
+                                </button>
+                            </div>
                         </div>
-                        <div class="class-actions">
-                            <button class="btn-cancel" onclick="cancelReservation('${reservation._id}')">
-                                Cancelar
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             }
 
             // Cargar clases disponibles - VERSIÓN CORREGIDA
@@ -919,6 +958,18 @@
                         return;
                     }
                     
+                    // IMPORTANTE: Verificar que la fecha sea correcta
+                    const [year, month, day] = selectedDate.split('-');
+                    const reservationDate = new Date(year, month - 1, day);
+                    const dayName = reservationDate.toLocaleDateString('es-ES', { weekday: 'long' });
+                    
+                    console.log('📅 Reservando:', {
+                        fecha: selectedDate,
+                        dia: dayName,
+                        hora: selectedTime,
+                        clase: className
+                    });
+                    
                     const response = await fetch('/api/reserve-class', {
                         method: 'POST',
                         headers: {
@@ -936,7 +987,7 @@
                     if (result.success) {
                         if (typeof showCustomAlert === 'function') {
                             showCustomAlert('success', '¡Reserva Exitosa!', 
-                                `Tu clase de ${className} ha sido reservada para el ${new Date(selectedDate).toLocaleDateString('es-ES')} a las ${selectedTime}`,
+                                `Tu clase de ${className} ha sido reservada para el ${dayName} ${day}/${month}/${year} a las ${selectedTime}`,
                                 () => {
                                     loadMyReservations();
                                     if (typeof loadUserReservations === 'function') {
@@ -1020,13 +1071,25 @@
 
             // Función auxiliar para formatear fechas
             function formatDate(dateString) {
-                const date = new Date(dateString);
-                return date.toLocaleDateString('es-ES', {
+                // Crear fecha sin conversión de zona horaria
+                const [year, month, day] = dateString.split('T')[0].split('-');
+                const date = new Date(year, month - 1, day);
+                
+                // Verificar que la fecha sea válida
+                if (isNaN(date.getTime())) {
+                    console.error('Fecha inválida:', dateString);
+                    return 'Fecha inválida';
+                }
+                
+                const options = {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
-                    day: 'numeric'
-                });
+                    day: 'numeric',
+                    timeZone: 'America/Argentina/Buenos_Aires' // Zona horaria de Argentina
+                };
+                
+                return date.toLocaleDateString('es-ES', options);
             }
 
             // Mostrar clases disponibles
