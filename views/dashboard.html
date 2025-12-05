@@ -282,8 +282,14 @@
                     const daysRemaining = membershipData.daysRemaining;
                     document.getElementById('days-remaining').textContent = daysRemaining;
                     
+                    // ⭐ CORRECCIÓN: Parsear fecha correctamente
                     const expiryDate = new Date(membershipData.endDate);
-                    document.getElementById('expiry-date').textContent = expiryDate.toLocaleDateString('es-ES');
+                    const formattedDate = expiryDate.toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                    document.getElementById('expiry-date').textContent = formattedDate;
                     
                     document.getElementById('membership-price').textContent = `$${membershipData.price.toLocaleString()}`;
                     
@@ -302,9 +308,14 @@
                         statusText.style.color = '#f59e0b';
                         
                         const renewalAlert = document.getElementById('renewal-alert');
-                        renewalAlert.style.display = 'flex';
-                        document.getElementById('renewal-message').textContent = 
-                            `Tu membresía vence en ${daysRemaining} días. Renueva ahora para seguir disfrutando de nuestros servicios.`;
+                        if (renewalAlert) {
+                            renewalAlert.style.display = 'flex';
+                            const renewalMessage = document.getElementById('renewal-message');
+                            if (renewalMessage) {
+                                renewalMessage.textContent = 
+                                    `Tu membresía vence en ${daysRemaining} días. Renueva ahora para seguir disfrutando de nuestros servicios.`;
+                            }
+                        }
                     } else {
                         statusBadge.className = 'membership-badge active';
                         statusBadge.innerHTML = '<i class="fas fa-check-circle"></i><span>ACTIVA</span>';
@@ -383,6 +394,26 @@
                         const currentDayDate = new Date(year, month, day);
                         
                         dayElement.className = 'calendar-day';
+                        // Hacer clickeable si es un día habilitado o tiene reservas
+                        if (isDayAvailable(currentDayDate) || getReservationForDate(currentDayDate)) {
+                            dayElement.style.cursor = 'pointer';
+                            dayElement.addEventListener('click', function() {
+                                showDayInfo(day, month, year);
+                            });
+                            
+                            // Efecto hover
+                            dayElement.addEventListener('mouseenter', function() {
+                                if (!this.classList.contains('past') && !this.classList.contains('disabled')) {
+                                    this.style.transform = 'scale(1.1)';
+                                    this.style.boxShadow = '0 5px 15px rgba(127, 76, 165, 0.5)';
+                                }
+                            });
+                            
+                            dayElement.addEventListener('mouseleave', function() {
+                                this.style.transform = '';
+                                this.style.boxShadow = '';
+                            });
+                        }
                         dayElement.textContent = day;
                         
                         const isToday = currentDayDate.toDateString() === today.toDateString();
@@ -662,6 +693,18 @@
                 </div>
             </section>
         </main>
+        <!-- Modal de Información del Día -->
+        <div id="day-info-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-box" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h3 id="modal-day-title">Información del Día</h3>
+                    <span class="close" onclick="closeDayModal()" style="cursor: pointer; font-size: 2rem; color: var(--violeta-claro);">&times;</span>
+                </div>
+                <div class="modal-body" id="day-info-content">
+                    <!-- Contenido dinámico -->
+                </div>
+            </div>
+        </div>
 
         <script>
             // ==================== REEMPLAZAR TODO EL SCRIPT DE dashboard.html ====================
@@ -958,19 +1001,43 @@
                         return;
                     }
                     
-                    // IMPORTANTE: Verificar que la fecha sea correcta
+                    // ⭐ NUEVA VALIDACIÓN: Verificar día permitido según membresía
                     const [year, month, day] = selectedDate.split('-');
                     const reservationDate = new Date(year, month - 1, day);
-                    const dayName = reservationDate.toLocaleDateString('es-ES', { weekday: 'long' });
+                    const dayOfWeek = reservationDate.getDay();
+                    const dayNames = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+                    const dayName = dayNames[dayOfWeek];
+                    const dayNameDisplay = reservationDate.toLocaleDateString('es-ES', { weekday: 'long' });
+                    
+                    // Verificar si el usuario tiene membresía de 3 veces y si el día está permitido
+                    if (membershipData && membershipData.planType === 'tres-veces') {
+                        if (!membershipData.trainingDays || !membershipData.trainingDays.includes(dayName)) {
+                            const allowedDays = membershipData.trainingDays 
+                                ? membershipData.trainingDays.map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ')
+                                : 'No configurados';
+                            
+                            if (typeof showCustomAlert === 'function') {
+                                showCustomAlert('error', 'Día No Permitido', 
+                                    `Tu membresía de 3 veces por semana solo permite asistir los días:<br><br>` +
+                                    `<strong>${allowedDays}</strong><br><br>` +
+                                    `El ${dayNameDisplay} ${day}/${month}/${year} no está incluido en tu plan.`
+                                );
+                            } else {
+                                alert(`Tu membresía solo permite asistir: ${allowedDays}.\nEl ${dayNameDisplay} no está permitido.`);
+                            }
+                            return;
+                        }
+                    }
                     
                     console.log('📅 Reservando:', {
                         fecha: selectedDate,
-                        dia: dayName,
+                        dia: dayNameDisplay,
                         hora: selectedTime,
-                        clase: className
+                        clase: className,
+                        diaPermitido: membershipData?.planType !== 'tres-veces' || membershipData?.trainingDays?.includes(dayName)
                     });
                     
-                    const response = await fetch('/api/reserve-class', {
+                    const response = await fetch('/api/reserve-class/improved', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -987,11 +1054,14 @@
                     if (result.success) {
                         if (typeof showCustomAlert === 'function') {
                             showCustomAlert('success', '¡Reserva Exitosa!', 
-                                `Tu clase de ${className} ha sido reservada para el ${dayName} ${day}/${month}/${year} a las ${selectedTime}`,
+                                `Tu clase de ${className} ha sido reservada para el ${dayNameDisplay} ${day}/${month}/${year} a las ${selectedTime}`,
                                 () => {
                                     loadMyReservations();
                                     if (typeof loadUserReservations === 'function') {
                                         loadUserReservations();
+                                    }
+                                    if (typeof generateCalendar === 'function') {
+                                        generateCalendar();
                                     }
                                 }
                             );
@@ -1016,7 +1086,6 @@
                     }
                 }
             }
-
             // Cancelar reserva
             async function cancelReservation(reservationId) {
                 const confirmCancel = typeof showConfirmAlert === 'function' 
@@ -1133,6 +1202,156 @@
                 } catch (error) {
                     console.error('Error cerrando sesión:', error);
                     window.location.href = '/';
+                }
+            });
+
+            // Función para mostrar información del día
+            function showDayInfo(day, month, year) {
+                const date = new Date(year, month, day);
+                const dateStr = date.toLocaleDateString('es-ES', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                
+                // Buscar reservas para ese día
+                const dayReservations = userReservations.filter(reservation => {
+                    const [resYear, resMonth, resDay] = reservation.date.split('T')[0].split('-');
+                    return parseInt(resYear) === year && 
+                        parseInt(resMonth) === month + 1 && 
+                        parseInt(resDay) === day;
+                });
+                
+                // Actualizar título
+                document.getElementById('modal-day-title').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+                
+                const content = document.getElementById('day-info-content');
+                
+                if (dayReservations.length === 0) {
+                    content.innerHTML = `
+                        <div style="text-align: center; padding: 2rem;">
+                            <i class="fas fa-calendar-times" style="font-size: 3rem; color: var(--gris-claro); margin-bottom: 1rem;"></i>
+                            <p style="color: var(--gris-claro);">No tienes clases reservadas para este día</p>
+                            <button class="btn-primary" onclick="closeDayModal(); document.getElementById('horarios').scrollIntoView({behavior: 'smooth'});" style="margin-top: 1rem;">
+                                <i class="fas fa-plus"></i> Reservar Clase
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = `
+                        <div style="padding: 1rem;">
+                            <h4 style="color: var(--violeta-claro); margin-bottom: 1.5rem;">
+                                <i class="fas fa-dumbbell"></i> Clases Reservadas
+                            </h4>
+                            ${dayReservations.map(reservation => {
+                                const classColor = getClassColor(reservation.className);
+                                return `
+                                    <div style="background: var(--negro); padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem; border-left: 4px solid ${classColor};">
+                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                                            <div>
+                                                <h5 style="color: var(--blanco); font-size: 1.2rem; margin-bottom: 0.5rem;">
+                                                    <i class="fas fa-dumbbell" style="color: ${classColor};"></i> 
+                                                    ${reservation.className}
+                                                </h5>
+                                                <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                                    <i class="fas fa-clock"></i> ${reservation.time}
+                                                </p>
+                                                <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                                    <i class="fas fa-user-tie"></i> ${reservation.classId?.instructor || 'Instructor FitZone'}
+                                                </p>
+                                                <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                                    <i class="fas fa-info-circle"></i> Duración: ${reservation.classId?.duration || '60 minutos'}
+                                                </p>
+                                            </div>
+                                            <button 
+                                                onclick="cancelReservationFromModal('${reservation._id}')" 
+                                                style="background: #ef4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; transition: all 0.3s;"
+                                                onmouseover="this.style.background='#dc2626'"
+                                                onmouseout="this.style.background='#ef4444'"
+                                            >
+                                                <i class="fas fa-times"></i> Cancelar
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('day-info-modal').style.display = 'flex';
+            }
+
+            // Función para cerrar modal
+            function closeDayModal() {
+                document.getElementById('day-info-modal').style.display = 'none';
+            }
+
+            // Función para cancelar desde el modal
+            async function cancelReservationFromModal(reservationId) {
+                const confirmCancel = typeof showConfirmAlert === 'function' 
+                    ? await new Promise(resolve => {
+                        showConfirmAlert(
+                            'Cancelar Reserva',
+                            '¿Estás seguro de que quieres cancelar esta reserva?',
+                            () => resolve(true),
+                            () => resolve(false)
+                        );
+                    })
+                    : confirm('¿Estás seguro de que quieres cancelar esta reserva?');
+                
+                if (!confirmCancel) return;
+                
+                try {
+                    const response = await fetch(`/api/cancel-reservation/${reservationId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        closeDayModal();
+                        
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', 'Reserva Cancelada', 'Tu reserva ha sido cancelada exitosamente', () => {
+                                loadMyReservations();
+                                if (typeof loadUserReservations === 'function') {
+                                    loadUserReservations();
+                                }
+                                if (typeof generateCalendar === 'function') {
+                                    generateCalendar();
+                                }
+                            });
+                        } else {
+                            alert('Reserva cancelada exitosamente');
+                            loadMyReservations();
+                            loadUserReservations();
+                            generateCalendar();
+                        }
+                    } else {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('error', 'Error', result.message || 'No se pudo cancelar la reserva');
+                        } else {
+                            alert(result.message || 'Error al cancelar la reserva');
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error de Conexión', 'No se pudo cancelar la reserva. Intenta nuevamente.');
+                    } else {
+                        alert('Error de conexión. Intenta nuevamente.');
+                    }
+                }
+            }
+
+            // Cerrar modal al hacer clic fuera
+            window.addEventListener('click', function(e) {
+                const modal = document.getElementById('day-info-modal');
+                if (e.target === modal) {
+                    closeDayModal();
                 }
             });
         </script>
