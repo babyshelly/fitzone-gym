@@ -1,5 +1,4 @@
-// Cargar variables de entorno
-require('dotenv').config();
+require('dotenv').config(); // ⭐ PRIMERO: Cargar variables de entorno
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -8,7 +7,10 @@ const nodemailer = require('nodemailer');
 const session = require('express-session');
 const path = require('path');
 
-// Configurar transporte de email
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// ============== CONFIGURACIÓN DE EMAIL ==============
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -16,25 +18,24 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASS
     },
     tls: {
-        rejectUnauthorized: false // Para desarrollo
+        rejectUnauthorized: false
     }
 });
 
 // Verificar conexión de email al iniciar
 transporter.verify(function(error, success) {
     if (error) {
-        console.log('❌ Error configurando email:', error);
-        console.log('⚠️ IMPORTANTE: Verifica EMAIL_USER y EMAIL_PASS en .env');
+        console.log('❌ Error configurando email:', error.message);
+        console.log('⚠️ Verifica EMAIL_USER y EMAIL_PASS en variables de entorno');
     } else {
-        console.log('✅ Servidor de email listo para enviar mensajes');
+        console.log('✅ Servidor de email listo');
     }
 });
 
-// Función mejorada para enviar email de confirmación
+// Función para enviar email de confirmación
 async function sendOrderConfirmationEmail(customerEmail, customerName, orderId, items, total) {
-    // Validar que tenemos configuración de email
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.error('❌ EMAIL_USER o EMAIL_PASS no configurados en .env');
+        console.error('❌ EMAIL_USER o EMAIL_PASS no configurados');
         return false;
     }
 
@@ -84,7 +85,7 @@ ${itemsList}
                     </p>
                     
                     <div style="text-align: center; margin-top: 30px;">
-                        <a href="http://localhost:3000/dashboard" 
+                        <a href="https://fitzone-gym.onrender.com/dashboard" 
                            style="background: linear-gradient(135deg, #7f4ca5, #4b1c71); 
                                   color: white; 
                                   padding: 12px 30px; 
@@ -98,7 +99,7 @@ ${itemsList}
                 </div>
                 
                 <div style="text-align: center; margin-top: 20px; padding: 15px; color: #999; font-size: 12px;">
-                    <p>¿Preguntas? Contáctanos en ${process.env.EMAIL_USER}</p>
+                    <p>¿Preguntas? Contáctanos en info@fitzone.com</p>
                     <p>FitZone Gym - Tu gimnasio de confianza</p>
                 </div>
             </div>
@@ -107,22 +108,16 @@ ${itemsList}
     
     try {
         const info = await transporter.sendMail(mailOptions);
-        console.log('✅ Email de confirmación enviado a:', customerEmail);
+        console.log('✅ Email enviado a:', customerEmail);
         console.log('📧 Message ID:', info.messageId);
         return true;
     } catch (error) {
-        console.error('❌ Error enviando email:', error);
-        console.error('Detalles:', error.message);
+        console.error('❌ Error enviando email:', error.message);
         return false;
     }
 }
-const session = require('express-session');
-const path = require('path');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Middleware
+// ============== MIDDLEWARE ==============
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
@@ -136,11 +131,10 @@ app.use(session({
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000,
-        sameSite: 'lax' // 👈 AGREGAR ESTO
+        sameSite: 'lax'
     },
-    proxy: process.env.NODE_ENV === 'production' // 👈 AGREGAR ESTO
+    proxy: process.env.NODE_ENV === 'production'
 }));
-
 // Schema del Usuario
 const userSchema = new mongoose.Schema({
     fullName: { type: String, required: true },

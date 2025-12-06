@@ -4,14 +4,12 @@
   "description": "Sistema de gestión para gimnasio FitZone",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.2",
-    "dotenv": "^17.2.3",
+    "dotenv": "^16.4.1",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
     "mongoose": "^8.18.1",
