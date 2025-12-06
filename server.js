@@ -1,6 +1,95 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
+
+// Configurar transporte de email
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
+
+// Función para enviar email de confirmación de compra
+async function sendOrderConfirmationEmail(customerEmail, customerName, orderId, items, total) {
+    const itemsList = items.map(item => 
+        `- ${item.name} x${item.quantity} - $${(item.price * item.quantity).toLocaleString()}`
+    ).join('\n');
+    
+    const mailOptions = {
+        from: `FitZone Gym <${process.env.EMAIL_USER}>`,
+        to: customerEmail,
+        subject: `Confirmación de Pedido #${orderId} - FitZone`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #1a1a1a; color: #fff; padding: 20px; border-radius: 10px;">
+                <div style="background: linear-gradient(135deg, #4b1c71, #7f4ca5); padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+                    <h1 style="margin: 0; color: #fff;">🏋️ FitZone Gym</h1>
+                </div>
+                
+                <div style="padding: 30px 20px; background: #333; border-radius: 0 0 10px 10px;">
+                    <h2 style="color: #b57edc; margin-bottom: 10px;">¡Gracias por tu compra, ${customerName}!</h2>
+                    
+                    <p style="color: #ddd; font-size: 16px; line-height: 1.6;">
+                        Tu pedido <strong style="color: #b57edc;">#${orderId}</strong> ha sido registrado exitosamente.
+                    </p>
+                    
+                    <div style="background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #7f4ca5;">
+                        <h3 style="color: #b57edc; margin-top: 0;">📦 Detalles de tu Pedido</h3>
+                        <div style="color: #ddd; line-height: 1.8; white-space: pre-line;">
+${itemsList}
+                        </div>
+                        <hr style="border: none; border-top: 1px solid #555; margin: 15px 0;">
+                        <p style="font-size: 18px; color: #b57edc; margin: 10px 0;">
+                            <strong>Total: $${Math.round(total).toLocaleString()}</strong>
+                        </p>
+                    </div>
+                    
+                    <div style="background: rgba(127, 76, 165, 0.2); padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <p style="margin: 5px 0; color: #ddd;">
+                            📧 <strong>Email:</strong> ${customerEmail}
+                        </p>
+                        <p style="margin: 5px 0; color: #ddd;">
+                            📅 <strong>Fecha:</strong> ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                    </div>
+                    
+                    <p style="color: #ddd; font-size: 14px; line-height: 1.6; margin-top: 20px;">
+                        Recibirás un email de seguimiento cuando tu pedido esté en camino.
+                    </p>
+                    
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="https://fitzone-gym.onrender.com/dashboard" 
+                           style="background: linear-gradient(135deg, #7f4ca5, #4b1c71); 
+                                  color: white; 
+                                  padding: 12px 30px; 
+                                  text-decoration: none; 
+                                  border-radius: 8px; 
+                                  display: inline-block;
+                                  font-weight: bold;">
+                            Ver Mi Dashboard
+                        </a>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px; padding: 15px; color: #999; font-size: 12px;">
+                    <p>¿Preguntas? Contáctanos en info@fitzone.com</p>
+                    <p>FitZone Gym - Tu gimnasio de confianza</p>
+                </div>
+            </div>
+        `
+    };
+    
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log('✅ Email de confirmación enviado a:', customerEmail);
+        return true;
+    } catch (error) {
+        console.error('❌ Error enviando email:', error);
+        return false;
+    }
+}
 const session = require('express-session');
 const path = require('path');
 
