@@ -232,6 +232,20 @@
                                 </label>
                             </div>
 
+                            <!-- ⭐ CHECKBOX DE TÉRMINOS - DEBE ESTAR AQUÍ -->
+                            <div class="terms-acceptance" style="margin: 2rem 0;">
+                                <label class="checkbox-label" style="display: flex; align-items: center; gap: 1rem; cursor: pointer;">
+                                    <input type="checkbox" id="terms" required style="width: 20px; height: 20px; cursor: pointer;">
+                                    <span style="color: var(--gris-claro);">
+                                        Acepto los 
+                                        <a href="#" onclick="event.preventDefault(); showTerms();" style="color: var(--violeta-claro); text-decoration: none;">términos y condiciones</a> 
+                                        y la 
+                                        <a href="#" onclick="event.preventDefault(); showPrivacy();" style="color: var(--violeta-claro); text-decoration: none;">política de privacidad</a>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Botones de navegación -->
                             <div class="checkout-actions">
                                 <button type="button" class="btn-secondary" onclick="goToCheckoutStep(2)">
                                     <i class="fas fa-arrow-left"></i> Volver
@@ -467,8 +481,23 @@
 
             // Completar compra
             async function completePurchase() {
-                // Validar términos
-                if (!document.getElementById('terms').checked) {
+                console.log('🚀 Iniciando completePurchase...');
+                
+                // VALIDACIÓN 1: Verificar checkbox de términos
+                const termsCheckbox = document.getElementById('terms');
+                
+                if (!termsCheckbox) {
+                    console.error('❌ Checkbox de términos no encontrado en el DOM');
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error del Sistema', 'No se pudo validar los términos. Recarga la página.');
+                    } else {
+                        alert('Error: No se encontró el checkbox de términos. Recarga la página.');
+                    }
+                    return;
+                }
+                
+                if (!termsCheckbox.checked) {
+                    console.log('⚠️ Términos no aceptados');
                     if (typeof showCustomAlert === 'function') {
                         showCustomAlert('warning', 'Términos Requeridos', 'Debes aceptar los términos y condiciones para continuar.');
                     } else {
@@ -477,13 +506,27 @@
                     return;
                 }
                 
-                // Validar paso actual
+                console.log('✅ Términos aceptados');
+                
+                // VALIDACIÓN 2: Verificar paso actual
                 if (!validateCheckoutStep(3)) {
+                    console.log('❌ Validación del paso 3 falló');
                     return;
                 }
                 
+                console.log('✅ Validación del paso 3 pasó');
+                
                 // Obtener botón y deshabilitarlo
                 const submitBtn = document.querySelector('.checkout-actions .btn-primary');
+                
+                if (!submitBtn) {
+                    console.error('❌ Botón de submit no encontrado');
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error del Sistema', 'No se pudo procesar la compra. Recarga la página.');
+                    }
+                    return;
+                }
+                
                 const originalBtnText = submitBtn.innerHTML;
                 
                 // Deshabilitar botón y mostrar feedback
@@ -492,25 +535,49 @@
                 submitBtn.style.opacity = '0.7';
                 submitBtn.style.cursor = 'not-allowed';
                 
-                console.log('🛒 Iniciando proceso de compra...');
+                console.log('🔄 Botón deshabilitado, preparando datos...');
                 
                 try {
+                    // Verificar que tenemos items en el carrito
+                    if (!cartItems || cartItems.length === 0) {
+                        throw new Error('El carrito está vacío');
+                    }
+                    
+                    console.log('📦 Items en carrito:', cartItems.length);
+                    
+                    // Recopilar datos del formulario
+                    const customerName = document.getElementById('checkout-name')?.value.trim();
+                    const customerEmail = document.getElementById('checkout-email')?.value.trim();
+                    const customerPhone = document.getElementById('checkout-phone')?.value.trim();
+                    const customerDNI = document.getElementById('checkout-dni')?.value.trim();
+                    
+                    // Validar datos básicos
+                    if (!customerName || !customerEmail || !customerPhone || !customerDNI) {
+                        throw new Error('Datos del cliente incompletos');
+                    }
+                    
+                    console.log('✅ Datos del cliente validados');
+                    console.log('👤 Cliente:', customerEmail);
+                    
                     const purchaseData = {
                         customer: {
-                            name: document.getElementById('checkout-name').value.trim(),
-                            email: document.getElementById('checkout-email').value.trim(),
-                            phone: document.getElementById('checkout-phone').value.trim(),
-                            dni: document.getElementById('checkout-dni').value.trim()
+                            name: customerName,
+                            email: customerEmail,
+                            phone: customerPhone,
+                            dni: customerDNI
                         },
                         shipping: {
-                            method: document.querySelector('input[name="shipping"]:checked').value,
-                            cost: shippingCost
+                            method: document.querySelector('input[name="shipping"]:checked')?.value || 'fitzone',
+                            cost: shippingCost || 0
                         },
                         payment: {
-                            method: document.querySelector('input[name="payment"]:checked').value
+                            method: document.querySelector('input[name="payment"]:checked')?.value || 'efectivo'
                         },
                         items: cartItems
                     };
+                    
+                    console.log('💳 Método de pago:', purchaseData.payment.method);
+                    console.log('🚚 Método de envío:', purchaseData.shipping.method);
                     
                     // Validar email
                     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -518,34 +585,44 @@
                         throw new Error('Email inválido');
                     }
                     
-                    // Agregar dirección si corresponde
+                    // Agregar dirección si NO es retiro en FitZone
                     if (purchaseData.shipping.method !== 'fitzone') {
-                        const street = document.getElementById('address-street').value.trim();
-                        const city = document.getElementById('address-city').value.trim();
-                        const province = document.getElementById('address-province').value.trim();
-                        const zipcode = document.getElementById('address-zipcode').value.trim();
+                        const street = document.getElementById('address-street')?.value.trim();
+                        const city = document.getElementById('address-city')?.value.trim();
+                        const province = document.getElementById('address-province')?.value.trim();
+                        const zipcode = document.getElementById('address-zipcode')?.value.trim();
                         
                         if (!street || !city || !province || !zipcode) {
-                            throw new Error('Dirección incompleta');
+                            throw new Error('Dirección incompleta. Completa todos los campos de dirección.');
                         }
                         
                         purchaseData.shipping.address = {
                             street: street,
-                            floor: document.getElementById('address-floor').value.trim(),
+                            floor: document.getElementById('address-floor')?.value.trim() || '',
                             city: city,
                             province: province,
                             zipcode: zipcode,
-                            notes: document.getElementById('address-notes').value.trim()
+                            notes: document.getElementById('address-notes')?.value.trim() || ''
                         };
+                        
+                        console.log('📍 Dirección agregada');
                     }
                     
-                    console.log('📤 Enviando datos al servidor...');
-                    console.log('Items:', purchaseData.items.length);
-                    console.log('Total:', cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0) + shippingCost);
+                    // Calcular totales
+                    const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                    const finalSubtotal = purchaseData.payment.method === 'mercadopago' ? subtotal * 1.05 : subtotal;
+                    const total = finalSubtotal + purchaseData.shipping.cost;
+                    
+                    console.log('💰 Subtotal:', subtotal);
+                    console.log('💰 Total:', total);
+                    console.log('📤 Enviando petición al servidor...');
                     
                     // Enviar petición con timeout
                     const controller = new AbortController();
-                    const timeout = setTimeout(() => controller.abort(), 30000); // 30 segundos
+                    const timeout = setTimeout(() => {
+                        console.error('⏱️ Timeout: la petición tardó más de 30 segundos');
+                        controller.abort();
+                    }, 30000); // 30 segundos
                     
                     const response = await fetch('/api/checkout/complete', {
                         method: 'POST',
@@ -561,19 +638,21 @@
                     console.log('📨 Respuesta recibida, status:', response.status);
                     
                     if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('❌ Error del servidor:', errorText);
                         throw new Error(`Error del servidor: ${response.status}`);
                     }
                     
                     const result = await response.json();
-                    console.log('✅ Resultado:', result);
+                    console.log('✅ Resultado parseado:', result);
                     
                     if (result.success) {
+                        console.log('🎉 Compra exitosa!');
+                        console.log('🆔 Order ID:', result.orderId);
+                        
                         // Limpiar carrito local
                         localStorage.removeItem('fitzone_cart');
                         cartItems = [];
-                        
-                        // Calcular total
-                        const total = purchaseData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0) + shippingCost;
                         
                         // Mostrar confirmación
                         if (typeof showCustomAlert === 'function') {
@@ -596,11 +675,13 @@
                         }
                         
                     } else {
-                        throw new Error(result.message || 'Error desconocido');
+                        console.error('❌ Compra falló:', result.message);
+                        throw new Error(result.message || 'Error desconocido en la compra');
                     }
                     
                 } catch (error) {
-                    console.error('❌ Error en checkout:', error);
+                    console.error('❌ ERROR EN CHECKOUT:', error);
+                    console.error('Stack:', error.stack);
                     
                     // Reactivar botón
                     submitBtn.disabled = false;
@@ -615,7 +696,11 @@
                     } else if (error.message.includes('Email inválido')) {
                         errorMessage += 'Verifica que tu email sea correcto.';
                     } else if (error.message.includes('Dirección incompleta')) {
-                        errorMessage += 'Completa todos los campos de dirección.';
+                        errorMessage += error.message;
+                    } else if (error.message.includes('carrito está vacío')) {
+                        errorMessage += 'Tu carrito está vacío.';
+                    } else if (error.message.includes('Datos del cliente incompletos')) {
+                        errorMessage += 'Completa todos tus datos personales.';
                     } else if (error.message.includes('Failed to fetch')) {
                         errorMessage += 'Problemas de conexión. Verifica tu internet.';
                     } else {
