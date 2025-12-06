@@ -1,7 +1,12 @@
+// Cargar variables de entorno
+require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
+const session = require('express-session');
+const path = require('path');
 
 // Configurar transporte de email
 const transporter = nodemailer.createTransport({
@@ -9,11 +14,30 @@ const transporter = nodemailer.createTransport({
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        rejectUnauthorized: false // Para desarrollo
     }
 });
 
-// Función para enviar email de confirmación de compra
+// Verificar conexión de email al iniciar
+transporter.verify(function(error, success) {
+    if (error) {
+        console.log('❌ Error configurando email:', error);
+        console.log('⚠️ IMPORTANTE: Verifica EMAIL_USER y EMAIL_PASS en .env');
+    } else {
+        console.log('✅ Servidor de email listo para enviar mensajes');
+    }
+});
+
+// Función mejorada para enviar email de confirmación
 async function sendOrderConfirmationEmail(customerEmail, customerName, orderId, items, total) {
+    // Validar que tenemos configuración de email
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.error('❌ EMAIL_USER o EMAIL_PASS no configurados en .env');
+        return false;
+    }
+
     const itemsList = items.map(item => 
         `- ${item.name} x${item.quantity} - $${(item.price * item.quantity).toLocaleString()}`
     ).join('\n');
@@ -21,7 +45,7 @@ async function sendOrderConfirmationEmail(customerEmail, customerName, orderId, 
     const mailOptions = {
         from: `FitZone Gym <${process.env.EMAIL_USER}>`,
         to: customerEmail,
-        subject: `Confirmación de Pedido #${orderId} - FitZone`,
+        subject: `✅ Confirmación de Pedido #${orderId} - FitZone`,
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #1a1a1a; color: #fff; padding: 20px; border-radius: 10px;">
                 <div style="background: linear-gradient(135deg, #4b1c71, #7f4ca5); padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
@@ -60,7 +84,7 @@ ${itemsList}
                     </p>
                     
                     <div style="text-align: center; margin-top: 30px;">
-                        <a href="https://fitzone-gym.onrender.com/dashboard" 
+                        <a href="http://localhost:3000/dashboard" 
                            style="background: linear-gradient(135deg, #7f4ca5, #4b1c71); 
                                   color: white; 
                                   padding: 12px 30px; 
@@ -74,7 +98,7 @@ ${itemsList}
                 </div>
                 
                 <div style="text-align: center; margin-top: 20px; padding: 15px; color: #999; font-size: 12px;">
-                    <p>¿Preguntas? Contáctanos en info@fitzone.com</p>
+                    <p>¿Preguntas? Contáctanos en ${process.env.EMAIL_USER}</p>
                     <p>FitZone Gym - Tu gimnasio de confianza</p>
                 </div>
             </div>
@@ -82,11 +106,13 @@ ${itemsList}
     };
     
     try {
-        await transporter.sendMail(mailOptions);
+        const info = await transporter.sendMail(mailOptions);
         console.log('✅ Email de confirmación enviado a:', customerEmail);
+        console.log('📧 Message ID:', info.messageId);
         return true;
     } catch (error) {
         console.error('❌ Error enviando email:', error);
+        console.error('Detalles:', error.message);
         return false;
     }
 }
@@ -1771,76 +1797,118 @@ const enhancedOrderSchema = new mongoose.Schema({
 // O actualizar el existente agregando los campos nuevos
 
 // API: Completar checkout
-app.post('/api/checkout/complete', requireAuth, async (req, res) => {
+app.post('/api/checkout/complete', requireAuth, async function(req, res) {
+    console.log('🛒 Procesando checkout...');
+    
     try {
         const { customer, shipping, payment, items } = req.body;
         
-        // Validar que hay items
+        // VALIDACIÓN 1: Verificar que hay items
         if (!items || items.length === 0) {
+            console.log('❌ Error: No hay items en el pedido');
             return res.json({
                 success: false,
                 message: 'No hay productos en el carrito'
             });
         }
         
+        // VALIDACIÓN 2: Verificar datos del cliente
+        if (!customer || !customer.email || !customer.name) {
+            console.log('❌ Error: Datos del cliente incompletos');
+            return res.json({
+                success: false,
+                message: 'Datos del cliente incompletos'
+            });
+        }
+        
+        console.log('✅ Validaciones pasadas');
+        console.log('📦 Items:', items.length);
+        console.log('👤 Cliente:', customer.email);
+        
         // Calcular subtotal
         const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        console.log('💰 Subtotal calculado:', subtotal);
         
         // Aplicar recargo de Mercado Pago si corresponde
         let finalSubtotal = subtotal;
-        if (payment.method === 'mercadopago') {
+        if (payment && payment.method === 'mercadopago') {
             finalSubtotal = subtotal * 1.05;
+            console.log('💳 Recargo MP aplicado:', finalSubtotal);
         }
         
         // Calcular total con envío
-        const total = finalSubtotal + shipping.cost;
+        const shippingCost = shipping && shipping.cost ? shipping.cost : 0;
+        const total = finalSubtotal + shippingCost;
+        console.log('🚚 Costo envío:', shippingCost);
+        console.log('💵 Total final:', total);
         
         // Crear la orden
         const newOrder = new Order({
             userId: req.session.user.id,
             items: items,
             total: Math.round(total),
-            status: 'completed', // O 'pending' si requiere confirmación
-            // Si usas el schema mejorado:
-            // customer: customer,
-            // shipping: shipping,
-            // payment: payment,
-            // subtotal: Math.round(finalSubtotal)
+            status: 'completed'
         });
         
+        console.log('💾 Guardando orden...');
         await newOrder.save();
+        console.log('✅ Orden guardada con ID:', newOrder._id);
         
-        // Enviar email de confirmación
+        // Generar ID corto para mostrar al usuario
         const orderId = newOrder._id.toString().slice(-8).toUpperCase();
-        await sendOrderConfirmationEmail(
-            customer.email,
-            customer.name,
-            orderId,
-            items,
-            total
-        );
+        console.log('🎫 Order ID público:', orderId);
+        
+        // Intentar enviar email (no bloquear si falla)
+        console.log('📧 Intentando enviar email de confirmación...');
+        try {
+            const emailSent = await sendOrderConfirmationEmail(
+                customer.email,
+                customer.name,
+                orderId,
+                items,
+                total
+            );
+            
+            if (emailSent) {
+                console.log('✅ Email enviado exitosamente');
+            } else {
+                console.log('⚠️ Email no enviado pero orden creada');
+            }
+        } catch (emailError) {
+            console.error('❌ Error en envío de email:', emailError);
+            // No fallar la compra si el email falla
+        }
         
         // Limpiar el carrito del usuario
+        console.log('🧹 Limpiando carrito...');
         await Cart.findOneAndUpdate(
             { userId: req.session.user.id },
             { items: [], updatedAt: new Date() }
         );
+        console.log('✅ Carrito limpiado');
         
-        // Aquí podrías enviar un email de confirmación
-        // await sendOrderConfirmationEmail(customer.email, newOrder);
-        
+        // RESPUESTA EXITOSA
+        console.log('✅ Checkout completado exitosamente');
         res.json({
             success: true,
             message: 'Compra realizada exitosamente',
-            orderId: newOrder._id.toString().slice(-8).toUpperCase(),
-            order: newOrder
+            orderId: orderId,
+            order: {
+                _id: newOrder._id,
+                total: newOrder.total,
+                items: newOrder.items,
+                createdAt: newOrder.createdAt
+            }
         });
         
     } catch (error) {
-        console.error('Error en checkout:', error);
-        res.json({
+        console.error('❌ ERROR CRÍTICO EN CHECKOUT:', error);
+        console.error('Stack:', error.stack);
+        
+        res.status(500).json({
             success: false,
-            message: 'Error al procesar la compra'
+            message: 'Error al procesar la compra. Por favor intenta nuevamente.',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 });

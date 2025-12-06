@@ -467,70 +467,166 @@
 
             // Completar compra
             async function completePurchase() {
+                // Validar términos
+                if (!document.getElementById('terms').checked) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Términos Requeridos', 'Debes aceptar los términos y condiciones para continuar.');
+                    } else {
+                        alert('Debes aceptar los términos y condiciones.');
+                    }
+                    return;
+                }
+                
+                // Validar paso actual
                 if (!validateCheckoutStep(3)) {
                     return;
                 }
-
-                const purchaseData = {
-                    customer: {
-                        name: document.getElementById('checkout-name').value,
-                        email: document.getElementById('checkout-email').value,
-                        phone: document.getElementById('checkout-phone').value,
-                        dni: document.getElementById('checkout-dni').value
-                    },
-                    shipping: {
-                        method: document.querySelector('input[name="shipping"]:checked').value,
-                        cost: shippingCost
-                    },
-                    payment: {
-                        method: document.querySelector('input[name="payment"]:checked').value
-                    },
-                    items: cartItems
-                };
-
-                // Agregar dirección si corresponde
-                if (purchaseData.shipping.method !== 'fitzone') {
-                    purchaseData.shipping.address = {
-                        street: document.getElementById('address-street').value,
-                        floor: document.getElementById('address-floor').value,
-                        city: document.getElementById('address-city').value,
-                        province: document.getElementById('address-province').value,
-                        zipcode: document.getElementById('address-zipcode').value,
-                        notes: document.getElementById('address-notes').value
-                    };
-                }
-
+                
+                // Obtener botón y deshabilitarlo
+                const submitBtn = document.querySelector('.checkout-actions .btn-primary');
+                const originalBtnText = submitBtn.innerHTML;
+                
+                // Deshabilitar botón y mostrar feedback
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+                submitBtn.style.opacity = '0.7';
+                submitBtn.style.cursor = 'not-allowed';
+                
+                console.log('🛒 Iniciando proceso de compra...');
+                
                 try {
+                    const purchaseData = {
+                        customer: {
+                            name: document.getElementById('checkout-name').value.trim(),
+                            email: document.getElementById('checkout-email').value.trim(),
+                            phone: document.getElementById('checkout-phone').value.trim(),
+                            dni: document.getElementById('checkout-dni').value.trim()
+                        },
+                        shipping: {
+                            method: document.querySelector('input[name="shipping"]:checked').value,
+                            cost: shippingCost
+                        },
+                        payment: {
+                            method: document.querySelector('input[name="payment"]:checked').value
+                        },
+                        items: cartItems
+                    };
+                    
+                    // Validar email
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(purchaseData.customer.email)) {
+                        throw new Error('Email inválido');
+                    }
+                    
+                    // Agregar dirección si corresponde
+                    if (purchaseData.shipping.method !== 'fitzone') {
+                        const street = document.getElementById('address-street').value.trim();
+                        const city = document.getElementById('address-city').value.trim();
+                        const province = document.getElementById('address-province').value.trim();
+                        const zipcode = document.getElementById('address-zipcode').value.trim();
+                        
+                        if (!street || !city || !province || !zipcode) {
+                            throw new Error('Dirección incompleta');
+                        }
+                        
+                        purchaseData.shipping.address = {
+                            street: street,
+                            floor: document.getElementById('address-floor').value.trim(),
+                            city: city,
+                            province: province,
+                            zipcode: zipcode,
+                            notes: document.getElementById('address-notes').value.trim()
+                        };
+                    }
+                    
+                    console.log('📤 Enviando datos al servidor...');
+                    console.log('Items:', purchaseData.items.length);
+                    console.log('Total:', cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0) + shippingCost);
+                    
+                    // Enviar petición con timeout
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 30000); // 30 segundos
+                    
                     const response = await fetch('/api/checkout/complete', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(purchaseData)
+                        headers: { 
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(purchaseData),
+                        signal: controller.signal
                     });
-
+                    
+                    clearTimeout(timeout);
+                    
+                    console.log('📨 Respuesta recibida, status:', response.status);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Error del servidor: ${response.status}`);
+                    }
+                    
                     const result = await response.json();
-
+                    console.log('✅ Resultado:', result);
+                    
                     if (result.success) {
-                        // Limpiar carrito
+                        // Limpiar carrito local
                         localStorage.removeItem('fitzone_cart');
+                        cartItems = [];
+                        
+                        // Calcular total
+                        const total = purchaseData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0) + shippingCost;
                         
                         // Mostrar confirmación
-                        const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0) + shippingCost;
-                        showCustomAlert('success', '¡Compra Exitosa!', 
-                            `Tu pedido #${result.orderId} ha sido registrado exitosamente.<br><br>` +
-                            `Total: ${Math.round(total).toLocaleString()}<br><br>` +
-                            `Recibirás un email de confirmación en ${purchaseData.customer.email}`,
-                            () => {
-                                setTimeout(() => {
-                                    window.location.href = '/dashboard';
-                                }, 2000);
-                            }
-                        );
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', '🎉 ¡Compra Exitosa!', 
+                                `Tu pedido <strong>#${result.orderId}</strong> ha sido registrado.<br><br>` +
+                                `💰 Total: <strong>$${Math.round(total).toLocaleString()}</strong><br><br>` +
+                                `📧 Recibirás un email de confirmación en:<br><strong>${purchaseData.customer.email}</strong><br><br>` +
+                                `Redirigiendo al dashboard...`,
+                                () => {
+                                    setTimeout(() => {
+                                        window.location.href = '/dashboard';
+                                    }, 2000);
+                                }
+                            );
+                        } else {
+                            alert(`¡Compra exitosa!\n\nPedido #${result.orderId}\nTotal: $${Math.round(total).toLocaleString()}\n\nRecibirás un email de confirmación.`);
+                            setTimeout(() => {
+                                window.location.href = '/dashboard';
+                            }, 2000);
+                        }
+                        
                     } else {
-                        showCustomAlert('error', 'Error en la Compra', result.message || 'Hubo un problema al procesar tu compra.');
+                        throw new Error(result.message || 'Error desconocido');
                     }
+                    
                 } catch (error) {
-                    console.error('Error:', error);
-                    showCustomAlert('error', 'Error de Conexión', 'No se pudo completar la compra. Verifica tu conexión e intenta nuevamente.');
+                    console.error('❌ Error en checkout:', error);
+                    
+                    // Reactivar botón
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                    
+                    let errorMessage = 'No se pudo completar la compra. ';
+                    
+                    if (error.name === 'AbortError') {
+                        errorMessage += 'La operación tardó demasiado. Intenta nuevamente.';
+                    } else if (error.message.includes('Email inválido')) {
+                        errorMessage += 'Verifica que tu email sea correcto.';
+                    } else if (error.message.includes('Dirección incompleta')) {
+                        errorMessage += 'Completa todos los campos de dirección.';
+                    } else if (error.message.includes('Failed to fetch')) {
+                        errorMessage += 'Problemas de conexión. Verifica tu internet.';
+                    } else {
+                        errorMessage += error.message || 'Error desconocido. Intenta nuevamente.';
+                    }
+                    
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error en Compra', errorMessage);
+                    } else {
+                        alert(errorMessage);
+                    }
                 }
             }
         </script>
