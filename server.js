@@ -445,23 +445,50 @@ async function initializeData() {
     }
 }
 
-// ============== MIDDLEWARE DE AUTENTICACIÓN CORREGIDO ==============
 function requireAuth(req, res, next) {
+    // Para rutas API, devolver JSON
+    if (req.path.startsWith('/api/')) {
+        if (req.session && req.session.user) {
+            return next();
+        } else {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Acceso no autorizado' 
+            });
+        }
+    }
+    
+    // Para rutas HTML, redirigir
     if (req.session && req.session.user) {
         next();
     } else {
-        // En lugar de devolver JSON, redirigir al login
         res.redirect('/login');
     }
 }
 
-// Middleware de admin CORREGIDO
 function requireAdmin(req, res, next) {
+    // Para rutas API, devolver JSON
+    if (req.path.startsWith('/api/')) {
+        if (req.session && req.session.user && req.session.user.role === 'admin') {
+            return next();
+        } else {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Acceso denegado' 
+            });
+        }
+    }
+    
+    // Para rutas HTML, redirigir
     if (req.session && req.session.user && req.session.user.role === 'admin') {
         next();
     } else {
-        // Redirigir a dashboard si no es admin
-        res.redirect('/dashboard');
+        // Si es usuario normal, redirigir a dashboard
+        if (req.session && req.session.user) {
+            res.redirect('/dashboard');
+        } else {
+            res.redirect('/login');
+        }
     }
 }
 
@@ -626,12 +653,30 @@ app.post('/api/login', async (req, res) => {
 });
 
 app.post('/api/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            return res.json({ success: false, message: 'Error al cerrar sesión' });
-        }
-        res.json({ success: true, message: 'Sesión cerrada exitosamente' });
-    });
+    if (req.session) {
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('Error cerrando sesión:', err);
+                return res.json({ 
+                    success: false, 
+                    message: 'Error al cerrar sesión' 
+                });
+            }
+            
+            // Limpiar cookie de sesión
+            res.clearCookie('connect.sid');
+            
+            res.json({ 
+                success: true, 
+                message: 'Sesión cerrada exitosamente' 
+            });
+        });
+    } else {
+        res.json({ 
+            success: true, 
+            message: 'No hay sesión activa' 
+        });
+    }
 });
 
 // ==================== RECUPERACION DE CONTRASEÑA ====================
@@ -1764,6 +1809,16 @@ app.post('/api/checkout/complete', requireAuth, async (req, res) => {
         });
         
         await newOrder.save();
+        
+        // Enviar email de confirmación
+        const orderId = newOrder._id.toString().slice(-8).toUpperCase();
+        await sendOrderConfirmationEmail(
+            customer.email,
+            customer.name,
+            orderId,
+            items,
+            total
+        );
         
         // Limpiar el carrito del usuario
         await Cart.findOneAndUpdate(

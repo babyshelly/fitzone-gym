@@ -1166,42 +1166,57 @@
                 document.getElementById('horarios').scrollIntoView({ behavior: 'smooth' });
             }
             // Cerrar sesión
-            document.querySelector('.btn-logout').addEventListener('click', async function(e) {
-                e.preventDefault();
+            document.addEventListener('DOMContentLoaded', function() {
+                const logoutBtn = document.querySelector('.btn-logout');
                 
-                const confirmLogout = typeof showConfirmAlert === 'function'
-                    ? await new Promise(resolve => {
-                        showConfirmAlert(
-                            'Cerrar Sesión',
-                            '¿Estás seguro de que quieres cerrar sesión?',
-                            () => resolve(true),
-                            () => resolve(false)
-                        );
-                    })
-                    : confirm('¿Estás seguro de que quieres cerrar sesión?');
-                
-                if (!confirmLogout) return;
-                
-                try {
-                    const response = await fetch('/api/logout', {
-                        method: 'POST'
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('success', 'Sesión Cerrada', '¡Hasta pronto!', () => {
-                                window.location.href = '/';
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', async function(e) {
+                        e.preventDefault();
+                        
+                        const confirmLogout = typeof showConfirmAlert === 'function'
+                            ? await new Promise(resolve => {
+                                showConfirmAlert(
+                                    'Cerrar Sesión',
+                                    '¿Estás seguro de que quieres cerrar sesión?',
+                                    () => resolve(true),
+                                    () => resolve(false)
+                                );
+                            })
+                            : confirm('¿Estás seguro de que quieres cerrar sesión?');
+                        
+                        if (!confirmLogout) return;
+                        
+                        try {
+                            const response = await fetch('/api/logout', {
+                                method: 'POST',
+                                credentials: 'same-origin' // IMPORTANTE: Enviar cookies
                             });
-                        } else {
-                            alert('Sesión cerrada. ¡Hasta pronto!');
+                            
+                            const result = await response.json();
+                            
+                            if (result.success) {
+                                // Limpiar almacenamiento local
+                                localStorage.clear();
+                                sessionStorage.clear();
+                                
+                                if (typeof showCustomAlert === 'function') {
+                                    showCustomAlert('success', 'Sesión Cerrada', '¡Hasta pronto!', () => {
+                                        window.location.href = '/';
+                                    });
+                                } else {
+                                    alert('Sesión cerrada. ¡Hasta pronto!');
+                                    window.location.href = '/';
+                                }
+                            } else {
+                                // Aunque falle, redirigir igual
+                                window.location.href = '/';
+                            }
+                        } catch (error) {
+                            console.error('Error cerrando sesión:', error);
+                            // Forzar redirección
                             window.location.href = '/';
                         }
-                    }
-                } catch (error) {
-                    console.error('Error cerrando sesión:', error);
-                    window.location.href = '/';
+                    });
                 }
             });
 

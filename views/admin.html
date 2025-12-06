@@ -246,10 +246,57 @@
 
             // Cargar datos al iniciar
             document.addEventListener('DOMContentLoaded', function() {
-                loadDashboardStats();
-                loadUsers();
-                loadOrders();
-                loadStatistics();
+                const logoutBtn = document.querySelector('.btn-logout');
+                
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', async function(e) {
+                        e.preventDefault();
+                        
+                        const confirmLogout = typeof showConfirmAlert === 'function'
+                            ? await new Promise(resolve => {
+                                showConfirmAlert(
+                                    'Cerrar Sesión',
+                                    '¿Estás seguro de que quieres cerrar sesión?',
+                                    () => resolve(true),
+                                    () => resolve(false)
+                                );
+                            })
+                            : confirm('¿Estás seguro de que quieres cerrar sesión?');
+                        
+                        if (!confirmLogout) return;
+                        
+                        try {
+                            const response = await fetch('/api/logout', {
+                                method: 'POST',
+                                credentials: 'same-origin' // IMPORTANTE: Enviar cookies
+                            });
+                            
+                            const result = await response.json();
+                            
+                            if (result.success) {
+                                // Limpiar almacenamiento local
+                                localStorage.clear();
+                                sessionStorage.clear();
+                                
+                                if (typeof showCustomAlert === 'function') {
+                                    showCustomAlert('success', 'Sesión Cerrada', '¡Hasta pronto!', () => {
+                                        window.location.href = '/';
+                                    });
+                                } else {
+                                    alert('Sesión cerrada. ¡Hasta pronto!');
+                                    window.location.href = '/';
+                                }
+                            } else {
+                                // Aunque falle, redirigir igual
+                                window.location.href = '/';
+                            }
+                        } catch (error) {
+                            console.error('Error cerrando sesión:', error);
+                            // Forzar redirección
+                            window.location.href = '/';
+                        }
+                    });
+                }
             });
 
             // Función para mostrar alertas
