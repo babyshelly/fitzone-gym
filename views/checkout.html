@@ -483,15 +483,30 @@
             async function completePurchase() {
                 console.log('🚀 Iniciando completePurchase...');
                 
-                // VALIDACIÓN 1: Verificar checkbox de términos
+                // Obtener botón PRIMERO
+                const submitBtn = document.querySelector('.checkout-actions .btn-primary');
+                
+                if (!submitBtn) {
+                    console.error('❌ Botón no encontrado');
+                    alert('Error del sistema. Recarga la página.');
+                    return;
+                }
+                
+                // Prevenir doble click
+                if (submitBtn.disabled) {
+                    console.log('⚠️ Botón ya deshabilitado, ignorando click');
+                    return;
+                }
+                
+                // VALIDACIÓN 1: Checkbox de términos
                 const termsCheckbox = document.getElementById('terms');
                 
                 if (!termsCheckbox) {
-                    console.error('❌ Checkbox de términos no encontrado en el DOM');
+                    console.error('❌ Checkbox no encontrado');
                     if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('error', 'Error del Sistema', 'No se pudo validar los términos. Recarga la página.');
+                        showCustomAlert('error', 'Error', 'Checkbox de términos no encontrado. Recarga la página.');
                     } else {
-                        alert('Error: No se encontró el checkbox de términos. Recarga la página.');
+                        alert('Error: Recarga la página.');
                     }
                     return;
                 }
@@ -499,7 +514,7 @@
                 if (!termsCheckbox.checked) {
                     console.log('⚠️ Términos no aceptados');
                     if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('warning', 'Términos Requeridos', 'Debes aceptar los términos y condiciones para continuar.');
+                        showCustomAlert('warning', 'Términos Requeridos', 'Debes aceptar los términos y condiciones.');
                     } else {
                         alert('Debes aceptar los términos y condiciones.');
                     }
@@ -508,50 +523,38 @@
                 
                 console.log('✅ Términos aceptados');
                 
-                // VALIDACIÓN 2: Verificar paso actual
+                // VALIDACIÓN 2: Validar paso 3
                 if (!validateCheckoutStep(3)) {
                     console.log('❌ Validación del paso 3 falló');
                     return;
                 }
                 
-                console.log('✅ Validación del paso 3 pasó');
-                
-                // Obtener botón y deshabilitarlo
-                const submitBtn = document.querySelector('.checkout-actions .btn-primary');
-                
-                if (!submitBtn) {
-                    console.error('❌ Botón de submit no encontrado');
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('error', 'Error del Sistema', 'No se pudo procesar la compra. Recarga la página.');
-                    }
-                    return;
-                }
+                console.log('✅ Paso 3 validado');
                 
                 const originalBtnText = submitBtn.innerHTML;
                 
-                // Deshabilitar botón y mostrar feedback
+                // Deshabilitar botón INMEDIATAMENTE
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando compra...';
                 submitBtn.style.opacity = '0.7';
                 submitBtn.style.cursor = 'not-allowed';
                 
-                console.log('🔄 Botón deshabilitado, preparando datos...');
+                console.log('🔄 Botón deshabilitado');
                 
                 try {
-                    // Verificar que tenemos items en el carrito
+                    // Verificar carrito
                     if (!cartItems || cartItems.length === 0) {
                         throw new Error('El carrito está vacío');
                     }
                     
                     console.log('📦 Items en carrito:', cartItems.length);
                     
-                    // Recopilar datos del formulario
+                    // Recopilar datos
                     const customerName = document.getElementById('checkout-name')?.value.trim();
                     const customerEmail = document.getElementById('checkout-email')?.value.trim();
                     const customerPhone = document.getElementById('checkout-phone')?.value.trim();
                     const customerDNI = document.getElementById('checkout-dni')?.value.trim();
                     
-                    // Validar datos básicos
                     if (!customerName || !customerEmail || !customerPhone || !customerDNI) {
                         throw new Error('Datos del cliente incompletos');
                     }
@@ -585,7 +588,7 @@
                         throw new Error('Email inválido');
                     }
                     
-                    // Agregar dirección si NO es retiro en FitZone
+                    // Agregar dirección si NO es FitZone
                     if (purchaseData.shipping.method !== 'fitzone') {
                         const street = document.getElementById('address-street')?.value.trim();
                         const city = document.getElementById('address-city')?.value.trim();
@@ -593,7 +596,7 @@
                         const zipcode = document.getElementById('address-zipcode')?.value.trim();
                         
                         if (!street || !city || !province || !zipcode) {
-                            throw new Error('Dirección incompleta. Completa todos los campos de dirección.');
+                            throw new Error('Completa todos los campos de dirección.');
                         }
                         
                         purchaseData.shipping.address = {
@@ -615,14 +618,16 @@
                     
                     console.log('💰 Subtotal:', subtotal);
                     console.log('💰 Total:', total);
-                    console.log('📤 Enviando petición al servidor...');
                     
-                    // Enviar petición con timeout
+                    // ⭐ TIMEOUT MÁS LARGO: 2 MINUTOS
+                    console.log('📤 Enviando petición al servidor...');
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando al servidor...';
+                    
                     const controller = new AbortController();
                     const timeout = setTimeout(() => {
-                        console.error('⏱️ Timeout: la petición tardó más de 30 segundos');
+                        console.error('⏱️ TIMEOUT: La operación tardó más de 2 minutos');
                         controller.abort();
-                    }, 30000); // 30 segundos
+                    }, 120000); // 2 minutos
                     
                     const response = await fetch('/api/checkout/complete', {
                         method: 'POST',
@@ -636,31 +641,37 @@
                     clearTimeout(timeout);
                     
                     console.log('📨 Respuesta recibida, status:', response.status);
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando respuesta...';
                     
                     if (!response.ok) {
                         const errorText = await response.text();
                         console.error('❌ Error del servidor:', errorText);
-                        throw new Error(`Error del servidor: ${response.status}`);
+                        throw new Error(`Error del servidor (${response.status})`);
                     }
                     
                     const result = await response.json();
-                    console.log('✅ Resultado parseado:', result);
+                    console.log('✅ Resultado:', result);
                     
                     if (result.success) {
-                        console.log('🎉 Compra exitosa!');
+                        console.log('🎉 ¡COMPRA EXITOSA!');
                         console.log('🆔 Order ID:', result.orderId);
                         
-                        // Limpiar carrito local
+                        // Limpiar carrito
                         localStorage.removeItem('fitzone_cart');
                         cartItems = [];
                         
-                        // Mostrar confirmación
+                        // Mostrar éxito
                         if (typeof showCustomAlert === 'function') {
                             showCustomAlert('success', '🎉 ¡Compra Exitosa!', 
-                                `Tu pedido <strong>#${result.orderId}</strong> ha sido registrado.<br><br>` +
-                                `💰 Total: <strong>$${Math.round(total).toLocaleString()}</strong><br><br>` +
-                                `📧 Recibirás un email de confirmación en:<br><strong>${purchaseData.customer.email}</strong><br><br>` +
-                                `Redirigiendo al dashboard...`,
+                                `<div style="text-align: center;">
+                                    <p style="font-size: 1.2rem; margin-bottom: 1rem;">Tu pedido <strong>#${result.orderId}</strong> ha sido registrado</p>
+                                    <p style="font-size: 1.4rem; color: var(--violeta-claro); margin: 1rem 0;">
+                                        💰 Total: <strong>$${Math.round(total).toLocaleString()}</strong>
+                                    </p>
+                                    <p style="margin: 1rem 0;">📧 Recibirás un email de confirmación en:</p>
+                                    <p style="font-weight: bold; color: var(--violeta-muy-claro);">${purchaseData.customer.email}</p>
+                                    <p style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--gris-claro);">Redirigiendo al dashboard...</p>
+                                </div>`,
                                 () => {
                                     setTimeout(() => {
                                         window.location.href = '/dashboard';
@@ -675,13 +686,12 @@
                         }
                         
                     } else {
-                        console.error('❌ Compra falló:', result.message);
-                        throw new Error(result.message || 'Error desconocido en la compra');
+                        console.error('❌ Compra rechazada:', result.message);
+                        throw new Error(result.message || 'La compra fue rechazada');
                     }
                     
                 } catch (error) {
                     console.error('❌ ERROR EN CHECKOUT:', error);
-                    console.error('Stack:', error.stack);
                     
                     // Reactivar botón
                     submitBtn.disabled = false;
@@ -690,27 +700,34 @@
                     submitBtn.style.cursor = 'pointer';
                     
                     let errorMessage = 'No se pudo completar la compra. ';
+                    let errorTitle = 'Error en Compra';
                     
                     if (error.name === 'AbortError') {
-                        errorMessage += 'La operación tardó demasiado. Intenta nuevamente.';
+                        errorTitle = 'Tiempo de Espera Agotado';
+                        errorMessage = 'La operación tardó demasiado tiempo. Esto puede deberse a:\n\n' +
+                                    '• Problemas de conexión\n' +
+                                    '• El servidor está ocupado\n' +
+                                    '• El envío de email está tardando\n\n' +
+                                    'Por favor verifica tu email por si la compra se procesó, o intenta nuevamente.';
                     } else if (error.message.includes('Email inválido')) {
                         errorMessage += 'Verifica que tu email sea correcto.';
-                    } else if (error.message.includes('Dirección incompleta')) {
+                    } else if (error.message.includes('dirección')) {
                         errorMessage += error.message;
                     } else if (error.message.includes('carrito está vacío')) {
-                        errorMessage += 'Tu carrito está vacío.';
+                        errorMessage += 'Tu carrito está vacío. Agrega productos primero.';
                     } else if (error.message.includes('Datos del cliente incompletos')) {
                         errorMessage += 'Completa todos tus datos personales.';
                     } else if (error.message.includes('Failed to fetch')) {
-                        errorMessage += 'Problemas de conexión. Verifica tu internet.';
+                        errorTitle = 'Error de Conexión';
+                        errorMessage = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
                     } else {
-                        errorMessage += error.message || 'Error desconocido. Intenta nuevamente.';
+                        errorMessage += error.message || 'Error desconocido.';
                     }
                     
                     if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('error', 'Error en Compra', errorMessage);
+                        showCustomAlert('error', errorTitle, errorMessage);
                     } else {
-                        alert(errorMessage);
+                        alert(errorTitle + '\n\n' + errorMessage);
                     }
                 }
             }
