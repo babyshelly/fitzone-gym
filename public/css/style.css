@@ -822,6 +822,9 @@ html {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--violeta-claro);
 }
+
+/*NUEVOOO
+
 /* Estilos para páginas de Login y Registro */
 .login-main {
     min-height: 100vh;
