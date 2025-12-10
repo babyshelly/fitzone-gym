@@ -2483,7 +2483,6 @@ reservationSchema.index({ userId: 1, date: 1 });
 reservationSchema.index({ classId: 1, date: 1, status: 1 });
 membershipSchema.index({ userId: 1, status: 1 });
 membershipSchema.index({ endDate: 1, status: 1 });
-productSchema.index({ category: 1, active: 1 });
 productSchema.index({ featured: 1, active: 1 });
 productSchema.index({ name: 'text', description: 'text', tags: 'text' });
 categorySchema.index({ slug: 1 });
@@ -2748,6 +2747,8 @@ const productSchema = new mongoose.Schema({
         default: Date.now
     }
 });
+
+productSchema.index({ category: 1, active: 1 });
 
 // Middleware para actualizar updatedAt
 productSchema.pre('save', function(next) {
@@ -3248,7 +3249,6 @@ await initializeProductsAndCategories();
 
 // 4. AGREGAR AL FINAL DEL ARCHIVO
 // Agregar índices para mejor rendimiento
-productSchema.index({ category: 1, active: 1 });
 productSchema.index({ featured: 1, active: 1 });
 productSchema.index({ name: 'text', description: 'text', tags: 'text' });
 categorySchema.index({ slug: 1 });
