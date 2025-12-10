@@ -2483,8 +2483,6 @@ reservationSchema.index({ userId: 1, date: 1 });
 reservationSchema.index({ classId: 1, date: 1, status: 1 });
 membershipSchema.index({ userId: 1, status: 1 });
 membershipSchema.index({ endDate: 1, status: 1 });
-productSchema.index({ featured: 1, active: 1 });
-productSchema.index({ name: 'text', description: 'text', tags: 'text' });
 categorySchema.index({ slug: 1 });
 
 // ==================== AGREGAR AL FINAL DE server.js (antes de app.listen) ====================
@@ -2749,6 +2747,8 @@ const productSchema = new mongoose.Schema({
 });
 
 productSchema.index({ category: 1, active: 1 });
+productSchema.index({ featured: 1, active: 1 });
+productSchema.index({ name: 'text', description: 'text', tags: 'text' });
 
 // Middleware para actualizar updatedAt
 productSchema.pre('save', function(next) {
@@ -3247,9 +3247,5 @@ app.patch('/api/admin/products/:id/toggle', requireAuth, requireAdmin, async (re
 // Dentro de initializeData(), después de crear el admin y las clases:
 await initializeProductsAndCategories();
 
-// 4. AGREGAR AL FINAL DEL ARCHIVO
-// Agregar índices para mejor rendimiento
-productSchema.index({ featured: 1, active: 1 });
-productSchema.index({ name: 'text', description: 'text', tags: 'text' });
 categorySchema.index({ slug: 1 });
 
