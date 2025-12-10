@@ -1180,11 +1180,8 @@
                 document.getElementById('product-modal-title').textContent = 'Agregar Producto';
                 document.getElementById('product-form').reset();
                 document.getElementById('product-id').value = '';
-                document.getElementById('product-icon').value = 'fas fa-box';
-                document.getElementById('product-stock').value = 100;
-                document.querySelector('input[name="image-type"][value="icon"]').checked = true;
-                toggleImageType();
-                document.getElementById('product-modal').classList.add('show');
+                document.getElementById('product-modal').style.display = 'flex';
+                loadCategoriesInSelect();
             }
 
             // Editar producto
@@ -1218,8 +1215,17 @@
 
             // Cerrar modal de producto
             function closeProductModal() {
-                document.getElementById('product-modal').classList.remove('show');
+                document.getElementById('product-modal').style.display = 'none';
+                document.getElementById('product-form').reset();
             }
+
+            // Mostrar modal de categorías
+            function showCategoriesModal() {
+                document.getElementById('categories-modal').style.display = 'flex';
+                loadCategoriesList();
+            }
+
+
 
             // Toggle tipo de imagen
             function toggleImageType() {
@@ -1391,13 +1397,14 @@
         <script>
         // ==================== GESTIÓN DE CATEGORÍAS ====================
 
+            // Mostrar modal de categorías
             function showCategoriesModal() {
-                loadCategoriesForModal();
-                document.getElementById('categories-modal').classList.add('show');
+                document.getElementById('categories-modal').style.display = 'flex';
+                loadCategoriesList();
             }
-
+            // Cerrar modal de categorías
             function closeCategoriesModal() {
-                document.getElementById('categories-modal').classList.remove('show');
+                document.getElementById('categories-modal').style.display = 'none';
             }
 
             async function loadCategoriesForModal() {
