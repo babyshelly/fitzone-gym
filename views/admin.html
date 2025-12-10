@@ -238,119 +238,166 @@
         </div>
 
         <script>
-            // Variables globales
+            // ==================== SCRIPT COMPLETAMENTE CORREGIDO PARA admin.html ====================
+            
             let allUsers = [];
             let filteredUsers = [];
             let currentPage = 1;
             const usersPerPage = 10;
 
-            // Cargar datos al iniciar
+            // ==================== CARGAR AL INICIAR ====================
             document.addEventListener('DOMContentLoaded', function() {
-                const logoutBtn = document.querySelector('.btn-logout');
+                console.log('🚀 Panel Admin: Iniciando carga de datos...');
                 
-                if (logoutBtn) {
-                    logoutBtn.addEventListener('click', async function(e) {
-                        e.preventDefault();
-                        
-                        const confirmLogout = typeof showConfirmAlert === 'function'
-                            ? await new Promise(resolve => {
-                                showConfirmAlert(
-                                    'Cerrar Sesión',
-                                    '¿Estás seguro de que quieres cerrar sesión?',
-                                    () => resolve(true),
-                                    () => resolve(false)
-                                );
-                            })
-                            : confirm('¿Estás seguro de que quieres cerrar sesión?');
-                        
-                        if (!confirmLogout) return;
-                        
-                        try {
-                            const response = await fetch('/api/logout', {
-                                method: 'POST',
-                                credentials: 'same-origin' // IMPORTANTE: Enviar cookies
-                            });
-                            
-                            const result = await response.json();
-                            
-                            if (result.success) {
-                                // Limpiar almacenamiento local
-                                localStorage.clear();
-                                sessionStorage.clear();
-                                
-                                if (typeof showCustomAlert === 'function') {
-                                    showCustomAlert('success', 'Sesión Cerrada', '¡Hasta pronto!', () => {
-                                        window.location.href = '/';
-                                    });
-                                } else {
-                                    alert('Sesión cerrada. ¡Hasta pronto!');
-                                    window.location.href = '/';
-                                }
-                            } else {
-                                // Aunque falle, redirigir igual
-                                window.location.href = '/';
-                            }
-                        } catch (error) {
-                            console.error('Error cerrando sesión:', error);
-                            // Forzar redirección
-                            window.location.href = '/';
-                        }
-                    });
-                }
+                // Cargar todos los datos
+                loadDashboardStats();
+                loadUsers();
+                loadOrders();
+                loadStatistics();
+                
+                // Configurar botón de logout
+                setupLogoutButton();
             });
 
-            // Función para mostrar alertas
-            function showCustomAlert(message, type = 'success') {
-                const alert = document.getElementById('global-alert');
-                const alertMessage = document.getElementById('alert-message');
+            // ==================== CONFIGURAR BOTÓN DE LOGOUT ====================
+            function setupLogoutButton() {
+                const logoutBtn = document.querySelector('.btn-logout');
                 
-                alertMessage.textContent = message;
-                alert.className = `alert alert-${type} show`;
+                if (!logoutBtn) {
+                    console.error('❌ Botón de logout no encontrado');
+                    return;
+                }
                 
-                setTimeout(() => {
-                    alert.classList.remove('show');
-                }, 5000);
+                console.log('✅ Configurando botón de logout...');
+                
+                logoutBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    console.log('🚪 Intentando cerrar sesión...');
+                    
+                    const confirmLogout = typeof showConfirmAlert === 'function'
+                        ? await new Promise(resolve => {
+                            showConfirmAlert(
+                                'Cerrar Sesión',
+                                '¿Estás seguro de que quieres cerrar sesión?',
+                                () => resolve(true),
+                                () => resolve(false)
+                            );
+                        })
+                        : confirm('¿Estás seguro de que quieres cerrar sesión?');
+                    
+                    if (!confirmLogout) {
+                        console.log('❌ Logout cancelado por el usuario');
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch('/api/logout', {
+                            method: 'POST',
+                            credentials: 'same-origin'
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            localStorage.clear();
+                            sessionStorage.clear();
+                            
+                            if (typeof showCustomAlert === 'function') {
+                                showCustomAlert('success', 'Sesión Cerrada', '¡Hasta pronto!', () => {
+                                    window.location.href = '/';
+                                });
+                            } else {
+                                alert('Sesión cerrada. ¡Hasta pronto!');
+                                window.location.href = '/';
+                            }
+                        } else {
+                            window.location.href = '/';
+                        }
+                    } catch (error) {
+                        console.error('❌ Error cerrando sesión:', error);
+                        window.location.href = '/';
+                    }
+                });
             }
 
-            // Cargar estadísticas del dashboard
+            // ==================== CARGAR ESTADÍSTICAS ====================
             async function loadDashboardStats() {
+                console.log('📊 Cargando estadísticas del dashboard...');
+                
                 try {
-                    const response = await fetch('/api/admin/dashboard-stats');
+                    const response = await fetch('/api/admin/dashboard-stats', {
+                        credentials: 'same-origin'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
                     const data = await response.json();
                     
                     if (data.success) {
-                        document.getElementById('total-users').textContent = data.stats.totalUsers;
-                        document.getElementById('total-reservas').textContent = data.stats.activeReservations;
-                        document.getElementById('total-ordenes').textContent = data.stats.monthlyOrders;
-                        document.getElementById('total-ingresos').textContent = `$${data.stats.monthlyRevenue.toLocaleString()}`;
+                        console.log('✅ Estadísticas cargadas:', data.stats);
+                        
+                        document.getElementById('total-users').textContent = data.stats.totalUsers || 0;
+                        document.getElementById('total-reservas').textContent = data.stats.activeReservations || 0;
+                        document.getElementById('total-ordenes').textContent = data.stats.monthlyOrders || 0;
+                        document.getElementById('total-ingresos').textContent = `$${(data.stats.monthlyRevenue || 0).toLocaleString()}`;
+                    } else {
+                        throw new Error(data.message || 'Error en respuesta');
                     }
                 } catch (error) {
-                    console.error('Error cargando estadísticas:', error);
+                    console.error('❌ Error cargando estadísticas:', error);
+                    
+                    // Mostrar 0 en lugar de error
+                    document.getElementById('total-users').textContent = '0';
+                    document.getElementById('total-reservas').textContent = '0';
+                    document.getElementById('total-ordenes').textContent = '0';
+                    document.getElementById('total-ingresos').textContent = '$0';
+                    
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error', 'No se pudieron cargar las estadísticas. Verifica tu conexión.');
+                    }
                 }
             }
 
-            // Cargar usuarios con paginación
+            // ==================== CARGAR USUARIOS ====================
             async function loadUsers() {
+                console.log('👥 Cargando usuarios...');
+                
+                const tbody = document.getElementById('users-table-body');
+                tbody.innerHTML = '<tr><td colspan="7" class="loading">Cargando usuarios...</td></tr>';
+                
                 try {
-                    const response = await fetch('/api/admin/users');
+                    const response = await fetch('/api/admin/users', {
+                        credentials: 'same-origin'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
                     const data = await response.json();
                     
                     if (data.success) {
+                        console.log(`✅ ${data.users.length} usuarios cargados`);
                         allUsers = data.users;
                         filteredUsers = [...allUsers];
                         displayUsers();
                         setupPagination();
                     } else {
-                        throw new Error(data.message);
+                        throw new Error(data.message || 'Error en respuesta');
                     }
                 } catch (error) {
-                    console.error('Error cargando usuarios:', error);
-                    document.getElementById('users-table-body').innerHTML = 
-                        '<tr><td colspan="7" class="error">Error cargando usuarios</td></tr>';
+                    console.error('❌ Error cargando usuarios:', error);
+                    tbody.innerHTML = '<tr><td colspan="7" class="error">Error cargando usuarios. Por favor recarga la página.</td></tr>';
+                    
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error', 'No se pudieron cargar los usuarios.');
+                    }
                 }
             }
 
-            // Mostrar usuarios con paginación
+            // ==================== MOSTRAR USUARIOS ====================
             function displayUsers() {
                 const tbody = document.getElementById('users-table-body');
                 
@@ -369,7 +416,7 @@
                         <td>${user.fullName}</td>
                         <td>${user.email}</td>
                         <td>${user.phone}</td>
-                        <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+                        <td>${new Date(user.createdAt).toLocaleDateString('es-ES')}</td>
                         <td><span class="status active">Activo</span></td>
                         <td>
                             <button class="btn-table-action" onclick="editUser('${user._id}')" title="Editar">
@@ -383,7 +430,7 @@
                 `).join('');
             }
 
-            // Configurar paginación
+            // ==================== PAGINACIÓN ====================
             function setupPagination() {
                 const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
                 const pagination = document.getElementById('users-pagination');
@@ -395,12 +442,10 @@
 
                 let paginationHTML = '';
                 
-                // Botón anterior
                 if (currentPage > 1) {
                     paginationHTML += `<button onclick="changePage(${currentPage - 1})">Anterior</button>`;
                 }
                 
-                // Números de página
                 for (let i = 1; i <= totalPages; i++) {
                     if (i === currentPage || i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
                         paginationHTML += `<button class="${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
@@ -409,7 +454,6 @@
                     }
                 }
                 
-                // Botón siguiente
                 if (currentPage < totalPages) {
                     paginationHTML += `<button onclick="changePage(${currentPage + 1})">Siguiente</button>`;
                 }
@@ -417,14 +461,13 @@
                 pagination.innerHTML = paginationHTML;
             }
 
-            // Cambiar página
             function changePage(page) {
                 currentPage = page;
                 displayUsers();
                 setupPagination();
             }
 
-            // Buscar usuarios
+            // ==================== BÚSQUEDA ====================
             function searchUsers() {
                 const searchTerm = document.getElementById('user-search').value.toLowerCase();
                 filteredUsers = allUsers.filter(user => 
@@ -436,17 +479,15 @@
                 setupPagination();
             }
 
-            // Filtrar usuarios
             function filterUsers() {
                 const filter = document.getElementById('user-filter').value;
-                // Por ahora todos los usuarios están activos, pero se puede implementar
                 filteredUsers = [...allUsers];
                 currentPage = 1;
                 displayUsers();
                 setupPagination();
             }
 
-            // Editar usuario
+            // ==================== EDITAR USUARIO ====================
             function editUser(userId) {
                 const user = allUsers.find(u => u._id === userId);
                 if (!user) return;
@@ -457,15 +498,14 @@
                 document.getElementById('edit-phone').value = user.phone;
                 document.getElementById('edit-status').value = 'active';
 
-                document.getElementById('edit-user-modal').classList.add('show');
+                document.getElementById('edit-user-modal').style.display = 'flex';
             }
 
-            // Cerrar modal de edición
             function closeEditUserModal() {
-                document.getElementById('edit-user-modal').classList.remove('show');
+                document.getElementById('edit-user-modal').style.display = 'none';
             }
 
-            // Manejar envío del formulario de edición
+            // ==================== GUARDAR CAMBIOS USUARIO ====================
             document.getElementById('edit-user-form').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
@@ -481,68 +521,113 @@
                     const response = await fetch(`/api/admin/users/${userId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
+                        credentials: 'same-origin',
                         body: JSON.stringify(formData)
                     });
 
                     const result = await response.json();
                     
                     if (result.success) {
-                        showCustomAlert('Usuario actualizado correctamente', 'success');
-                        closeEditUserModal();
-                        loadUsers();
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', 'Usuario Actualizado', 'Los cambios se guardaron correctamente', () => {
+                                closeEditUserModal();
+                                loadUsers();
+                            });
+                        } else {
+                            alert('Usuario actualizado correctamente');
+                            closeEditUserModal();
+                            loadUsers();
+                        }
                     } else {
-                        showAshowCustomAlertlert(result.message || 'Error al actualizar usuario', 'error');
+                        throw new Error(result.message);
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    showCustomAlert('Error de conexión', 'error');
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error', error.message || 'No se pudo actualizar el usuario');
+                    } else {
+                        alert('Error al actualizar usuario');
+                    }
                 }
             });
 
-            // Eliminar usuario
+            // ==================== ELIMINAR USUARIO ====================
             async function deleteUser(userId) {
-                if (!confirm('¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.')) {
-                    return;
-                }
+                const confirmDelete = typeof showConfirmAlert === 'function'
+                    ? await new Promise(resolve => {
+                        showConfirmAlert(
+                            'Eliminar Usuario',
+                            '¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.',
+                            () => resolve(true),
+                            () => resolve(false)
+                        );
+                    })
+                    : confirm('¿Estás seguro de eliminar este usuario?');
+
+                if (!confirmDelete) return;
 
                 try {
                     const response = await fetch(`/api/admin/users/${userId}`, {
-                        method: 'DELETE'
+                        method: 'DELETE',
+                        credentials: 'same-origin'
                     });
 
                     const result = await response.json();
                     
                     if (result.success) {
-                        showCustomAlert('Usuario eliminado correctamente', 'success');
-                        loadUsers();
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', 'Usuario Eliminado', 'El usuario fue eliminado correctamente', () => {
+                                loadUsers();
+                                loadDashboardStats();
+                            });
+                        } else {
+                            alert('Usuario eliminado correctamente');
+                            loadUsers();
+                            loadDashboardStats();
+                        }
                     } else {
-                        showCustomAlert(result.message || 'Error al eliminar usuario', 'error');
+                        throw new Error(result.message);
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    showCustomAlert('Error de conexión', 'error');
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error', error.message || 'No se pudo eliminar el usuario');
+                    } else {
+                        alert('Error al eliminar usuario');
+                    }
                 }
             }
 
-            // Cargar órdenes
+            // ==================== CARGAR ÓRDENES ====================
             async function loadOrders() {
+                console.log('🛒 Cargando órdenes...');
+                
+                const tbody = document.getElementById('orders-table-body');
+                tbody.innerHTML = '<tr><td colspan="7" class="loading">Cargando órdenes...</td></tr>';
+                
                 try {
-                    const response = await fetch('/api/admin/orders');
+                    const response = await fetch('/api/admin/orders', {
+                        credentials: 'same-origin'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
                     const data = await response.json();
                     
                     if (data.success) {
+                        console.log(`✅ ${data.orders.length} órdenes cargadas`);
                         displayOrders(data.orders);
                     } else {
-                        throw new Error(data.message);
+                        throw new Error(data.message || 'Error en respuesta');
                     }
                 } catch (error) {
-                    console.error('Error cargando órdenes:', error);
-                    document.getElementById('orders-table-body').innerHTML = 
-                        '<tr><td colspan="7" class="error">Error cargando órdenes</td></tr>';
+                    console.error('❌ Error cargando órdenes:', error);
+                    tbody.innerHTML = '<tr><td colspan="7" class="error">Error cargando órdenes</td></tr>';
                 }
             }
 
-            // Mostrar órdenes
             function displayOrders(orders) {
                 const tbody = document.getElementById('orders-table-body');
                 
@@ -555,7 +640,7 @@
                     <tr>
                         <td>#${order._id.slice(-6)}</td>
                         <td>${order.userInfo?.fullName || 'Usuario eliminado'}</td>
-                        <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+                        <td>${new Date(order.createdAt).toLocaleDateString('es-ES')}</td>
                         <td>$${order.total.toLocaleString()}</td>
                         <td>${order.items.length} items</td>
                         <td><span class="status active">Completada</span></td>
@@ -568,10 +653,13 @@
                 `).join('');
             }
 
-            // Ver detalles de orden
+            // ==================== VER DETALLES ORDEN ====================
             async function viewOrderDetails(orderId) {
                 try {
-                    const response = await fetch(`/api/admin/orders/${orderId}`);
+                    const response = await fetch(`/api/admin/orders/${orderId}`, {
+                        credentials: 'same-origin'
+                    });
+                    
                     const data = await response.json();
                     
                     if (data.success) {
@@ -589,7 +677,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Fecha:</label>
-                                <p>${new Date(order.createdAt).toLocaleDateString()}</p>
+                                <p>${new Date(order.createdAt).toLocaleDateString('es-ES')}</p>
                             </div>
                             <div class="form-group">
                                 <label>Productos:</label>
@@ -608,36 +696,39 @@
                             </div>
                         `;
                         
-                        document.getElementById('order-details-modal').classList.add('show');
-                    } else {
-                        showCustomAlert('Error al cargar detalles de la orden', 'error');
+                        document.getElementById('order-details-modal').style.display = 'flex';
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    showCustomAlert('Error de conexión', 'error');
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error', 'No se pudieron cargar los detalles');
+                    }
                 }
             }
 
-            // Cerrar modal de detalles de orden
             function closeOrderDetailsModal() {
-                document.getElementById('order-details-modal').classList.remove('show');
+                document.getElementById('order-details-modal').style.display = 'none';
             }
 
-            // Cargar estadísticas
+            // ==================== ESTADÍSTICAS ====================
             async function loadStatistics() {
+                console.log('📈 Cargando estadísticas adicionales...');
+                
                 try {
-                    const response = await fetch('/api/admin/statistics');
+                    const response = await fetch('/api/admin/statistics', {
+                        credentials: 'same-origin'
+                    });
+                    
                     const data = await response.json();
                     
                     if (data.success) {
                         displayTopClasses(data.stats.topClasses);
                     }
                 } catch (error) {
-                    console.error('Error cargando estadísticas:', error);
+                    console.error('❌ Error cargando estadísticas:', error);
                 }
             }
 
-            // Mostrar top clases
             function displayTopClasses(topClasses) {
                 const container = document.getElementById('top-classes');
                 
@@ -659,9 +750,9 @@
                 `).join('');
             }
 
-            // Funciones auxiliares
+            // ==================== FUNCIONES AUXILIARES ====================
             function refreshUsers() {
-                const btn = event.target;
+                const btn = event.target.closest('button');
                 const originalContent = btn.innerHTML;
                 btn.innerHTML = '<div class="loading-spinner"></div> Actualizando...';
                 btn.disabled = true;
@@ -674,7 +765,11 @@
 
             function exportUsers() {
                 if (allUsers.length === 0) {
-                    showCustomAlert('No hay usuarios para exportar', 'error');
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Sin Datos', 'No hay usuarios para exportar');
+                    } else {
+                        alert('No hay usuarios para exportar');
+                    }
                     return;
                 }
 
@@ -685,7 +780,7 @@
                         user.fullName,
                         user.email,
                         user.phone,
-                        new Date(user.createdAt).toLocaleDateString()
+                        new Date(user.createdAt).toLocaleDateString('es-ES')
                     ].join(','))
                 ].join('\n');
 
@@ -697,29 +792,32 @@
                 a.click();
                 window.URL.revokeObjectURL(url);
                 
-                showCustomAlert('Usuarios exportados correctamente', 'success');
+                if (typeof showCustomAlert === 'function') {
+                    showCustomAlert('success', 'Exportación Exitosa', 'Los usuarios se exportaron correctamente');
+                }
             }
 
-            // Cerrar modales al hacer clic fuera
+            // ==================== CERRAR MODALES AL HACER CLIC FUERA ====================
             window.addEventListener('click', function(event) {
                 const modals = document.querySelectorAll('.modal-overlay');
                 modals.forEach(modal => {
                     if (event.target === modal) {
-                        modal.classList.remove('show');
+                        modal.style.display = 'none';
                     }
                 });
             });
 
-            // Keyboard shortcuts
+            // ==================== KEYBOARD SHORTCUTS ====================
             document.addEventListener('keydown', function(e) {
-                // Escape para cerrar modales
                 if (e.key === 'Escape') {
-                    const openModal = document.querySelector('.modal-overlay.show');
+                    const openModal = document.querySelector('.modal-overlay[style*="flex"]');
                     if (openModal) {
-                        openModal.classList.remove('show');
+                        openModal.style.display = 'none';
                     }
                 }
             });
+
+            console.log('✅ Panel de administración cargado correctamente');
         </script>
     </body>
 </html>
