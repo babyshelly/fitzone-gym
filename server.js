@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 import session from 'express-session';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -707,8 +708,6 @@ app.post('/api/logout', (req, res) => {
 
 // ==================== RECUPERACION DE CONTRASEÑA ====================
 
-//const nodemailer = require('nodemailer');
-const crypto = require('crypto');
 
 // Schema para tokens de reset
 const resetTokenSchema = new mongoose.Schema({
