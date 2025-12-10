@@ -1043,20 +1043,21 @@
             console.log('✅ Panel de administración cargado correctamente');
         </script>
 
-        <!-- ________________ Update parte 2 para el administrador; apartado modificado de la tienda_______________________________________-->
-        ---------------------------------------------------------------------------------------------------------------------------
+        <!-- SCRIPT UNIFICADO PARA GESTIÓN DE PRODUCTOS Y CATEGORÍAS -->
         <script>
-                    let allProducts = [];
+            // Variables globales para productos y categorías
+            let allProducts = [];
             let allCategories = [];
 
-            // Cargar productos al iniciar
+            // Agregar al DOMContentLoaded existente
+            const originalDOMLoad = document.addEventListener;
             document.addEventListener('DOMContentLoaded', function() {
-                // ... código existente ...
                 loadProducts();
                 loadCategories();
             });
 
-            // Cargar categorías
+            // ==================== GESTIÓN DE CATEGORÍAS ====================
+
             async function loadCategories() {
                 try {
                     const response = await fetch('/api/categories');
@@ -1071,7 +1072,6 @@
                 }
             }
 
-            // Actualizar selectores de categorías
             function updateCategorySelectors() {
                 const productCategorySelect = document.getElementById('product-category');
                 const filterSelect = document.getElementById('product-category-filter');
@@ -1087,10 +1087,136 @@
                 }
             }
 
-            // Cargar productos
+            function showCategoriesModal() {
+                document.getElementById('categories-modal').style.display = 'flex';
+                loadCategoriesList();
+            }
+
+            function closeCategoriesModal() {
+                document.getElementById('categories-modal').style.display = 'none';
+            }
+
+            function loadCategoriesInSelect() {
+                updateCategorySelectors();
+            }
+
+            function loadCategoriesList() {
+                const container = document.getElementById('categories-list');
+
+                if (allCategories.length === 0) {
+                    container.innerHTML = '<p style="color: var(--gris-claro); text-align: center;">No hay categorías</p>';
+                    return;
+                }
+
+                container.innerHTML = allCategories.map(cat => `
+                    <div style="display: flex; align-items: center; justify-content: space-between; 
+                                padding: 1rem; background: var(--negro); border-radius: 10px;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <i class="${cat.icon || 'fas fa-box'}" style="font-size: 1.5rem; color: var(--violeta-claro);"></i>
+                            <div>
+                                <strong style="color: var(--blanco);">${cat.name}</strong>
+                                <p style="color: var(--gris-claro); margin: 0; font-size: 0.85rem;">
+                                    ${cat.description || 'Sin descripción'}
+                                </p>
+                            </div>
+                        </div>
+                        <button class="btn-table-action delete" onclick="deleteCategory('${cat._id}')" 
+                                title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `).join('');
+            }
+
+            async function addCategory(event) {
+                event.preventDefault();
+
+                const categoryData = {
+                    name: document.getElementById('category-name').value,
+                    description: document.getElementById('category-description').value,
+                    icon: document.getElementById('category-icon').value
+                };
+
+                try {
+                    const response = await fetch('/api/admin/categories', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'same-origin',
+                        body: JSON.stringify(categoryData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', '¡Éxito!', result.message);
+                        } else {
+                            alert(result.message);
+                        }
+                        document.getElementById('category-form').reset();
+                        await loadCategories();
+                        loadCategoriesList();
+                    } else {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('error', 'Error', result.message);
+                        } else {
+                            alert(result.message);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+
+            async function deleteCategory(categoryId) {
+                const confirmDelete = typeof showConfirmAlert === 'function'
+                    ? await new Promise(resolve => {
+                        showConfirmAlert(
+                            'Eliminar Categoría',
+                            '¿Estás seguro? No se puede eliminar si tiene productos asociados.',
+                            () => resolve(true),
+                            () => resolve(false)
+                        );
+                    })
+                    : confirm('¿Estás seguro de eliminar esta categoría?');
+
+                if (!confirmDelete) return;
+
+                try {
+                    const response = await fetch(`/api/admin/categories/${categoryId}`, {
+                        method: 'DELETE',
+                        credentials: 'same-origin'
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', '¡Éxito!', result.message);
+                        } else {
+                            alert(result.message);
+                        }
+                        await loadCategories();
+                        loadCategoriesList();
+                    } else {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('error', 'Error', result.message);
+                        } else {
+                            alert(result.message);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+
+            // ==================== GESTIÓN DE PRODUCTOS ====================
+
             async function loadProducts() {
                 try {
-                    const response = await fetch('/api/admin/products');
+                    const response = await fetch('/api/admin/products', {
+                        credentials: 'same-origin'
+                    });
                     const data = await response.json();
 
                     if (data.success) {
@@ -1107,7 +1233,6 @@
                 }
             }
 
-            // Mostrar productos en tabla
             function displayProducts(products) {
                 const tbody = document.getElementById('products-table-body');
 
@@ -1119,7 +1244,7 @@
                 tbody.innerHTML = products.map(product => {
                     let imageHtml = '';
                     if (product.imageType === 'icon' || !product.image) {
-                        imageHtml = `<i class="${product.icon}" style="font-size: 2rem; color: var(--violeta-claro);"></i>`;
+                        imageHtml = `<i class="${product.icon || 'fas fa-box'}" style="font-size: 2rem; color: var(--violeta-claro);"></i>`;
                     } else if (product.imageType === 'url' || product.imageType === 'base64') {
                         imageHtml = `<img src="${product.image}" alt="${product.name}" 
                             style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">`;
@@ -1127,7 +1252,7 @@
 
                     return `
                         <tr>
-                            <td>#${product.productId}</td>
+                            <td>#${product.productId || product._id.slice(-6)}</td>
                             <td style="text-align: center;">${imageHtml}</td>
                             <td>${product.name}</td>
                             <td>${product.categoryId?.name || product.category}</td>
@@ -1158,7 +1283,6 @@
                 }).join('');
             }
 
-            // Buscar productos
             function searchProducts() {
                 const searchTerm = document.getElementById('product-search').value.toLowerCase();
                 const filtered = allProducts.filter(product => 
@@ -1168,14 +1292,12 @@
                 displayProducts(filtered);
             }
 
-            // Filtrar por categoría
             function filterProductsByCategory() {
                 const category = document.getElementById('product-category-filter').value;
                 const filtered = category ? allProducts.filter(p => p.category === category) : allProducts;
                 displayProducts(filtered);
             }
 
-            // Mostrar modal de agregar producto
             function showAddProductModal() {
                 document.getElementById('product-modal-title').textContent = 'Agregar Producto';
                 document.getElementById('product-form').reset();
@@ -1184,7 +1306,11 @@
                 loadCategoriesInSelect();
             }
 
-            // Editar producto
+            function closeProductModal() {
+                document.getElementById('product-modal').style.display = 'none';
+                document.getElementById('product-form').reset();
+            }
+
             function editProduct(productId) {
                 const product = allProducts.find(p => p._id === productId);
                 if (!product) return;
@@ -1199,7 +1325,6 @@
                 document.getElementById('product-tags').value = product.tags?.join(', ') || '';
                 document.getElementById('product-featured').checked = product.featured || false;
 
-                // Configurar tipo de imagen
                 const imageType = product.imageType || 'icon';
                 document.querySelector(`input[name="image-type"][value="${imageType}"]`).checked = true;
                 toggleImageType();
@@ -1210,24 +1335,9 @@
                     document.getElementById('product-image-url').value = product.image || '';
                 }
 
-                document.getElementById('product-modal').classList.add('show');
+                document.getElementById('product-modal').style.display = 'flex';
             }
 
-            // Cerrar modal de producto
-            function closeProductModal() {
-                document.getElementById('product-modal').style.display = 'none';
-                document.getElementById('product-form').reset();
-            }
-
-            // Mostrar modal de categorías
-            function showCategoriesModal() {
-                document.getElementById('categories-modal').style.display = 'flex';
-                loadCategoriesList();
-            }
-
-
-
-            // Toggle tipo de imagen
             function toggleImageType() {
                 const type = document.querySelector('input[name="image-type"]:checked').value;
 
@@ -1236,27 +1346,23 @@
                 document.getElementById('file-input-container').style.display = type === 'base64' ? 'block' : 'none';
             }
 
-            // Manejar subida de imagen
             function handleImageUpload(event) {
                 const file = event.target.files[0];
 
                 if (!file) return;
 
-                // Validar tamaño (2MB)
                 if (file.size > 2 * 1024 * 1024) {
                     alert('La imagen es muy grande. Máximo 2MB');
                     event.target.value = '';
                     return;
                 }
 
-                // Validar tipo
                 if (!['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(file.type)) {
                     alert('Formato no soportado. Usa JPG, PNG o WEBP');
                     event.target.value = '';
                     return;
                 }
 
-                // Leer archivo y mostrar preview
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById('preview-img').src = e.target.result;
@@ -1265,7 +1371,6 @@
                 reader.readAsDataURL(file);
             }
 
-            // Guardar producto
             document.getElementById('product-form').addEventListener('submit', async function(e) {
                 e.preventDefault();
 
@@ -1303,6 +1408,7 @@
                     const response = await fetch(url, {
                         method: method,
                         headers: { 'Content-Type': 'application/json' },
+                        credentials: 'same-origin',
                         body: JSON.stringify(productData)
                     });
 
@@ -1333,11 +1439,11 @@
                 }
             });
 
-            // Cambiar estado de producto
             async function toggleProductStatus(productId) {
                 try {
                     const response = await fetch(`/api/admin/products/${productId}/toggle`, {
-                        method: 'PATCH'
+                        method: 'PATCH',
+                        credentials: 'same-origin'
                     });
 
                     const result = await response.json();
@@ -1353,7 +1459,6 @@
                 }
             }
 
-            // Eliminar producto
             async function deleteProduct(productId) {
                 const confirmDelete = typeof showConfirmAlert === 'function'
                     ? await new Promise(resolve => {
@@ -1370,7 +1475,8 @@
 
                 try {
                     const response = await fetch(`/api/admin/products/${productId}`, {
-                        method: 'DELETE'
+                        method: 'DELETE',
+                        credentials: 'same-origin'
                     });
 
                     const result = await response.json();
@@ -1382,127 +1488,6 @@
                             alert(result.message);
                         }
                         loadProducts();
-                    } else {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('error', 'Error', result.message);
-                        } else {
-                            alert(result.message);
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                }
-            }
-        </script>
-        <script>
-        // ==================== GESTIÓN DE CATEGORÍAS ====================
-
-            // Mostrar modal de categorías
-            function showCategoriesModal() {
-                document.getElementById('categories-modal').style.display = 'flex';
-                loadCategoriesList();
-            }
-            // Cerrar modal de categorías
-            function closeCategoriesModal() {
-                document.getElementById('categories-modal').style.display = 'none';
-            }
-
-            async function loadCategoriesForModal() {
-                const container = document.getElementById('categories-list');
-
-                if (allCategories.length === 0) {
-                    container.innerHTML = '<p style="color: var(--gris-claro); text-align: center;">No hay categorías</p>';
-                    return;
-                }
-
-                container.innerHTML = allCategories.map(cat => `
-                    <div style="display: flex; align-items: center; justify-content: space-between; 
-                                padding: 1rem; background: var(--negro); border-radius: 10px;">
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <i class="${cat.icon}" style="font-size: 1.5rem; color: var(--violeta-claro);"></i>
-                            <div>
-                                <strong style="color: var(--blanco);">${cat.name}</strong>
-                                <p style="color: var(--gris-claro); margin: 0; font-size: 0.85rem;">
-                                    ${cat.description || 'Sin descripción'}
-                                </p>
-                            </div>
-                        </div>
-                        <button class="btn-table-action delete" onclick="deleteCategory('${cat._id}')" 
-                                title="Eliminar">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                `).join('');
-            }
-
-            async function addCategory(event) {
-                event.preventDefault();
-
-                const categoryData = {
-                    name: document.getElementById('category-name').value,
-                    description: document.getElementById('category-description').value,
-                    icon: document.getElementById('category-icon').value
-                };
-
-                try {
-                    const response = await fetch('/api/admin/categories', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(categoryData)
-                    });
-
-                    const result = await response.json();
-
-                    if (result.success) {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('success', '¡Éxito!', result.message);
-                        } else {
-                            alert(result.message);
-                        }
-                        document.getElementById('category-form').reset();
-                        await loadCategories();
-                        loadCategoriesForModal();
-                    } else {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('error', 'Error', result.message);
-                        } else {
-                            alert(result.message);
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                }
-            }
-
-            async function deleteCategory(categoryId) {
-                const confirmDelete = typeof showConfirmAlert === 'function'
-                    ? await new Promise(resolve => {
-                        showConfirmAlert(
-                            'Eliminar Categoría',
-                            '¿Estás seguro? No se puede eliminar si tiene productos asociados.',
-                            () => resolve(true),
-                            () => resolve(false)
-                        );
-                    })
-                    : confirm('¿Estás seguro de eliminar esta categoría?');
-
-                if (!confirmDelete) return;
-
-                try {
-                    const response = await fetch(`/api/admin/categories/${categoryId}`, {
-                        method: 'DELETE'
-                    });
-
-                    const result = await response.json();
-
-                    if (result.success) {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('success', '¡Éxito!', result.message);
-                        } else {
-                            alert(result.message);
-                        }
-                        await loadCategories();
-                        loadCategoriesForModal();
                     } else {
                         if (typeof showCustomAlert === 'function') {
                             showCustomAlert('error', 'Error', result.message);
