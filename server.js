@@ -2115,6 +2115,10 @@ reservationSchema.index({ userId: 1, date: 1 });
 reservationSchema.index({ classId: 1, date: 1, status: 1 });
 membershipSchema.index({ userId: 1, status: 1 });
 membershipSchema.index({ endDate: 1, status: 1 });
+productSchema.index({ category: 1, active: 1 });
+productSchema.index({ featured: 1, active: 1 });
+productSchema.index({ name: 'text', description: 'text', tags: 'text' });
+categorySchema.index({ slug: 1 });
 
 // ==================== AGREGAR AL FINAL DE server.js (antes de app.listen) ====================
 
@@ -2280,3 +2284,603 @@ process.on('SIGINT', async () => {
     console.log('✅ Conexión a MongoDB cerrada');
     process.exit(0);
 });
+
+// ________________ Update para el administrador; apartado modificado de la tienda_______________________________________
+//-----------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------
+
+// Schema de Categorías
+const categorySchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    slug: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    description: String,
+    icon: {
+        type: String,
+        default: 'fas fa-box'
+    },
+    active: {
+        type: Boolean,
+        default: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+const Category = mongoose.model('Category', categorySchema);
+
+// Schema de Productos mejorado
+const productSchema = new mongoose.Schema({
+    productId: {
+        type: Number,
+        required: true,
+        unique: true
+    },
+    name: {
+        type: String,
+        required: true
+    },
+    description: {
+        type: String,
+        required: true
+    },
+    price: {
+        type: Number,
+        required: true
+    },
+    category: {
+        type: String,
+        required: true
+    },
+    categoryId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Category'
+    },
+    image: {
+        type: String, // URL de la imagen o base64
+        default: null
+    },
+    imageType: {
+        type: String, // 'url', 'base64', 'icon'
+        default: 'icon'
+    },
+    icon: {
+        type: String, // Clase de Font Awesome
+        default: 'fas fa-box'
+    },
+    stock: {
+        type: Number,
+        default: 100
+    },
+    active: {
+        type: Boolean,
+        default: true
+    },
+    featured: {
+        type: Boolean,
+        default: false
+    },
+    tags: [String],
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+// Middleware para actualizar updatedAt
+productSchema.pre('save', function(next) {
+    this.updatedAt = new Date();
+    next();
+});
+
+const Product = mongoose.model('Product', productSchema);
+
+// 2. AGREGAR FUNCIÓN PARA INICIALIZAR PRODUCTOS Y CATEGORÍAS
+
+async function initializeProductsAndCategories() {
+    try {
+        // Crear categorías por defecto
+        const existingCategories = await Category.countDocuments();
+        if (existingCategories === 0) {
+            await Category.insertMany([
+                {
+                    name: 'Suplementos',
+                    slug: 'suplementos',
+                    description: 'Suplementos nutricionales para potenciar tu entrenamiento',
+                    icon: 'fas fa-capsules'
+                },
+                {
+                    name: 'Ropa Deportiva',
+                    slug: 'ropa',
+                    description: 'Ropa cómoda y de calidad para entrenar',
+                    icon: 'fas fa-tshirt'
+                },
+                {
+                    name: 'Accesorios',
+                    slug: 'accesorios',
+                    description: 'Accesorios esenciales para tu entrenamiento',
+                    icon: 'fas fa-dumbbell'
+                }
+            ]);
+            console.log('✅ Categorías predefinidas creadas');
+        }
+        // Crear productos por defecto
+        const existingProducts = await Product.countDocuments();
+        if (existingProducts === 0) {
+            const categories = await Category.find();
+            const suplementos = categories.find(c => c.slug === 'suplementos');
+            const ropa = categories.find(c => c.slug === 'ropa');
+            const accesorios = categories.find(c => c.slug === 'accesorios');
+
+            await Product.insertMany([
+                // Suplementos
+                {
+                    productId: 1,
+                    name: 'Proteína Whey',
+                    description: 'Proteína de alta calidad para recuperación muscular',
+                    price: 15990,
+                    category: 'suplementos',
+                    categoryId: suplementos._id,
+                    icon: 'fas fa-capsules',
+                    imageType: 'icon',
+                    stock: 50,
+                    featured: true,
+                    tags: ['proteína', 'recuperación', 'músculo']
+                },
+                {
+                    productId: 2,
+                    name: 'Creatina',
+                    description: 'Aumenta tu fuerza y potencia en entrenamientos',
+                    price: 8990,
+                    category: 'suplementos',
+                    categoryId: suplementos._id,
+                    icon: 'fas fa-flask',
+                    imageType: 'icon',
+                    stock: 30,
+                    tags: ['fuerza', 'potencia', 'rendimiento']
+                },
+                {
+                    productId: 3,
+                    name: 'Pre-Workout',
+                    description: 'Energía y concentración para tus entrenamientos',
+                    price: 12990,
+                    category: 'suplementos',
+                    categoryId: suplementos._id,
+                    icon: 'fas fa-prescription-bottle',
+                    imageType: 'icon',
+                    stock: 40,
+                    tags: ['energía', 'concentración', 'pre-entrenamiento']
+                },
+                
+                // Ropa Deportiva
+                {
+                    productId: 4,
+                    name: 'Remera FitZone',
+                    description: 'Remera oficial de algodón premium',
+                    price: 6990,
+                    category: 'ropa',
+                    categoryId: ropa._id,
+                    icon: 'fas fa-tshirt',
+                    imageType: 'icon',
+                    stock: 100,
+                    featured: true,
+                    tags: ['remera', 'oficial', 'algodón']
+                },
+                {
+                    productId: 5,
+                    name: 'Short Deportivo',
+                    description: 'Comodidad y flexibilidad para entrenar',
+                    price: 4990,
+                    category: 'ropa',
+                    categoryId: ropa._id,
+                    icon: 'fas fa-running',
+                    imageType: 'icon',
+                    stock: 80,
+                    tags: ['short', 'entrenamiento', 'flexible']
+                },
+                {
+                    productId: 6,
+                    name: 'Zapatillas Training',
+                    description: 'Soporte y estabilidad para todos los ejercicios',
+                    price: 25990,
+                    category: 'ropa',
+                    categoryId: ropa._id,
+                    icon: 'fas fa-shoe-prints',
+                    imageType: 'icon',
+                    stock: 25,
+                    featured: true,
+                    tags: ['zapatillas', 'training', 'estabilidad']
+                },
+                
+                // Accesorios
+                {
+                    productId: 7,
+                    name: 'Guantes de Entrenamiento',
+                    description: 'Protección y mejor agarre para tus manos',
+                    price: 3990,
+                    category: 'accesorios',
+                    categoryId: accesorios._id,
+                    icon: 'fas fa-mitten',
+                    imageType: 'icon',
+                    stock: 60,
+                    tags: ['guantes', 'protección', 'agarre']
+                },
+                {
+                    productId: 8,
+                    name: 'Cinturón de Fuerza',
+                    description: 'Soporte lumbar para levantamientos pesados',
+                    price: 7990,
+                    category: 'accesorios',
+                    categoryId: accesorios._id,
+                    icon: 'fas fa-dumbbell',
+                    imageType: 'icon',
+                    stock: 20,
+                    tags: ['cinturón', 'soporte', 'levantamiento']
+                },
+                {
+                    productId: 9,
+                    name: 'Shaker FitZone',
+                    description: 'Botella mezcladora oficial con logo FitZone',
+                    price: 2990,
+                    category: 'accesorios',
+                    categoryId: accesorios._id,
+                    icon: 'fas fa-water',
+                    imageType: 'icon',
+                    stock: 150,
+                    featured: true,
+                    tags: ['shaker', 'botella', 'oficial']
+                }
+            ]);
+            console.log('✅ Productos predefinidos creados');
+            await initializeProductsAndCategories();
+        }
+    } catch (error) {
+        console.error('Error inicializando productos:', error);
+    }
+}
+
+// 3. AGREGAR LAS APIs DE GESTIÓN DE PRODUCTOS
+// Agregar estas rutas después de las APIs existentes
+
+// ============== APIs DE CATEGORÍAS ==============
+
+// Obtener todas las categorías
+app.get('/api/categories', async (req, res) => {
+    try {
+        const categories = await Category.find({ active: true }).sort({ name: 1 });
+        res.json({ success: true, categories });
+    } catch (error) {
+        console.error('Error obteniendo categorías:', error);
+        res.json({ success: false, message: 'Error obteniendo categorías' });
+    }
+});
+
+// Crear categoría (Admin)
+app.post('/api/admin/categories', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const { name, description, icon } = req.body;
+        
+        // Generar slug
+        const slug = name.toLowerCase()
+            .replace(/[áàäâ]/g, 'a')
+            .replace(/[éèëê]/g, 'e')
+            .replace(/[íìïî]/g, 'i')
+            .replace(/[óòöô]/g, 'o')
+            .replace(/[úùüû]/g, 'u')
+            .replace(/[^a-z0-9]/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
+        
+        const category = new Category({
+            name,
+            slug,
+            description,
+            icon: icon || 'fas fa-box'
+        });
+        
+        await category.save();
+        
+        res.json({ 
+            success: true, 
+            message: 'Categoría creada exitosamente',
+            category 
+        });
+    } catch (error) {
+        console.error('Error creando categoría:', error);
+        res.json({ 
+            success: false, 
+            message: error.code === 11000 ? 'Ya existe una categoría con ese nombre' : 'Error creando categoría'
+        });
+    }
+});
+
+// Actualizar categoría (Admin)
+app.put('/api/admin/categories/:id', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const { name, description, icon, active } = req.body;
+        
+        const category = await Category.findByIdAndUpdate(
+            req.params.id,
+            { name, description, icon, active },
+            { new: true }
+        );
+        
+        if (!category) {
+            return res.json({ success: false, message: 'Categoría no encontrada' });
+        }
+        
+        res.json({ 
+            success: true, 
+            message: 'Categoría actualizada exitosamente',
+            category 
+        });
+    } catch (error) {
+        console.error('Error actualizando categoría:', error);
+        res.json({ success: false, message: 'Error actualizando categoría' });
+    }
+});
+
+// Eliminar categoría (Admin)
+app.delete('/api/admin/categories/:id', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        // Verificar si hay productos en esta categoría
+        const productsCount = await Product.countDocuments({ categoryId: req.params.id });
+        
+        if (productsCount > 0) {
+            return res.json({ 
+                success: false, 
+                message: `No se puede eliminar. Hay ${productsCount} productos en esta categoría`
+            });
+        }
+        
+        await Category.findByIdAndDelete(req.params.id);
+        
+        res.json({ 
+            success: true, 
+            message: 'Categoría eliminada exitosamente'
+        });
+    } catch (error) {
+        console.error('Error eliminando categoría:', error);
+        res.json({ success: false, message: 'Error eliminando categoría' });
+    }
+});
+
+// ============== APIs DE PRODUCTOS ==============
+
+// Obtener todos los productos (público)
+app.get('/api/products', async (req, res) => {
+    try {
+        const { category, featured, search } = req.query;
+        
+        let query = { active: true };
+        
+        if (category && category !== 'all') {
+            query.category = category;
+        }
+        
+        if (featured === 'true') {
+            query.featured = true;
+        }
+        
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } },
+                { tags: { $in: [new RegExp(search, 'i')] } }
+            ];
+        }
+        
+        const products = await Product.find(query)
+            .populate('categoryId', 'name slug icon')
+            .sort({ featured: -1, createdAt: -1 });
+        
+        res.json({ success: true, products });
+    } catch (error) {
+        console.error('Error obteniendo productos:', error);
+        res.json({ success: false, message: 'Error obteniendo productos' });
+    }
+});
+
+// Obtener producto por ID
+app.get('/api/products/:id', async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id)
+            .populate('categoryId', 'name slug icon');
+        
+        if (!product) {
+            return res.json({ success: false, message: 'Producto no encontrado' });
+        }
+        
+        res.json({ success: true, product });
+    } catch (error) {
+        console.error('Error obteniendo producto:', error);
+        res.json({ success: false, message: 'Error obteniendo producto' });
+    }
+});
+
+// Obtener todos los productos (Admin) - sin filtros
+app.get('/api/admin/products', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const products = await Product.find()
+            .populate('categoryId', 'name slug icon')
+            .sort({ createdAt: -1 });
+        
+        res.json({ success: true, products });
+    } catch (error) {
+        console.error('Error obteniendo productos:', error);
+        res.json({ success: false, message: 'Error obteniendo productos' });
+    }
+});
+
+// Crear producto (Admin)
+app.post('/api/admin/products', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const { name, description, price, category, categoryId, image, imageType, icon, stock, featured, tags } = req.body;
+        
+        // Validaciones
+        if (!name || !description || !price || !category) {
+            return res.json({ 
+                success: false, 
+                message: 'Faltan campos requeridos: nombre, descripción, precio y categoría'
+            });
+        }
+        
+        if (price < 0) {
+            return res.json({ 
+                success: false, 
+                message: 'El precio no puede ser negativo'
+            });
+        }
+        
+        // Generar nuevo productId
+        const lastProduct = await Product.findOne().sort({ productId: -1 });
+        const newProductId = lastProduct ? lastProduct.productId + 1 : 1;
+        
+        const product = new Product({
+            productId: newProductId,
+            name,
+            description,
+            price: parseFloat(price),
+            category,
+            categoryId: categoryId || null,
+            image: image || null,
+            imageType: imageType || 'icon',
+            icon: icon || 'fas fa-box',
+            stock: stock || 100,
+            featured: featured || false,
+            tags: tags || []
+        });
+        
+        await product.save();
+        
+        res.json({ 
+            success: true, 
+            message: 'Producto creado exitosamente',
+            product 
+        });
+    } catch (error) {
+        console.error('Error creando producto:', error);
+        res.json({ 
+            success: false, 
+            message: 'Error creando producto: ' + error.message
+        });
+    }
+});
+
+// Actualizar producto (Admin)
+app.put('/api/admin/products/:id', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const { name, description, price, category, categoryId, image, imageType, icon, stock, active, featured, tags } = req.body;
+        
+        const updateData = {
+            name,
+            description,
+            price: parseFloat(price),
+            category,
+            categoryId: categoryId || null,
+            stock: parseInt(stock) || 0,
+            active: active !== undefined ? active : true,
+            featured: featured || false,
+            tags: tags || [],
+            updatedAt: new Date()
+        };
+        
+        // Actualizar imagen solo si se proporciona
+        if (image !== undefined) {
+            updateData.image = image;
+            updateData.imageType = imageType || 'icon';
+        }
+        
+        if (icon) {
+            updateData.icon = icon;
+        }
+        
+        const product = await Product.findByIdAndUpdate(
+            req.params.id,
+            updateData,
+            { new: true, runValidators: true }
+        ).populate('categoryId', 'name slug icon');
+        
+        if (!product) {
+            return res.json({ success: false, message: 'Producto no encontrado' });
+        }
+        
+        res.json({ 
+            success: true, 
+            message: 'Producto actualizado exitosamente',
+            product 
+        });
+    } catch (error) {
+        console.error('Error actualizando producto:', error);
+        res.json({ success: false, message: 'Error actualizando producto' });
+    }
+});
+
+// Eliminar producto (Admin)
+app.delete('/api/admin/products/:id', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const product = await Product.findByIdAndDelete(req.params.id);
+        
+        if (!product) {
+            return res.json({ success: false, message: 'Producto no encontrado' });
+        }
+        
+        res.json({ 
+            success: true, 
+            message: 'Producto eliminado exitosamente'
+        });
+    } catch (error) {
+        console.error('Error eliminando producto:', error);
+        res.json({ success: false, message: 'Error eliminando producto' });
+    }
+});
+
+// Cambiar estado de producto (Admin)
+app.patch('/api/admin/products/:id/toggle', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        
+        if (!product) {
+            return res.json({ success: false, message: 'Producto no encontrado' });
+        }
+        
+        product.active = !product.active;
+        await product.save();
+        
+        res.json({ 
+            success: true, 
+            message: `Producto ${product.active ? 'activado' : 'desactivado'} exitosamente`,
+            product 
+        });
+    } catch (error) {
+        console.error('Error cambiando estado:', error);
+        res.json({ success: false, message: 'Error cambiando estado del producto' });
+    }
+});
+
+// ============== ACTUALIZAR LA FUNCIÓN initializeData() ====================
+// AGREGAR esta llamada dentro de initializeData() existente
+
+// Dentro de initializeData(), después de crear el admin y las clases:
+await initializeProductsAndCategories();
+
+// 4. AGREGAR AL FINAL DEL ARCHIVO
+// Agregar índices para mejor rendimiento
+productSchema.index({ category: 1, active: 1 });
+productSchema.index({ featured: 1, active: 1 });
+productSchema.index({ name: 'text', description: 'text', tags: 'text' });
+categorySchema.index({ slug: 1 });

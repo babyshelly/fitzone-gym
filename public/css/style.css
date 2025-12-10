@@ -4917,3 +4917,116 @@ body {
         font-size: 0.75rem;
     }
 }
+
+/* ==================== ESTILOS ADICIONALES PARA GESTIÓN DE PRODUCTOS Jota ==================== */
+
+/* Loading spinner mejorado */
+.loading-spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(127, 76, 165, 0.2);
+    border-radius: 50%;
+    border-top-color: var(--violeta-medio);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Productos en tabla de admin */
+.admin-table img {
+    max-width: 50px;
+    max-height: 50px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+/* Formulario de productos */
+#product-form textarea {
+    width: 100%;
+    padding: 0.8rem;
+    border: 2px solid var(--violeta-medio);
+    border-radius: 8px;
+    background-color: var(--negro);
+    color: var(--blanco);
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+}
+
+#product-form textarea:focus {
+    outline: none;
+    border-color: var(--violeta-claro);
+}
+
+/* Input de archivo personalizado */
+input[type="file"] {
+    padding: 0.8rem;
+    border: 2px solid var(--violeta-medio);
+    border-radius: 8px;
+    background-color: var(--negro);
+    color: var(--blanco);
+    cursor: pointer;
+}
+
+input[type="file"]::file-selector-button {
+    background: var(--violeta-medio);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 1rem;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background: var(--violeta-oscuro);
+}
+
+/* Preview de imagen */
+#image-preview img {
+    max-width: 200px;
+    border-radius: 10px;
+    border: 2px solid var(--violeta-medio);
+    margin-top: 1rem;
+}
+
+/* Lista de categorías en modal */
+#categories-list > div {
+    transition: all 0.3s ease;
+}
+
+#categories-list > div:hover {
+    transform: translateX(5px);
+    background: var(--gris-oscuro) !important;
+}
+
+/* Productos sin stock */
+.product-card .btn-add-cart:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #666;
+}
+
+.product-card .btn-add-cart:disabled:hover {
+    background: #666;
+    transform: none;
+}
+
+/* Grid responsive de productos */
+@media (max-width: 768px) {
+    .products-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    #product-modal .modal-box {
+        max-width: 95%;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+/* ==================== Fin ESTILOS ADICIONALES PARA GESTIÓN DE PRODUCTOS Jota ==================== */
