@@ -1,11 +1,17 @@
-require('dotenv').config(); // ⭐ PRIMERO: Cargar variables de entorno
+import 'dotenv/config';
 
-const express = require('express');
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
-const session = require('express-session');
-const path = require('path');
+import express from 'express';
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import nodemailer from 'nodemailer';
+import session from 'express-session';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Necesario para __dirname en ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;

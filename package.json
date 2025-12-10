@@ -1,6 +1,7 @@
 {
   "name": "fitzone-gym",
   "version": "1.0.0",
+  "type": "module",
   "description": "Sistema de gestión para gimnasio FitZone",
   "main": "server.js",
   "scripts": {
