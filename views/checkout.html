@@ -668,8 +668,8 @@
                                     <p style="font-size: 1.4rem; color: var(--violeta-claro); margin: 1rem 0;">
                                         💰 Total: <strong>$${Math.round(total).toLocaleString()}</strong>
                                     </p>
-                                    <p style="margin: 1rem 0;">📧 Recibirás un email de confirmación en:</p>
-                                    <p style="font-weight: bold; color: var(--violeta-muy-claro);">${purchaseData.customer.email}</p>
+                                    <p style="margin: 1rem 0;">📧 Para consultas comunicate al:</p>
+                                    <p style="font-weight: bold; color: var(--violeta-muy-claro);">+54 9 11 2170-8945</p>
                                     <p style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--gris-claro);">Redirigiendo al dashboard...</p>
                                 </div>`,
                                 () => {
@@ -679,7 +679,7 @@
                                 }
                             );
                         } else {
-                            alert(`¡Compra exitosa!\n\nPedido #${result.orderId}\nTotal: $${Math.round(total).toLocaleString()}\n\nRecibirás un email de confirmación.`);
+                            alert(`¡Compra exitosa!\n\nPedido #${result.orderId}\nTotal: $${Math.round(total).toLocaleString()}\n\nPara consultas comunicate al.`);
                             setTimeout(() => {
                                 window.location.href = '/dashboard';
                             }, 2000);
