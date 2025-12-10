@@ -737,118 +737,241 @@ app.post('/api/password-reset/request', async (req, res) => {
 
 app.get('/api/admin/dashboard-stats', requireAuth, requireAdmin, async (req, res) => {
     try {
-        const totalUsers = await User.countDocuments({ role: 'user' });
-        const activeReservations = await Reservation.countDocuments({ status: 'active' });
+        console.log('📊 Cargando estadísticas del dashboard admin...');
         
+        // Total de usuarios (sin contar admins)
+        const totalUsers = await User.countDocuments({ role: 'user' });
+        console.log('👥 Total usuarios:', totalUsers);
+        
+        // Reservas activas (futuras)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const activeReservations = await Reservation.countDocuments({ 
+            status: 'active',
+            date: { $gte: today }
+        });
+        console.log('📅 Reservas activas:', activeReservations);
+        
+        // Órdenes del mes actual
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
         startOfMonth.setHours(0, 0, 0, 0);
         
-        const monthlyOrders = await Order.countDocuments({ createdAt: { $gte: startOfMonth } });
+        const monthlyOrders = await Order.countDocuments({ 
+            createdAt: { $gte: startOfMonth },
+            status: 'completed'
+        });
+        console.log('🛒 Órdenes del mes:', monthlyOrders);
         
+        // Ingresos del mes
         const monthlyRevenueResult = await Order.aggregate([
-            { $match: { createdAt: { $gte: startOfMonth }, status: 'completed' } },
-            { $group: { _id: null, total: { $sum: '$total' } } }
+            { 
+                $match: { 
+                    createdAt: { $gte: startOfMonth },
+                    status: 'completed'
+                } 
+            },
+            { 
+                $group: { 
+                    _id: null, 
+                    total: { $sum: '$total' } 
+                } 
+            }
         ]);
         
         const monthlyRevenue = monthlyRevenueResult.length > 0 ? monthlyRevenueResult[0].total : 0;
-
+        console.log('💰 Ingresos del mes:', monthlyRevenue);
+        
         res.json({
             success: true,
-            stats: { totalUsers, activeReservations, monthlyOrders, monthlyRevenue }
+            stats: { 
+                totalUsers, 
+                activeReservations, 
+                monthlyOrders, 
+                monthlyRevenue 
+            }
         });
 
     } catch (error) {
-        console.error('Error obteniendo estadísticas:', error);
-        res.json({ success: false, message: 'Error obteniendo estadísticas' });
+        console.error('❌ Error obteniendo estadísticas:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al cargar estadísticas',
+            error: error.message 
+        });
     }
 });
 
+// GET: Obtener todos los usuarios
 app.get('/api/admin/users', requireAuth, requireAdmin, async (req, res) => {
     try {
-        const users = await User.find({ role: 'user' }, '-password').sort({ createdAt: -1 });
-        res.json({ success: true, users: users });
+        console.log('👥 Cargando lista de usuarios...');
+        
+        const users = await User.find(
+            { role: 'user' }, 
+            '-password'
+        ).sort({ createdAt: -1 });
+        
+        console.log(`✅ ${users.length} usuarios encontrados`);
+        
+        res.json({ 
+            success: true, 
+            users: users 
+        });
+        
     } catch (error) {
-        console.error('Error obteniendo usuarios:', error);
-        res.json({ success: false, message: 'Error obteniendo usuarios' });
+        console.error('❌ Error obteniendo usuarios:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al cargar usuarios',
+            error: error.message 
+        });
     }
 });
 
+// PUT: Actualizar usuario
 app.put('/api/admin/users/:userId', requireAuth, requireAdmin, async (req, res) => {
     try {
         const { userId } = req.params;
         const { fullName, email, phone, status } = req.body;
 
-        const existingUser = await User.findOne({ email: email, _id: { $ne: userId } });
+        console.log('✏️ Actualizando usuario:', userId);
+
+        // Verificar que el email no esté en uso
+        const existingUser = await User.findOne({ 
+            email: email, 
+            _id: { $ne: userId } 
+        });
+        
         if (existingUser) {
-            return res.json({ success: false, message: 'El email ya está en uso por otro usuario' });
+            return res.status(400).json({ 
+                success: false, 
+                message: 'El email ya está en uso por otro usuario' 
+            });
         }
 
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             { fullName, email, phone, status },
             { new: true, runValidators: true }
-        );
+        ).select('-password');
 
         if (!updatedUser) {
-            return res.json({ success: false, message: 'Usuario no encontrado' });
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Usuario no encontrado' 
+            });
         }
 
-        res.json({ success: true, message: 'Usuario actualizado correctamente', user: updatedUser });
+        console.log('✅ Usuario actualizado:', updatedUser.fullName);
+
+        res.json({ 
+            success: true, 
+            message: 'Usuario actualizado correctamente', 
+            user: updatedUser 
+        });
 
     } catch (error) {
-        console.error('Error actualizando usuario:', error);
-        res.json({ success: false, message: 'Error actualizando usuario' });
+        console.error('❌ Error actualizando usuario:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al actualizar usuario',
+            error: error.message 
+        });
     }
 });
 
+
+// DELETE: Eliminar usuario
 app.delete('/api/admin/users/:userId', requireAuth, requireAdmin, async (req, res) => {
     try {
         const { userId } = req.params;
 
+        console.log('🗑️ Eliminando usuario:', userId);
+
+        // No permitir eliminar al mismo admin
         if (userId === req.session.user.id) {
-            return res.json({ success: false, message: 'No puedes eliminarte a ti mismo' });
+            return res.status(400).json({ 
+                success: false, 
+                message: 'No puedes eliminarte a ti mismo' 
+            });
         }
 
+        // Eliminar datos relacionados
         await Reservation.deleteMany({ userId: userId });
         await Cart.deleteOne({ userId: userId });
+        await Membership.deleteMany({ userId: userId });
         
         const deletedUser = await User.findByIdAndDelete(userId);
 
         if (!deletedUser) {
-            return res.json({ success: false, message: 'Usuario no encontrado' });
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Usuario no encontrado' 
+            });
         }
 
-        res.json({ success: true, message: 'Usuario eliminado correctamente' });
+        console.log('✅ Usuario eliminado:', deletedUser.fullName);
+
+        res.json({ 
+            success: true, 
+            message: 'Usuario eliminado correctamente' 
+        });
 
     } catch (error) {
-        console.error('Error eliminando usuario:', error);
-        res.json({ success: false, message: 'Error eliminando usuario' });
+        console.error('❌ Error eliminando usuario:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al eliminar usuario',
+            error: error.message 
+        });
     }
 });
 
+console.log('✅ Rutas de administración configuradas correctamente');
+
+// GET: Obtener todas las órdenes
 app.get('/api/admin/orders', requireAuth, requireAdmin, async (req, res) => {
     try {
+        console.log('🛒 Cargando órdenes...');
+        
         const orders = await Order.find()
             .populate('userId', 'fullName email')
             .sort({ createdAt: -1 })
+            .limit(100)
             .lean();
 
+        console.log(`✅ ${orders.length} órdenes encontradas`);
+
+        // Formatear órdenes con información del usuario
         const formattedOrders = orders.map(order => ({
             ...order,
-            userInfo: order.userId || { fullName: 'Usuario eliminado', email: 'N/A' }
+            userInfo: order.userId || { 
+                fullName: 'Usuario eliminado', 
+                email: 'N/A' 
+            }
         }));
 
-        res.json({ success: true, orders: formattedOrders });
+        res.json({ 
+            success: true, 
+            orders: formattedOrders 
+        });
+        
     } catch (error) {
-        console.error('Error obteniendo órdenes:', error);
-        res.json({ success: false, message: 'Error obteniendo órdenes' });
+        console.error('❌ Error obteniendo órdenes:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al cargar órdenes',
+            error: error.message 
+        });
     }
 });
 
+// GET: Obtener detalles de una orden
 app.get('/api/admin/orders/:orderId', requireAuth, requireAdmin, async (req, res) => {
     try {
         const { orderId } = req.params;
+        console.log('📦 Cargando detalles de orden:', orderId);
         
         const order = await Order.findById(orderId).populate({
             path: 'userId',
@@ -856,7 +979,10 @@ app.get('/api/admin/orders/:orderId', requireAuth, requireAdmin, async (req, res
         });
         
         if (!order) {
-            return res.json({ success: false, message: 'Orden no encontrada' });
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Orden no encontrada' 
+            });
         }
 
         res.json({
@@ -867,17 +993,29 @@ app.get('/api/admin/orders/:orderId', requireAuth, requireAdmin, async (req, res
                 total: order.total,
                 status: order.status,
                 createdAt: order.createdAt,
-                userInfo: order.userId || { fullName: 'Usuario eliminado', email: 'N/A' }
+                userInfo: order.userId || { 
+                    fullName: 'Usuario eliminado', 
+                    email: 'N/A' 
+                }
             }
         });
+        
     } catch (error) {
-        console.error('Error obteniendo detalles de orden:', error);
-        res.json({ success: false, message: 'Error obteniendo detalles de orden' });
+        console.error('❌ Error obteniendo detalles de orden:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al cargar detalles de orden',
+            error: error.message 
+        });
     }
 });
 
+// GET: Estadísticas adicionales (Top clases)
 app.get('/api/admin/statistics', requireAuth, requireAdmin, async (req, res) => {
     try {
+        console.log('📈 Cargando estadísticas adicionales...');
+        
+        // Top clases más reservadas
         const topClasses = await Reservation.aggregate([
             { $match: { status: 'active' } },
             { $group: { _id: '$className', count: { $sum: 1 } } },
@@ -885,20 +1023,20 @@ app.get('/api/admin/statistics', requireAuth, requireAdmin, async (req, res) => 
             { $limit: 5 }
         ]);
 
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        console.log('✅ Top clases:', topClasses.length);
 
-        const registrationsByMonth = await User.aggregate([
-            { $match: { createdAt: { $gte: sixMonthsAgo }, role: 'user' } },
-            { $group: { _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } }, count: { $sum: 1 } } },
-            { $sort: { '_id.year': 1, '_id.month': 1 } }
-        ]);
-
-        res.json({ success: true, stats: { topClasses, registrationsByMonth } });
-
+        res.json({ 
+            success: true, 
+            stats: { topClasses } 
+        });
+        
     } catch (error) {
-        console.error('Error obteniendo estadísticas:', error);
-        res.json({ success: false, message: 'Error obteniendo estadísticas' });
+        console.error('❌ Error obteniendo estadísticas:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al cargar estadísticas',
+            error: error.message 
+        });
     }
 });
 
