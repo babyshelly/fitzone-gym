@@ -16,16 +16,6 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Verificar conexión de email al iniciar
-transporter.verify(function(error, success) {
-    if (error) {
-        console.log('❌ Error configurando email:', error.message);
-        console.log('⚠️ Verifica EMAIL_USER y EMAIL_PASS en variables de entorno');
-    } else {
-        console.log('✅ Servidor de email listo');
-    }
-});
-
 // ============== MIDDLEWARE ==============
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
