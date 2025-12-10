@@ -152,7 +152,7 @@ const userSchema = new mongoose.Schema({
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     createdAt: { type: Date, default: Date.now }
 });
-
+userSchema.index({ email: 1 });
 const User = mongoose.model('User', userSchema);
 // ==================== Agrega limites de usuarios en pagina simultanea ====================
 // Evitar cargar todos los datos
@@ -234,7 +234,8 @@ const reservationSchema = new mongoose.Schema({
     status: { type: String, enum: ['active', 'cancelled'], default: 'active' },
     createdAt: { type: Date, default: Date.now }
 });
-
+reservationSchema.index({ userId: 1, date: 1 });
+reservationSchema.index({ classId: 1, date: 1, status: 1 });
 const Reservation = mongoose.model('Reservation', reservationSchema);
 
 // Schema del Carrito
@@ -327,7 +328,8 @@ const membershipSchema = new mongoose.Schema({
         default: false
     }
 });
-
+membershipSchema.index({ userId: 1, status: 1 });
+membershipSchema.index({ endDate: 1, status: 1 });
 const Membership = mongoose.model('Membership', membershipSchema);
 
 // Schema para Datos Pendientes de Usuario (para membresía de 2 personas)
@@ -2477,13 +2479,6 @@ showConfirmAlert(
 */
 // ==================== FIN DE LOS SCHEMAS ====================
 
-// Agregar después de definir los schemas
-userSchema.index({ email: 1 });
-reservationSchema.index({ userId: 1, date: 1 });
-reservationSchema.index({ classId: 1, date: 1, status: 1 });
-membershipSchema.index({ userId: 1, status: 1 });
-membershipSchema.index({ endDate: 1, status: 1 });
-categorySchema.index({ slug: 1 });
 
 // ==================== AGREGAR AL FINAL DE server.js (antes de app.listen) ====================
 
@@ -2681,7 +2676,7 @@ const categorySchema = new mongoose.Schema({
         default: Date.now
     }
 });
-
+categorySchema.index({ slug: 1 });
 const Category = mongoose.model('Category', categorySchema);
 
 // Schema de Productos mejorado
@@ -3247,5 +3242,4 @@ app.patch('/api/admin/products/:id/toggle', requireAuth, requireAdmin, async (re
 // Dentro de initializeData(), después de crear el admin y las clases:
 await initializeProductsAndCategories();
 
-categorySchema.index({ slug: 1 });
 
