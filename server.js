@@ -2492,8 +2492,6 @@ async function cleanOldReservations() {
 // Conectar a MongoDB
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://abrilcarchedi_db_user:GZ22MDMYUTM22_m@gym-proyecto.vhxnxsq.mongodb.net/?appName=Gym-proyecto';
 mongoose.connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
 })
 .then(() => {
     console.log('âœ… Conectado a MongoDB Local');
@@ -2502,7 +2500,7 @@ mongoose.connect(MONGODB_URI, {
 .catch(err => console.log('âŒ Error conectando a MongoDB:', err));
 
 // Iniciar servidor
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor ejecutándose en http://localhost:${PORT}`);
     console.log('✨ ¡Proyecto FitZone con MongoDB iniciado correctamente!');
     console.log('👤 Admin por defecto: admin@fitzone.com / admin123');
@@ -3112,5 +3110,3 @@ app.patch('/api/admin/products/:id/toggle', requireAuth, requireAdmin, async (re
 
 // Dentro de initializeData(), después de crear el admin y las clases:
 await initializeProductsAndCategories();
-
-
