@@ -149,6 +149,9 @@
                                 </tr>
                             </tbody>
                         </table>
+
+                        <!-- ⭐ AGREGAR ESTA LÍNEA -->
+                        <div id="orders-pagination" class="pagination"></div>
                     </div>
                 </div>
             </section>
@@ -663,23 +666,15 @@
                     return;
                 }
 
-                let paginationHTML = '';
-                
-                if (currentPage > 1) {
-                    paginationHTML += `<button onclick="changePage(${currentPage - 1})">Anterior</button>`;
-                }
-                
-                for (let i = 1; i <= totalPages; i++) {
-                    if (i === currentPage || i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-                        paginationHTML += `<button class="${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
-                    } else if (i === currentPage - 2 || i === currentPage + 2) {
-                        paginationHTML += '<span>...</span>';
-                    }
-                }
-                
-                if (currentPage < totalPages) {
-                    paginationHTML += `<button onclick="changePage(${currentPage + 1})">Siguiente</button>`;
-                }
+                let paginationHTML = `
+                    <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span class="page-info">Página ${currentPage} de ${totalPages}</span>
+                    <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                `;
                 
                 pagination.innerHTML = paginationHTML;
             }
@@ -851,15 +846,56 @@
                 }
             }
 
-            function displayOrders(orders) {
+            // ==================== VARIABLES PARA PAGINACIÓN DE ÓRDENES ====================
+            let allOrders = [];
+            let currentOrdersPage = 1;
+            const ordersPerPage = 10;
+
+            // ==================== CARGAR ÓRDENES ====================
+            async function loadOrders() {
+                console.log('🛒 Cargando órdenes...');
+                
+                const tbody = document.getElementById('orders-table-body');
+                tbody.innerHTML = '<tr><td colspan="7" class="loading">Cargando órdenes...</td></tr>';
+                
+                try {
+                    const response = await fetch('/api/admin/orders', {
+                        credentials: 'same-origin'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        console.log(`✅ ${data.orders.length} órdenes cargadas`);
+                        allOrders = data.orders;
+                        displayOrders();
+                        setupOrdersPagination();
+                    } else {
+                        throw new Error(data.message || 'Error en respuesta');
+                    }
+                } catch (error) {
+                    console.error('❌ Error cargando órdenes:', error);
+                    tbody.innerHTML = '<tr><td colspan="7" class="error">Error cargando órdenes</td></tr>';
+                }
+            }
+
+            function displayOrders() {
                 const tbody = document.getElementById('orders-table-body');
                 
-                if (orders.length === 0) {
+                if (allOrders.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7" class="no-data">No hay órdenes registradas</td></tr>';
                     return;
                 }
 
-                tbody.innerHTML = orders.map(order => `
+                const startIndex = (currentOrdersPage - 1) * ordersPerPage;
+                const endIndex = startIndex + ordersPerPage;
+                const ordersToShow = allOrders.slice(startIndex, endIndex);
+
+                tbody.innerHTML = ordersToShow.map(order => `
                     <tr>
                         <td>#${order._id.slice(-6)}</td>
                         <td>${order.userInfo?.fullName || 'Usuario eliminado'}</td>
@@ -874,6 +910,37 @@
                         </td>
                     </tr>
                 `).join('');
+            }
+
+            function setupOrdersPagination() {
+                const totalPages = Math.ceil(allOrders.length / ordersPerPage);
+                const pagination = document.getElementById('orders-pagination');
+                
+                if (totalPages <= 1) {
+                    pagination.innerHTML = '';
+                    return;
+                }
+
+                let paginationHTML = `
+                    <button onclick="changeOrdersPage(${currentOrdersPage - 1})" ${currentOrdersPage === 1 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span class="page-info">Página ${currentOrdersPage} de ${totalPages}</span>
+                    <button onclick="changeOrdersPage(${currentOrdersPage + 1})" ${currentOrdersPage === totalPages ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                `;
+                
+                pagination.innerHTML = paginationHTML;
+            }
+
+            function changeOrdersPage(page) {
+                const totalPages = Math.ceil(allOrders.length / ordersPerPage);
+                if (page < 1 || page > totalPages) return;
+                
+                currentOrdersPage = page;
+                displayOrders();
+                setupOrdersPagination();
             }
 
             // ==================== VER DETALLES ORDEN ====================
