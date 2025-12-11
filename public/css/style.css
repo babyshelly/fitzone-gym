@@ -5959,3 +5959,26 @@ input[type="file"]::file-selector-button:hover {
 .pagination i {
     font-size: 1rem;
 }
+/* ==================== PLANES DE MEMBRESÍA ==================== */
+.membership-plans {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* ⭐ CAMBIAR DE 2 A 3 */
+    gap: 2rem;
+    margin: 2rem 0;
+    max-width: 1200px; /* ⭐ AGREGAR PARA MEJOR VISUALIZACIÓN */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .membership-plans {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .membership-plans {
+        grid-template-columns: 1fr;
+    }
+}
