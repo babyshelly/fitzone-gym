@@ -5384,6 +5384,7 @@ html {
         font-size: 0.75rem;
     }
 }
+<<<<<<< HEAD
 /* ==================== ESTILOS DE CHECKOUT - AGREGAR AL FINAL ====================*/
 
 .checkout-main {
@@ -5788,6 +5789,8 @@ html {
         flex-direction: column;
     }
 }
+=======
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
 
 /* ==================== ESTILOS ADICIONALES PARA GESTIÓN DE PRODUCTOS Jota ==================== */
 
@@ -5891,15 +5894,24 @@ input[type="file"]::file-selector-button:hover {
     .products-grid {
         grid-template-columns: 1fr;
     }
+<<<<<<< HEAD
 
     #product-modal .modal-box {
         max-width: 95%;
     }
 
+=======
+    
+    #product-modal .modal-box {
+        max-width: 95%;
+    }
+    
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
     .form-row {
         grid-template-columns: 1fr;
     }
 }
+<<<<<<< HEAD
 /* ==================== Fin ESTILOS ADICIONALES PARA GESTIÓN DE PRODUCTOS Jota ==================== */
 /* ==================== PAGINACIÓN MEJORADA ==================== */
 .pagination {
@@ -5982,3 +5994,6 @@ input[type="file"]::file-selector-button:hover {
         grid-template-columns: 1fr;
     }
 }
+=======
+/* ==================== Fin ESTILOS ADICIONALES PARA GESTIÓN DE PRODUCTOS Jota ==================== */
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739

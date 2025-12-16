@@ -210,6 +210,227 @@
                     </div>
                 </div>
             </section>
+            <!-- ________________ Update para el administrador; apartado modificado de la tienda_______________________________________-->
+            <!--------------------------------------------------------------------------------------------------------------------------->
+            <!--------------------------------------------------------------------------------------------------------------------------->
+            <!--------------------------------------------------------------------------------------------------------------------------->
+            <!-- Gestión de Productos y Tienda -->
+            <section id="productos" class="admin-section">
+                <div class="container">
+                    <div class="section-header">
+                        <h2>Gestión de Productos</h2>
+                        <div class="section-actions">
+                            <button class="btn btn-primary" onclick="showAddProductModal()">
+                                <i class="fas fa-plus"></i> Agregar Producto
+                            </button>
+                            <button class="btn btn-secondary" onclick="showCategoriesModal()">
+                                <i class="fas fa-tags"></i> Gestionar Categorías
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filtros de productos -->
+                    <div class="search-container">
+                        <input type="text" id="product-search" class="search-input" 
+                            placeholder="Buscar productos por nombre..." 
+                            onkeyup="searchProducts()">
+                        <select id="product-category-filter" class="search-input" 
+                                onchange="filterProductsByCategory()" 
+                                style="max-width: 200px;">
+                            <option value="">Todas las categorías</option>
+                        </select>
+                    </div>
+
+                    <!-- Tabla de productos -->
+                    <div class="users-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Imagen</th>
+                                    <th>Nombre</th>
+                                    <th>Categoría</th>
+                                    <th>Precio</th>
+                                    <th>Stock</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table-body">
+                                <tr>
+                                    <td colspan="8" class="loading">Cargando productos...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Modal para Agregar/Editar Producto -->
+            <div id="product-modal" class="modal-overlay" style="display: none;">
+                <div class="modal-box" style="max-width: 700px;">
+                    <div class="modal-header">
+                        <h3 id="product-modal-title">Agregar Producto</h3>
+                        <span class="close" onclick="closeProductModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="product-form">
+                            <input type="hidden" id="product-id">
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="product-name">Nombre del Producto *</label>
+                                    <input type="text" id="product-name" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="product-category">Categoría *</label>
+                                    <select id="product-category" required>
+                                        <option value="">Seleccionar categoría...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="product-description">Descripción *</label>
+                                <textarea id="product-description" rows="3" required></textarea>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="product-price">Precio ($) *</label>
+                                    <input type="number" id="product-price" step="0.01" min="0" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="product-stock">Stock</label>
+                                    <input type="number" id="product-stock" value="100" min="0">
+                                </div>
+                            </div>
+                            
+                            <!-- Sección de Imagen -->
+                            <div class="form-group">
+                                <label>Tipo de Imagen</label>
+                                <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                        <input type="radio" name="image-type" value="icon" checked 
+                                            onchange="toggleImageType()">
+                                        <span>Icono Font Awesome</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                        <input type="radio" name="image-type" value="url" 
+                                            onchange="toggleImageType()">
+                                        <span>URL de Imagen</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                        <input type="radio" name="image-type" value="base64" 
+                                            onchange="toggleImageType()">
+                                        <span>Subir Imagen</span>
+                                    </label>
+                                </div>
+                                
+                                <!-- Input para icono -->
+                                <div id="icon-input-container">
+                                    <label for="product-icon">Clase de Icono (ej: fas fa-capsules)</label>
+                                    <input type="text" id="product-icon" value="fas fa-box" 
+                                        placeholder="fas fa-box">
+                                    <small style="color: var(--gris-claro); display: block; margin-top: 0.5rem;">
+                                        <a href="https://fontawesome.com/icons" target="_blank" 
+                                        style="color: var(--violeta-claro);">
+                                            Ver iconos disponibles →
+                                        </a>
+                                    </small>
+                                </div>
+                                
+                                <!-- Input para URL -->
+                                <div id="url-input-container" style="display: none;">
+                                    <label for="product-image-url">URL de la Imagen</label>
+                                    <input type="url" id="product-image-url" 
+                                        placeholder="https://ejemplo.com/imagen.jpg">
+                                </div>
+                                
+                                <!-- Input para subir archivo -->
+                                <div id="file-input-container" style="display: none;">
+                                    <label for="product-image-file">Seleccionar Imagen</label>
+                                    <input type="file" id="product-image-file" 
+                                        accept="image/jpeg,image/png,image/jpg,image/webp" 
+                                        onchange="handleImageUpload(event)">
+                                    <small style="color: var(--gris-claro); display: block; margin-top: 0.5rem;">
+                                        Formatos: JPG, PNG, WEBP. Máximo 2MB
+                                    </small>
+                                    <div id="image-preview" style="margin-top: 1rem; display: none;">
+                                        <img id="preview-img" style="max-width: 200px; border-radius: 10px; border: 2px solid var(--violeta-medio);">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tags y opciones -->
+                            <div class="form-group">
+                                <label for="product-tags">Etiquetas (separadas por comas)</label>
+                                <input type="text" id="product-tags" 
+                                    placeholder="ej: proteína, recuperación, músculo">
+                            </div>
+                            
+                            <div class="form-group" style="display: flex; align-items: center; gap: 1rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin: 0;">
+                                    <input type="checkbox" id="product-featured">
+                                    <span>Producto Destacado</span>
+                                </label>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="closeProductModal()">
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Guardar Producto
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Categorías -->
+            <div id="categories-modal" class="modal-overlay" style="display: none;">
+                <div class="modal-box" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h3>Gestión de Categorías</h3>
+                        <span class="close" onclick="closeCategoriesModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Formulario para nueva categoría -->
+                        <div style="background: var(--negro); padding: 1.5rem; border-radius: 10px; margin-bottom: 2rem;">
+                            <h4 style="color: var(--violeta-claro); margin-bottom: 1rem;">Nueva Categoría</h4>
+                            <form id="category-form" onsubmit="addCategory(event)">
+                                <div class="form-group">
+                                    <label for="category-name">Nombre *</label>
+                                    <input type="text" id="category-name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="category-description">Descripción</label>
+                                    <input type="text" id="category-description">
+                                </div>
+                                <div class="form-group">
+                                    <label for="category-icon">Icono Font Awesome</label>
+                                    <input type="text" id="category-icon" value="fas fa-box">
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                    <i class="fas fa-plus"></i> Agregar Categoría
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!-- Lista de categorías existentes -->
+                        <h4 style="color: var(--violeta-claro); margin-bottom: 1rem;">Categorías Existentes</h4>
+                        <div id="categories-list" style="display: flex; flex-direction: column; gap: 1rem;">
+                            <!-- Las categorías se cargarán dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- ________________ Fin del Update parte 1 para el administrador; apartado modificado de la tienda_______________________________________-->
+            <!--------------------------------------------------------------------------------------------------------------------------->
 
             <!-- Modal para Agregar/Editar Producto -->
             <div id="product-modal" class="modal-overlay" style="display: none;">
@@ -480,9 +701,12 @@
                 loadStatistics();
                 loadCategories();
                 loadProducts();
+<<<<<<< HEAD
                 
                 // Configurar botón de logout
                 setupLogoutButton();
+=======
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
             });
 
             // ==================== CONFIGURAR BOTÓN DE LOGOUT ====================
@@ -1555,6 +1779,471 @@
                             alert(result.message);
                         }
                         loadProducts();
+                    } else {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('error', 'Error', result.message);
+                        } else {
+                            alert(result.message);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+        </script>
+        <!-- ________________ Update parte 2 para el administrador; apartado modificado de la tienda_______________________________________-->
+        ---------------------------------------------------------------------------------------------------------------------------
+        <script>
+                    let allProducts = [];
+            let allCategories = [];
+
+            // Cargar productos al iniciar
+            document.addEventListener('DOMContentLoaded', function() {
+                // ... código existente ...
+                loadProducts();
+                loadCategories();
+            });
+
+            // Cargar categorías
+            async function loadCategories() {
+                try {
+                    const response = await fetch('/api/categories');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        allCategories = data.categories;
+                        updateCategorySelectors();
+                    }
+                } catch (error) {
+                    console.error('Error cargando categorías:', error);
+                }
+            }
+
+            // Actualizar selectores de categorías
+            function updateCategorySelectors() {
+                const productCategorySelect = document.getElementById('product-category');
+                const filterSelect = document.getElementById('product-category-filter');
+                
+                if (productCategorySelect) {
+                    productCategorySelect.innerHTML = '<option value="">Seleccionar categoría...</option>' +
+                        allCategories.map(cat => `<option value="${cat.slug}">${cat.name}</option>`).join('');
+                }
+                
+                if (filterSelect) {
+                    filterSelect.innerHTML = '<option value="">Todas las categorías</option>' +
+                        allCategories.map(cat => `<option value="${cat.slug}">${cat.name}</option>`).join('');
+                }
+            }
+
+            // Cargar productos
+            async function loadProducts() {
+                try {
+                    const response = await fetch('/api/admin/products');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        allProducts = data.products;
+                        displayProducts(allProducts);
+                    } else {
+                        document.getElementById('products-table-body').innerHTML = 
+                            '<tr><td colspan="8" class="error">Error cargando productos</td></tr>';
+                    }
+                } catch (error) {
+                    console.error('Error cargando productos:', error);
+                    document.getElementById('products-table-body').innerHTML = 
+                        '<tr><td colspan="8" class="error">Error de conexión</td></tr>';
+                }
+            }
+
+            // Mostrar productos en tabla
+            function displayProducts(products) {
+                const tbody = document.getElementById('products-table-body');
+                
+                if (products.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="no-data">No hay productos</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = products.map(product => {
+                    let imageHtml = '';
+                    if (product.imageType === 'icon' || !product.image) {
+                        imageHtml = `<i class="${product.icon}" style="font-size: 2rem; color: var(--violeta-claro);"></i>`;
+                    } else if (product.imageType === 'url' || product.imageType === 'base64') {
+                        imageHtml = `<img src="${product.image}" alt="${product.name}" 
+                            style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">`;
+                    }
+                    
+                    return `
+                        <tr>
+                            <td>#${product.productId}</td>
+                            <td style="text-align: center;">${imageHtml}</td>
+                            <td>${product.name}</td>
+                            <td>${product.categoryId?.name || product.category}</td>
+                            <td>$${product.price.toLocaleString()}</td>
+                            <td>${product.stock}</td>
+                            <td>
+                                <span class="status ${product.active ? 'active' : ''}" 
+                                    style="background: ${product.active ? '#4CAF50' : '#666'};">
+                                    ${product.active ? 'Activo' : 'Inactivo'}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn-table-action" onclick="editProduct('${product._id}')" 
+                                        title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-table-action" onclick="toggleProductStatus('${product._id}')" 
+                                        title="${product.active ? 'Desactivar' : 'Activar'}">
+                                    <i class="fas fa-${product.active ? 'eye-slash' : 'eye'}"></i>
+                                </button>
+                                <button class="btn-table-action delete" onclick="deleteProduct('${product._id}')" 
+                                        title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // Buscar productos
+            function searchProducts() {
+                const searchTerm = document.getElementById('product-search').value.toLowerCase();
+                const filtered = allProducts.filter(product => 
+                    product.name.toLowerCase().includes(searchTerm) ||
+                    product.description.toLowerCase().includes(searchTerm)
+                );
+                displayProducts(filtered);
+            }
+
+            // Filtrar por categoría
+            function filterProductsByCategory() {
+                const category = document.getElementById('product-category-filter').value;
+                const filtered = category ? allProducts.filter(p => p.category === category) : allProducts;
+                displayProducts(filtered);
+            }
+
+            // Mostrar modal de agregar producto
+            function showAddProductModal() {
+                document.getElementById('product-modal-title').textContent = 'Agregar Producto';
+                document.getElementById('product-form').reset();
+                document.getElementById('product-id').value = '';
+                document.getElementById('product-icon').value = 'fas fa-box';
+                document.getElementById('product-stock').value = 100;
+                document.querySelector('input[name="image-type"][value="icon"]').checked = true;
+                toggleImageType();
+                document.getElementById('product-modal').classList.add('show');
+            }
+
+            // Editar producto
+            function editProduct(productId) {
+                const product = allProducts.find(p => p._id === productId);
+                if (!product) return;
+                
+                document.getElementById('product-modal-title').textContent = 'Editar Producto';
+                document.getElementById('product-id').value = product._id;
+                document.getElementById('product-name').value = product.name;
+                document.getElementById('product-description').value = product.description;
+                document.getElementById('product-price').value = product.price;
+                document.getElementById('product-stock').value = product.stock;
+                document.getElementById('product-category').value = product.category;
+                document.getElementById('product-tags').value = product.tags?.join(', ') || '';
+                document.getElementById('product-featured').checked = product.featured || false;
+                
+                // Configurar tipo de imagen
+                const imageType = product.imageType || 'icon';
+                document.querySelector(`input[name="image-type"][value="${imageType}"]`).checked = true;
+                toggleImageType();
+                
+                if (imageType === 'icon') {
+                    document.getElementById('product-icon').value = product.icon || 'fas fa-box';
+                } else if (imageType === 'url') {
+                    document.getElementById('product-image-url').value = product.image || '';
+                }
+                
+                document.getElementById('product-modal').classList.add('show');
+            }
+
+            // Cerrar modal de producto
+            function closeProductModal() {
+                document.getElementById('product-modal').classList.remove('show');
+            }
+
+            // Toggle tipo de imagen
+            function toggleImageType() {
+                const type = document.querySelector('input[name="image-type"]:checked').value;
+                
+                document.getElementById('icon-input-container').style.display = type === 'icon' ? 'block' : 'none';
+                document.getElementById('url-input-container').style.display = type === 'url' ? 'block' : 'none';
+                document.getElementById('file-input-container').style.display = type === 'base64' ? 'block' : 'none';
+            }
+
+            // Manejar subida de imagen
+            function handleImageUpload(event) {
+                const file = event.target.files[0];
+                
+                if (!file) return;
+                
+                // Validar tamaño (2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('La imagen es muy grande. Máximo 2MB');
+                    event.target.value = '';
+                    return;
+                }
+                
+                // Validar tipo
+                if (!['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(file.type)) {
+                    alert('Formato no soportado. Usa JPG, PNG o WEBP');
+                    event.target.value = '';
+                    return;
+                }
+                
+                // Leer archivo y mostrar preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview-img').src = e.target.result;
+                    document.getElementById('image-preview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // Guardar producto
+            document.getElementById('product-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const productId = document.getElementById('product-id').value;
+                const imageType = document.querySelector('input[name="image-type"]:checked').value;
+                
+                let imageData = null;
+                if (imageType === 'url') {
+                    imageData = document.getElementById('product-image-url').value;
+                } else if (imageType === 'base64') {
+                    const fileInput = document.getElementById('product-image-file');
+                    if (fileInput.files[0]) {
+                        imageData = document.getElementById('preview-img').src;
+                    }
+                }
+                
+                const productData = {
+                    name: document.getElementById('product-name').value,
+                    description: document.getElementById('product-description').value,
+                    price: parseFloat(document.getElementById('product-price').value),
+                    category: document.getElementById('product-category').value,
+                    categoryId: allCategories.find(c => c.slug === document.getElementById('product-category').value)?._id,
+                    stock: parseInt(document.getElementById('product-stock').value),
+                    featured: document.getElementById('product-featured').checked,
+                    tags: document.getElementById('product-tags').value.split(',').map(t => t.trim()).filter(t => t),
+                    imageType: imageType,
+                    icon: imageType === 'icon' ? document.getElementById('product-icon').value : 'fas fa-box',
+                    image: imageData
+                };
+                
+                try {
+                    const url = productId ? `/api/admin/products/${productId}` : '/api/admin/products';
+                    const method = productId ? 'PUT' : 'POST';
+                    
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(productData)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', '¡Éxito!', result.message);
+                        } else {
+                            alert(result.message);
+                        }
+                        closeProductModal();
+                        loadProducts();
+                    } else {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('error', 'Error', result.message);
+                        } else {
+                            alert(result.message);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error de Conexión', 'No se pudo guardar el producto');
+                    } else {
+                        alert('Error de conexión');
+                    }
+                }
+            });
+
+            // Cambiar estado de producto
+            async function toggleProductStatus(productId) {
+                try {
+                    const response = await fetch(`/api/admin/products/${productId}/toggle`, {
+                        method: 'PATCH'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', '¡Éxito!', result.message);
+                        }
+                        loadProducts();
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+
+            // Eliminar producto
+            async function deleteProduct(productId) {
+                const confirmDelete = typeof showConfirmAlert === 'function'
+                    ? await new Promise(resolve => {
+                        showConfirmAlert(
+                            'Eliminar Producto',
+                            '¿Estás seguro de eliminar este producto? Esta acción no se puede deshacer.',
+                            () => resolve(true),
+                            () => resolve(false)
+                        );
+                    })
+                    : confirm('¿Estás seguro de eliminar este producto?');
+                
+                if (!confirmDelete) return;
+                
+                try {
+                    const response = await fetch(`/api/admin/products/${productId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', '¡Éxito!', result.message);
+                        } else {
+                            alert(result.message);
+                        }
+                        loadProducts();
+                    } else {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('error', 'Error', result.message);
+                        } else {
+                            alert(result.message);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+        </script>
+        <script>
+        // ==================== GESTIÓN DE CATEGORÍAS ====================
+
+            function showCategoriesModal() {
+                loadCategoriesForModal();
+                document.getElementById('categories-modal').classList.add('show');
+            }
+
+            function closeCategoriesModal() {
+                document.getElementById('categories-modal').classList.remove('show');
+            }
+
+            async function loadCategoriesForModal() {
+                const container = document.getElementById('categories-list');
+                
+                if (allCategories.length === 0) {
+                    container.innerHTML = '<p style="color: var(--gris-claro); text-align: center;">No hay categorías</p>';
+                    return;
+                }
+                
+                container.innerHTML = allCategories.map(cat => `
+                    <div style="display: flex; align-items: center; justify-content: space-between; 
+                                padding: 1rem; background: var(--negro); border-radius: 10px;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <i class="${cat.icon}" style="font-size: 1.5rem; color: var(--violeta-claro);"></i>
+                            <div>
+                                <strong style="color: var(--blanco);">${cat.name}</strong>
+                                <p style="color: var(--gris-claro); margin: 0; font-size: 0.85rem;">
+                                    ${cat.description || 'Sin descripción'}
+                                </p>
+                            </div>
+                        </div>
+                        <button class="btn-table-action delete" onclick="deleteCategory('${cat._id}')" 
+                                title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `).join('');
+            }
+
+            async function addCategory(event) {
+                event.preventDefault();
+                
+                const categoryData = {
+                    name: document.getElementById('category-name').value,
+                    description: document.getElementById('category-description').value,
+                    icon: document.getElementById('category-icon').value
+                };
+                
+                try {
+                    const response = await fetch('/api/admin/categories', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(categoryData)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', '¡Éxito!', result.message);
+                        } else {
+                            alert(result.message);
+                        }
+                        document.getElementById('category-form').reset();
+                        await loadCategories();
+                        loadCategoriesForModal();
+                    } else {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('error', 'Error', result.message);
+                        } else {
+                            alert(result.message);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+
+            async function deleteCategory(categoryId) {
+                const confirmDelete = typeof showConfirmAlert === 'function'
+                    ? await new Promise(resolve => {
+                        showConfirmAlert(
+                            'Eliminar Categoría',
+                            '¿Estás seguro? No se puede eliminar si tiene productos asociados.',
+                            () => resolve(true),
+                            () => resolve(false)
+                        );
+                    })
+                    : confirm('¿Estás seguro de eliminar esta categoría?');
+                
+                if (!confirmDelete) return;
+                
+                try {
+                    const response = await fetch(`/api/admin/categories/${categoryId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', '¡Éxito!', result.message);
+                        } else {
+                            alert(result.message);
+                        }
+                        await loadCategories();
+                        loadCategoriesForModal();
                     } else {
                         if (typeof showCustomAlert === 'function') {
                             showCustomAlert('error', 'Error', result.message);
