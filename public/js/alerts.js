@@ -1,190 +1,124 @@
-// ==================== SISTEMA DE ALERTAS PERSONALIZADO FITZONE ====================
-// Archivo: public/js/alerts.js
+// ==================== SISTEMA DE MENSAJES DISCRETOS FITZONE ====================
+// Sin modales molestos, solo mensajes directos
 
-// Función principal para mostrar alertas
-function showCustomAlert(type, title, message, callback) {
-    // Remover alertas anteriores
-    const existingAlerts = document.querySelectorAll('.custom-alert-overlay');
-    existingAlerts.forEach(alert => alert.remove());
-    
-    const overlay = document.createElement('div');
-    overlay.className = 'custom-alert-overlay show';
-    
-    const icons = {
-        success: '✓',
-        error: '✗',
-        warning: '⚠',
-        info: 'ℹ'
-    };
-    
-    overlay.innerHTML = `
-        <div class="custom-alert-box">
-            <div class="custom-alert-header ${type}">
-                <div class="custom-alert-icon">${icons[type] || 'ℹ'}</div>
-                <h3>${title}</h3>
-            </div>
-            <div class="custom-alert-body">
-                ${message}
-            </div>
-            <div class="custom-alert-actions">
-                <button class="custom-alert-btn primary" onclick="closeCustomAlert(this)">
-                    Aceptar
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(overlay);
-    
-    // Cerrar al hacer clic fuera
-    overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) {
-            closeCustomAlert(overlay);
-            if (callback) callback();
-        }
-    });
-    
-    // Ejecutar callback al cerrar con botón
-    const btn = overlay.querySelector('.custom-alert-btn');
-    if (btn) {
-        btn.addEventListener('click', function() {
-            if (callback) callback();
-        });
-    }
-}
-
-// Función para alertas de confirmación
-function showConfirmAlert(title, message, onConfirm, onCancel) {
-    // Remover alertas anteriores
-    const existingAlerts = document.querySelectorAll('.custom-alert-overlay');
-    existingAlerts.forEach(alert => alert.remove());
-    
-    const overlay = document.createElement('div');
-    overlay.className = 'custom-alert-overlay show';
-    
-    overlay.innerHTML = `
-        <div class="custom-alert-box">
-            <div class="custom-alert-header warning">
-                <div class="custom-alert-icon">?</div>
-                <h3>${title}</h3>
-            </div>
-            <div class="custom-alert-body">
-                ${message}
-            </div>
-            <div class="custom-alert-actions">
-                <button class="custom-alert-btn secondary btn-cancel">
-                    Cancelar
-                </button>
-                <button class="custom-alert-btn primary btn-confirm">
-                    Confirmar
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(overlay);
-    
-    // Manejadores de eventos
-    const btnCancel = overlay.querySelector('.btn-cancel');
-    const btnConfirm = overlay.querySelector('.btn-confirm');
-    
-    if (btnCancel) {
-        btnCancel.addEventListener('click', function() {
-            closeCustomAlert(overlay);
-            if (onCancel) onCancel();
-        });
-    }
-    
-    if (btnConfirm) {
-        btnConfirm.addEventListener('click', function() {
-            closeCustomAlert(overlay);
-            if (onConfirm) onConfirm();
-        });
-    }
-    
-    // Cerrar al hacer clic fuera
-    overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) {
-            closeCustomAlert(overlay);
-            if (onCancel) onCancel();
-        }
-    });
-}
-
-// Función para cerrar alertas
-function closeCustomAlert(element) {
-    try {
-        const overlay = element.closest ? element.closest('.custom-alert-overlay') : element;
-        if (overlay) {
-            overlay.classList.remove('show');
+// Función para mostrar mensaje de error discreto
+function showError(message, elementId = null) {
+    // Si hay un elemento específico, mostrar el error ahí
+    if (elementId) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            let errorDiv = element.nextElementSibling;
+            if (!errorDiv || !errorDiv.classList.contains('error-message')) {
+                errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                element.parentNode.insertBefore(errorDiv, element.nextSibling);
+            }
+            errorDiv.textContent = message;
+            errorDiv.style.cssText = `
+                color: #ef4444;
+                font-size: 0.85rem;
+                margin-top: 0.3rem;
+                display: block;
+            `;
+            
+            // Remover después de 5 segundos
             setTimeout(() => {
-                if (overlay.parentNode) {
-                    overlay.remove();
-                }
-            }, 300);
+                if (errorDiv.parentNode) errorDiv.remove();
+            }, 5000);
         }
-    } catch (error) {
-        console.error('Error cerrando alerta:', error);
+    } else {
+        // Mostrar en la parte superior de la página
+        showTopMessage(message, 'error');
     }
 }
 
-// Cerrar con tecla Escape
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        const openAlert = document.querySelector('.custom-alert-overlay.show');
-        if (openAlert) {
-            closeCustomAlert(openAlert);
-        }
-    }
-});
+// Función para mostrar mensaje de éxito discreto (solo cuando sea necesario)
+function showSuccess(message) {
+    showTopMessage(message, 'success');
+}
 
-// Exportar funciones globales
-window.showCustomAlert = showCustomAlert;
-window.showConfirmAlert = showConfirmAlert;
-window.closeCustomAlert = closeCustomAlert;
-
-// Función auxiliar para mostrar notificaciones tipo toast
-function showToast(message, type = 'info', duration = 3000) {
-    const toast = document.createElement('div');
-    toast.className = `fitzone-toast fitzone-toast-${type}`;
+// Mensaje superior discreto
+function showTopMessage(message, type = 'error') {
+    const existing = document.querySelector('.top-message');
+    if (existing) existing.remove();
     
-    const icons = {
-        success: '✓',
-        error: '✗',
-        warning: '⚠',
-        info: 'ℹ'
-    };
-    
-    toast.innerHTML = `
-        <div class="toast-icon">${icons[type]}</div>
-        <div class="toast-message">${message}</div>
-    `;
-    
-    toast.style.cssText = `
+    const msg = document.createElement('div');
+    msg.className = 'top-message';
+    msg.textContent = message;
+    msg.style.cssText = `
         position: fixed;
-        top: 100px;
+        top: 80px;
         right: 20px;
-        background: var(--gris-oscuro);
-        color: white;
         padding: 1rem 1.5rem;
-        border-radius: 10px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        z-index: 10001;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        z-index: 9999;
         animation: slideInRight 0.3s ease;
-        border-left: 4px solid ${type === 'success' ? '#22c55e' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : 'var(--violeta-claro)'};
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        max-width: 400px;
+        ${type === 'error' 
+            ? 'background: #ef4444; color: white;' 
+            : 'background: #22c55e; color: white;'}
     `;
     
-    document.body.appendChild(toast);
+    document.body.appendChild(msg);
     
     setTimeout(() => {
-        toast.style.animation = 'slideOutRight 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-    }, duration);
+        msg.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => msg.remove(), 300);
+    }, 4000);
 }
 
-window.showToast = showToast;
+// Limpiar mensajes de error
+function clearErrors() {
+    document.querySelectorAll('.error-message').forEach(el => el.remove());
+    const topMsg = document.querySelector('.top-message');
+    if (topMsg) topMsg.remove();
+}
 
-console.log('✅ Sistema de alertas FitZone cargado correctamente');
+// CSS para animaciones
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    .error-message {
+        animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+`;
+document.head.appendChild(style);
+
+// Mantener compatibilidad con código antiguo (pero sin modales)
+window.showCustomAlert = function(type, title, message, callback) {
+    if (type === 'error' || type === 'warning') {
+        showError(message);
+    } else {
+        showSuccess(message);
+    }
+    if (callback) setTimeout(callback, 100);
+};
+
+window.showConfirmAlert = function(title, message, onConfirm, onCancel) {
+    // Usar confirm nativo de JavaScript (simple y directo)
+    if (confirm(message)) {
+        if (onConfirm) onConfirm();
+    } else {
+        if (onCancel) onCancel();
+    }
+};
+
+window.showError = showError;
+window.showSuccess = showSuccess;
+window.clearErrors = clearErrors;
+
+console.log('✅ Sistema de mensajes discretos cargado');
