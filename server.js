@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema({
     phone: { type: String, required: true },
     password: { type: String, required: true },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
-    role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    role: { type: String, enum: ['user', 'admin', 'employee'], default: 'user' }, // ← MODIFICADO
     createdAt: { type: Date, default: Date.now }
 });
 userSchema.index({ email: 1 });
@@ -413,6 +413,14 @@ function requireAdmin(req, res, next) {
     }
 }
 
+// Middleware para verificar si es empleado
+function verificarEmpleado(req, res, next) {
+    if (req.session.userId && (req.session.role === 'employee' || req.session.role === 'admin')) {
+        return next();
+    }
+    res.redirect('/login-empleado');
+}
+
 // ============== RUTAS HTML CORREGIDAS ==============
 
 app.get('/', (req, res) => {
@@ -455,6 +463,14 @@ app.get('/admin', requireAuth, requireAdmin, (req, res) => {
 
 app.get('/checkout', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'checkout.html'));
+});
+
+// Ruta de login para empleados
+app.get('/login-empleado', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login-empleado.html')));
+
+// Ruta del panel de empleados (protegida)
+app.get('/empleados', verificarSesion, verificarEmpleado, (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'empleados.html'));
 });
 
 // ============== APIs BÁSICAS ==============
@@ -570,6 +586,44 @@ app.post('/api/login', async (req, res) => {
             success: false,
             message: 'Error interno del servidor'
         });
+    }
+});
+
+// Login para empleados
+app.post('/api/login-empleado', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        const user = await User.findOne({ email: email.toLowerCase() });
+        
+        if (!user) {
+            return res.json({ success: false, message: 'Credenciales incorrectas' });
+        }
+        
+        // Verificar que sea empleado o admin
+        if (user.role !== 'employee' && user.role !== 'admin') {
+            return res.json({ success: false, message: 'No tienes permisos de empleado' });
+        }
+        
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        
+        if (!passwordMatch) {
+            return res.json({ success: false, message: 'Credenciales incorrectas' });
+        }
+        
+        req.session.userId = user._id;
+        req.session.role = user.role;
+        req.session.userEmail = user.email;
+        
+        res.json({ 
+            success: true, 
+            message: 'Login exitoso',
+            role: user.role
+        });
+        
+    } catch (error) {
+        console.error('Error en login de empleado:', error);
+        res.status(500).json({ success: false, message: 'Error en el servidor' });
     }
 });
 
