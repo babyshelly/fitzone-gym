@@ -86,6 +86,43 @@
                     });
                 </script>
             </section>
+            <section>
+                <script>
+                    // Función para mostrar errores inline en dashboard
+                    function showDashboardError(message) {
+                        // Crear o actualizar toast de error
+                        let toast = document.getElementById('dashboard-toast');
+                        if (!toast) {
+                            toast = document.createElement('div');
+                            toast.id = 'dashboard-toast';
+                            toast.style.cssText = `
+                                position: fixed;
+                                top: 100px;
+                                right: 20px;
+                                background: #ef4444;
+                                color: white;
+                                padding: 1rem 1.5rem;
+                                border-radius: 8px;
+                                z-index: 1001;
+                                animation: slideIn 0.3s ease;
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                            `;
+                            document.body.appendChild(toast);
+                        }
+                        toast.textContent = message;
+                        toast.style.display = 'block';
+                        
+                        setTimeout(() => {
+                            toast.style.animation = 'slideOut 0.3s ease';
+                            setTimeout(() => toast.style.display = 'none', 300);
+                        }, 3000);
+                    }
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Ejemplo de uso
+                        // showDashboardError('Error cargando datos de membresía.');
+                    });
+                </script>
+            </section>
             <!-- ==================== AGREGAR ESTA SECCIÓN AL DASHBOARD.HTML ==================== -->
             <!-- Colocar después de la sección de bienvenida y antes de "Mi Perfil" -->
 
@@ -984,20 +1021,12 @@
                     const selectedTime = timeSelector.value;
                     
                     if (!selectedDate) {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('warning', 'Fecha Requerida', 'Por favor selecciona una fecha');
-                        } else {
-                            alert('Por favor selecciona una fecha');
-                        }
+                        showDashboardError('Por favor selecciona una fecha');
                         return;
                     }
                     
                     if (!selectedTime) {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('warning', 'Horario Requerido', 'Por favor selecciona un horario');
-                        } else {
-                            alert('Por favor selecciona un horario');
-                        }
+                        showDashboardError('Por favor selecciona un horario');
                         return;
                     }
                     
@@ -1052,38 +1081,43 @@
                     const result = await response.json();
                     
                     if (result.success) {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('success', '¡Reserva Exitosa!', 
-                                `Tu clase de ${className} ha sido reservada para el ${dayNameDisplay} ${day}/${month}/${year} a las ${selectedTime}`,
-                                () => {
-                                    loadMyReservations();
-                                    if (typeof loadUserReservations === 'function') {
-                                        loadUserReservations();
-                                    }
-                                    if (typeof generateCalendar === 'function') {
-                                        generateCalendar();
-                                    }
-                                }
-                            );
-                        } else {
-                            alert(`¡Reserva exitosa para ${className}!`);
-                            loadMyReservations();
+                        // Recargar reservas automáticamente
+                        loadMyReservations();
+                        if (typeof loadUserReservations === 'function') {
+                            loadUserReservations();
                         }
+                        
+                        // Limpiar selectores
+                        dateSelector.value = '';
+                        timeSelector.value = '';
+                        
+                        // Mostrar confirmación breve
+                        const successToast = document.createElement('div');
+                        successToast.style.cssText = `
+                            position: fixed;
+                            top: 100px;
+                            right: 20px;
+                            background: #22c55e;
+                            color: white;
+                            padding: 1rem 1.5rem;
+                            border-radius: 8px;
+                            z-index: 1001;
+                            animation: slideIn 0.3s ease;
+                        `;
+                        successToast.textContent = 'Reserva confirmada';
+                        document.body.appendChild(successToast);
+                        
+                        setTimeout(() => {
+                            successToast.style.animation = 'slideOut 0.3s ease';
+                            setTimeout(() => successToast.remove(), 300);
+                        }, 2000);
                     } else {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('error', 'Error en Reserva', result.message || 'No se pudo completar la reserva');
-                        } else {
-                            alert(result.message || 'Error al reservar la clase');
-                        }
+                        showDashboardError(result.message || 'No se pudo completar la reserva');
                     }
                     
                 } catch (error) {
                     console.error('Error:', error);
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('error', 'Error de Conexión', 'No se pudo conectar con el servidor. Intenta nuevamente.');
-                    } else {
-                        alert('Error de conexión. Intenta nuevamente.');
-                    }
+                    showDashboardError('Error de conexión');
                 }
             }
             // Cancelar reserva
@@ -1109,32 +1143,18 @@
                     const result = await response.json();
                     
                     if (result.success) {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('success', 'Reserva Cancelada', 'Tu reserva ha sido cancelada exitosamente', () => {
-                                loadMyReservations();
-                                if (typeof loadUserReservations === 'function') {
-                                    loadUserReservations();
-                                }
-                            });
-                        } else {
-                            alert('Reserva cancelada exitosamente');
-                            loadMyReservations();
+                        // Recargar automáticamente
+                        loadMyReservations();
+                        if (typeof loadUserReservations === 'function') {
+                            loadUserReservations();
                         }
                     } else {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('error', 'Error', result.message || 'No se pudo cancelar la reserva');
-                        } else {
-                            alert(result.message || 'Error al cancelar la reserva');
-                        }
+                        showDashboardError(result.message || 'No se pudo cancelar la reserva');
                     }
                     
                 } catch (error) {
                     console.error('Error:', error);
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('error', 'Error de Conexión', 'No se pudo cancelar la reserva. Intenta nuevamente.');
-                    } else {
-                        alert('Error de conexión. Intenta nuevamente.');
-                    }
+                    showDashboardError('Error de conexión');
                 }
             }
 
@@ -1165,58 +1185,23 @@
             function showAvailableClasses() {
                 document.getElementById('horarios').scrollIntoView({ behavior: 'smooth' });
             }
-            // Cerrar sesión
-            document.addEventListener('DOMContentLoaded', function() {
-                const logoutBtn = document.querySelector('.btn-logout');
+            // Cerrar sesión - SIN CONFIRMACIÓN
+            document.querySelector('.btn-logout').addEventListener('click', async function(e) {
+                e.preventDefault();
                 
-                if (logoutBtn) {
-                    logoutBtn.addEventListener('click', async function(e) {
-                        e.preventDefault();
-                        
-                        const confirmLogout = typeof showConfirmAlert === 'function'
-                            ? await new Promise(resolve => {
-                                showConfirmAlert(
-                                    'Cerrar Sesión',
-                                    '¿Estás seguro de que quieres cerrar sesión?',
-                                    () => resolve(true),
-                                    () => resolve(false)
-                                );
-                            })
-                            : confirm('¿Estás seguro de que quieres cerrar sesión?');
-                        
-                        if (!confirmLogout) return;
-                        
-                        try {
-                            const response = await fetch('/api/logout', {
-                                method: 'POST',
-                                credentials: 'same-origin' // IMPORTANTE: Enviar cookies
-                            });
-                            
-                            const result = await response.json();
-                            
-                            if (result.success) {
-                                // Limpiar almacenamiento local
-                                localStorage.clear();
-                                sessionStorage.clear();
-                                
-                                if (typeof showCustomAlert === 'function') {
-                                    showCustomAlert('success', 'Sesión Cerrada', '¡Hasta pronto!', () => {
-                                        window.location.href = '/';
-                                    });
-                                } else {
-                                    alert('Sesión cerrada. ¡Hasta pronto!');
-                                    window.location.href = '/';
-                                }
-                            } else {
-                                // Aunque falle, redirigir igual
-                                window.location.href = '/';
-                            }
-                        } catch (error) {
-                            console.error('Error cerrando sesión:', error);
-                            // Forzar redirección
-                            window.location.href = '/';
-                        }
+                try {
+                    const response = await fetch('/api/logout', {
+                        method: 'POST'
                     });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        window.location.href = '/';
+                    }
+                } catch (error) {
+                    console.error('Error cerrando sesión:', error);
+                    window.location.href = '/';
                 }
             });
 
@@ -1369,6 +1354,34 @@
                     closeDayModal();
                 }
             });
+            if (!document.getElementById('toast-animations')) {
+                const style = document.createElement('style');
+                style.id = 'toast-animations';
+                style.textContent = `
+                    @keyframes slideIn {
+                        from {
+                            transform: translateX(100%);
+                            opacity: 0;
+                        }
+                        to {
+                            transform: translateX(0);
+                            opacity: 1;
+                        }
+                    }
+                    
+                    @keyframes slideOut {
+                        from {
+                            transform: translateX(0);
+                            opacity: 1;
+                        }
+                        to {
+                            transform: translateX(100%);
+                            opacity: 0;
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
         </script>
     </body>
 </html>

@@ -50,7 +50,10 @@
             </div>
         </section>
 
+<<<<<<< HEAD
         <!-- Productos -->
+=======
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         <!--Update Tienda jota-->
         <section class="products-section">
             <div class="container">
@@ -62,6 +65,7 @@
                 </div>
             </div>
         </section>
+<!-- ...............................................Fin Update Tienda jota....................................... -->
 
         <!-- Carrito Modal -->
         <div id="cart-modal" class="cart-modal" style="display: none;">
@@ -113,9 +117,13 @@
                 </div>
             </div>
         </footer>
-
+        
         <script>
+<<<<<<< HEAD
           // ==================== SCRIPT ACTUALIZADO PARA tienda.html ====================
+=======
+            // ==================== SCRIPT ACTUALIZADO PARA tienda.html ====================
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
 
             let cart = [];
             let allProducts = [];
@@ -239,7 +247,11 @@
                 if (typeof showCustomAlert === 'function') {
                     showCustomAlert('success', 'Producto Agregado', `${name} ha sido agregado al carrito`);
                 } else {
+<<<<<<< HEAD
                     showNotification('${name} agregado al carrito');
+=======
+                    showNotification(`${name} agregado al carrito`);
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
                 }
             }
 
@@ -375,10 +387,13 @@
                     border-radius: 8px; animation: slideIn 0.3s ease;
                 `;
                 document.body.appendChild(notification);
-                
+
                 setTimeout(() => notification.remove(), 2000);
             }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
             // Cerrar modal al hacer clic fuera
             window.onclick = function(event) {
                 const modal = document.getElementById('cart-modal');
@@ -387,5 +402,6 @@
                 }
             };
         </script>
+        
     </body>
 </html>

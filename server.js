@@ -2404,6 +2404,19 @@ showConfirmAlert(
 */
 // ==================== FIN DE LOS SCHEMAS ====================
 
+<<<<<<< HEAD
+=======
+// Agregar después de definir los schemas
+userSchema.index({ email: 1 });
+reservationSchema.index({ userId: 1, date: 1 });
+reservationSchema.index({ classId: 1, date: 1, status: 1 });
+membershipSchema.index({ userId: 1, status: 1 });
+membershipSchema.index({ endDate: 1, status: 1 });
+productSchema.index({ category: 1, active: 1 });
+productSchema.index({ featured: 1, active: 1 });
+productSchema.index({ name: 'text', description: 'text', tags: 'text' });
+categorySchema.index({ slug: 1 });
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
 
 // ==================== AGREGAR AL FINAL DE server.js (antes de app.listen) ====================
 
@@ -2599,7 +2612,11 @@ const categorySchema = new mongoose.Schema({
         default: Date.now
     }
 });
+<<<<<<< HEAD
 categorySchema.index({ slug: 1 });
+=======
+
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
 const Category = mongoose.model('Category', categorySchema);
 
 // Schema de Productos mejorado
@@ -2664,10 +2681,13 @@ const productSchema = new mongoose.Schema({
     }
 });
 
+<<<<<<< HEAD
 productSchema.index({ category: 1, active: 1 });
 productSchema.index({ featured: 1, active: 1 });
 productSchema.index({ name: 'text', description: 'text', tags: 'text' });
 
+=======
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
 // Middleware para actualizar updatedAt
 productSchema.pre('save', function(next) {
     this.updatedAt = new Date();
@@ -2752,7 +2772,11 @@ async function initializeProductsAndCategories() {
                     stock: 40,
                     tags: ['energía', 'concentración', 'pre-entrenamiento']
                 },
+<<<<<<< HEAD
 
+=======
+                
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
                 // Ropa Deportiva
                 {
                     productId: 4,
@@ -2792,7 +2816,11 @@ async function initializeProductsAndCategories() {
                     featured: true,
                     tags: ['zapatillas', 'training', 'estabilidad']
                 },
+<<<<<<< HEAD
 
+=======
+                
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
                 // Accesorios
                 {
                     productId: 7,
@@ -2860,7 +2888,11 @@ app.get('/api/categories', async (req, res) => {
 app.post('/api/admin/categories', requireAuth, requireAdmin, async (req, res) => {
     try {
         const { name, description, icon } = req.body;
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         // Generar slug
         const slug = name.toLowerCase()
             .replace(/[áàäâ]/g, 'a')
@@ -2871,16 +2903,26 @@ app.post('/api/admin/categories', requireAuth, requireAdmin, async (req, res) =>
             .replace(/[^a-z0-9]/g, '-')
             .replace(/-+/g, '-')
             .replace(/^-|-$/g, '');
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         const category = new Category({
             name,
             slug,
             description,
             icon: icon || 'fas fa-box'
         });
+<<<<<<< HEAD
 
         await category.save();
 
+=======
+        
+        await category.save();
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         res.json({ 
             success: true, 
             message: 'Categoría creada exitosamente',
@@ -2899,17 +2941,29 @@ app.post('/api/admin/categories', requireAuth, requireAdmin, async (req, res) =>
 app.put('/api/admin/categories/:id', requireAuth, requireAdmin, async (req, res) => {
     try {
         const { name, description, icon, active } = req.body;
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         const category = await Category.findByIdAndUpdate(
             req.params.id,
             { name, description, icon, active },
             { new: true }
         );
+<<<<<<< HEAD
 
         if (!category) {
             return res.json({ success: false, message: 'Categoría no encontrada' });
         }
 
+=======
+        
+        if (!category) {
+            return res.json({ success: false, message: 'Categoría no encontrada' });
+        }
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         res.json({ 
             success: true, 
             message: 'Categoría actualizada exitosamente',
@@ -2926,16 +2980,26 @@ app.delete('/api/admin/categories/:id', requireAuth, requireAdmin, async (req, r
     try {
         // Verificar si hay productos en esta categoría
         const productsCount = await Product.countDocuments({ categoryId: req.params.id });
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         if (productsCount > 0) {
             return res.json({ 
                 success: false, 
                 message: `No se puede eliminar. Hay ${productsCount} productos en esta categoría`
             });
         }
+<<<<<<< HEAD
 
         await Category.findByIdAndDelete(req.params.id);
 
+=======
+        
+        await Category.findByIdAndDelete(req.params.id);
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         res.json({ 
             success: true, 
             message: 'Categoría eliminada exitosamente'
@@ -2952,6 +3016,7 @@ app.delete('/api/admin/categories/:id', requireAuth, requireAdmin, async (req, r
 app.get('/api/products', async (req, res) => {
     try {
         const { category, featured, search } = req.query;
+<<<<<<< HEAD
 
         let query = { active: true };
 
@@ -2963,6 +3028,19 @@ app.get('/api/products', async (req, res) => {
             query.featured = true;
         }
 
+=======
+        
+        let query = { active: true };
+        
+        if (category && category !== 'all') {
+            query.category = category;
+        }
+        
+        if (featured === 'true') {
+            query.featured = true;
+        }
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         if (search) {
             query.$or = [
                 { name: { $regex: search, $options: 'i' } },
@@ -2970,11 +3048,19 @@ app.get('/api/products', async (req, res) => {
                 { tags: { $in: [new RegExp(search, 'i')] } }
             ];
         }
+<<<<<<< HEAD
 
         const products = await Product.find(query)
             .populate('categoryId', 'name slug icon')
             .sort({ featured: -1, createdAt: -1 });
 
+=======
+        
+        const products = await Product.find(query)
+            .populate('categoryId', 'name slug icon')
+            .sort({ featured: -1, createdAt: -1 });
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         res.json({ success: true, products });
     } catch (error) {
         console.error('Error obteniendo productos:', error);
@@ -2987,11 +3073,19 @@ app.get('/api/products/:id', async (req, res) => {
     try {
         const product = await Product.findById(req.params.id)
             .populate('categoryId', 'name slug icon');
+<<<<<<< HEAD
 
         if (!product) {
             return res.json({ success: false, message: 'Producto no encontrado' });
         }
 
+=======
+        
+        if (!product) {
+            return res.json({ success: false, message: 'Producto no encontrado' });
+        }
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         res.json({ success: true, product });
     } catch (error) {
         console.error('Error obteniendo producto:', error);
@@ -3005,7 +3099,11 @@ app.get('/api/admin/products', requireAuth, requireAdmin, async (req, res) => {
         const products = await Product.find()
             .populate('categoryId', 'name slug icon')
             .sort({ createdAt: -1 });
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         res.json({ success: true, products });
     } catch (error) {
         console.error('Error obteniendo productos:', error);
@@ -3017,7 +3115,11 @@ app.get('/api/admin/products', requireAuth, requireAdmin, async (req, res) => {
 app.post('/api/admin/products', requireAuth, requireAdmin, async (req, res) => {
     try {
         const { name, description, price, category, categoryId, image, imageType, icon, stock, featured, tags } = req.body;
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         // Validaciones
         if (!name || !description || !price || !category) {
             return res.json({ 
@@ -3025,18 +3127,30 @@ app.post('/api/admin/products', requireAuth, requireAdmin, async (req, res) => {
                 message: 'Faltan campos requeridos: nombre, descripción, precio y categoría'
             });
         }
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         if (price < 0) {
             return res.json({ 
                 success: false, 
                 message: 'El precio no puede ser negativo'
             });
         }
+<<<<<<< HEAD
 
         // Generar nuevo productId
         const lastProduct = await Product.findOne().sort({ productId: -1 });
         const newProductId = lastProduct ? lastProduct.productId + 1 : 1;
 
+=======
+        
+        // Generar nuevo productId
+        const lastProduct = await Product.findOne().sort({ productId: -1 });
+        const newProductId = lastProduct ? lastProduct.productId + 1 : 1;
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         const product = new Product({
             productId: newProductId,
             name,
@@ -3051,9 +3165,15 @@ app.post('/api/admin/products', requireAuth, requireAdmin, async (req, res) => {
             featured: featured || false,
             tags: tags || []
         });
+<<<<<<< HEAD
 
         await product.save();
 
+=======
+        
+        await product.save();
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         res.json({ 
             success: true, 
             message: 'Producto creado exitosamente',
@@ -3072,7 +3192,11 @@ app.post('/api/admin/products', requireAuth, requireAdmin, async (req, res) => {
 app.put('/api/admin/products/:id', requireAuth, requireAdmin, async (req, res) => {
     try {
         const { name, description, price, category, categoryId, image, imageType, icon, stock, active, featured, tags } = req.body;
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         const updateData = {
             name,
             description,
@@ -3085,27 +3209,47 @@ app.put('/api/admin/products/:id', requireAuth, requireAdmin, async (req, res) =
             tags: tags || [],
             updatedAt: new Date()
         };
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         // Actualizar imagen solo si se proporciona
         if (image !== undefined) {
             updateData.image = image;
             updateData.imageType = imageType || 'icon';
         }
+<<<<<<< HEAD
 
         if (icon) {
             updateData.icon = icon;
         }
 
+=======
+        
+        if (icon) {
+            updateData.icon = icon;
+        }
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         const product = await Product.findByIdAndUpdate(
             req.params.id,
             updateData,
             { new: true, runValidators: true }
         ).populate('categoryId', 'name slug icon');
+<<<<<<< HEAD
 
         if (!product) {
             return res.json({ success: false, message: 'Producto no encontrado' });
         }
 
+=======
+        
+        if (!product) {
+            return res.json({ success: false, message: 'Producto no encontrado' });
+        }
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         res.json({ 
             success: true, 
             message: 'Producto actualizado exitosamente',
@@ -3121,11 +3265,19 @@ app.put('/api/admin/products/:id', requireAuth, requireAdmin, async (req, res) =
 app.delete('/api/admin/products/:id', requireAuth, requireAdmin, async (req, res) => {
     try {
         const product = await Product.findByIdAndDelete(req.params.id);
+<<<<<<< HEAD
 
         if (!product) {
             return res.json({ success: false, message: 'Producto no encontrado' });
         }
 
+=======
+        
+        if (!product) {
+            return res.json({ success: false, message: 'Producto no encontrado' });
+        }
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         res.json({ 
             success: true, 
             message: 'Producto eliminado exitosamente'
@@ -3140,6 +3292,7 @@ app.delete('/api/admin/products/:id', requireAuth, requireAdmin, async (req, res
 app.patch('/api/admin/products/:id/toggle', requireAuth, requireAdmin, async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
+<<<<<<< HEAD
 
         if (!product) {
             return res.json({ success: false, message: 'Producto no encontrado' });
@@ -3148,6 +3301,16 @@ app.patch('/api/admin/products/:id/toggle', requireAuth, requireAdmin, async (re
         product.active = !product.active;
         await product.save();
 
+=======
+        
+        if (!product) {
+            return res.json({ success: false, message: 'Producto no encontrado' });
+        }
+        
+        product.active = !product.active;
+        await product.save();
+        
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
         res.json({ 
             success: true, 
             message: `Producto ${product.active ? 'activado' : 'desactivado'} exitosamente`,
@@ -3164,3 +3327,13 @@ app.patch('/api/admin/products/:id/toggle', requireAuth, requireAdmin, async (re
 
 // Dentro de initializeData(), después de crear el admin y las clases:
 await initializeProductsAndCategories();
+<<<<<<< HEAD
+=======
+
+// 4. AGREGAR AL FINAL DEL ARCHIVO
+// Agregar índices para mejor rendimiento
+productSchema.index({ category: 1, active: 1 });
+productSchema.index({ featured: 1, active: 1 });
+productSchema.index({ name: 'text', description: 'text', tags: 'text' });
+categorySchema.index({ slug: 1 });
+>>>>>>> 0d8c3e390c82d346f76dd7614df2208dddf57739
