@@ -449,6 +449,14 @@ app.get('/register', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'register.html'));
 });
 
+// Ruta de login para empleados
+app.get('/login-empleado', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login-empleado.html')));
+
+// Ruta del panel de empleados (protegida)
+app.get('/empleados', verificarEmpleado, (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'empleados.html'));
+});
+
 app.get('/dashboard', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
 });
@@ -463,14 +471,6 @@ app.get('/admin', requireAuth, requireAdmin, (req, res) => {
 
 app.get('/checkout', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'checkout.html'));
-});
-
-// Ruta de login para empleados
-app.get('/login-empleado', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login-empleado.html')));
-
-// Ruta del panel de empleados (protegida)
-app.get('/empleados', verificarSesion, verificarEmpleado, (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'empleados.html'));
 });
 
 // ============== APIs BÁSICAS ==============
