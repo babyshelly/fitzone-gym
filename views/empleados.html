@@ -296,377 +296,203 @@
                     <span>FitZone</span>
                 </a>
                 <ul class="nav-menu">
-                    <li><a href="#clases">Clases</a></li>
+                    <li><a href="#estadisticas">Estadísticas</a></li>
+                    <li><a href="#clases-hoy">Clases Hoy</a></li>
                     <li><a href="#asistencia">Asistencia</a></li>
-                    <li><a href="#tienda">Tienda</a></li>
-                    <li><a href="#ventas">Ventas Hoy</a></li>
-                    <li><a href="/" class="btn-logout">Cerrar Sesión</a></li>
+                    <li><a href="#pedidos">Pedidos</a></li>
+                    <li><a href="/" class="btn-logout" id="logout-btn">Cerrar Sesión</a></li>
                 </ul>
             </div>
         </nav>
     </header>
 
     <!-- Main Content -->
-    <main class="employee-main">
-        <!-- Overview -->
-        <section class="employee-overview">
+    <main class="employee-main" style="padding-top: 80px; background: var(--negro); min-height: 100vh;">
+        
+        <!-- Bienvenida y Stats del Día -->
+        <section class="employee-overview" style="background: linear-gradient(135deg, var(--violeta-oscuro), var(--violeta-medio)); padding: 3rem 0;">
             <div class="container">
-                <h1>👋 Panel de Empleado</h1>
-                <div class="overview-cards">
-                    <div class="overview-card">
-                        <i class="fas fa-calendar-check"></i>
+                <h1 style="text-align: center; color: var(--blanco); margin-bottom: 0.5rem; font-size: 2.5rem;">
+                    👋 Panel de Empleado
+                </h1>
+                <p style="text-align: center; color: rgba(255,255,255,0.9); font-size: 1.1rem; margin-bottom: 2rem;">
+                    <span id="employee-name">Cargando...</span> • <span id="current-date"></span>
+                </p>
+                
+                <!-- Stats del Día -->
+                <div class="overview-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+                    <div class="overview-card" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 2rem; display: flex; align-items: center; gap: 1.5rem; border: 2px solid var(--violeta-claro);">
+                        <i class="fas fa-calendar-check" style="font-size: 3rem; color: var(--violeta-muy-claro);"></i>
                         <div class="card-content">
-                            <h3 id="today-classes">0</h3>
-                            <p>Clases Hoy</p>
+                            <h3 id="today-classes" style="font-size: 2rem; color: var(--blanco); margin-bottom: 0.5rem;">0</h3>
+                            <p style="color: white; font-size: 0.9rem;">Clases Hoy</p>
                         </div>
                     </div>
-                    <div class="overview-card">
-                        <i class="fas fa-users"></i>
+                    <div class="overview-card" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 2rem; display: flex; align-items: center; gap: 1.5rem; border: 2px solid var(--violeta-claro);">
+                        <i class="fas fa-users" style="font-size: 3rem; color: var(--violeta-muy-claro);"></i>
                         <div class="card-content">
-                            <h3 id="today-attendance">0</h3>
-                            <p>Asistencias Hoy</p>
+                            <h3 id="today-attendance" style="font-size: 2rem; color: var(--blanco); margin-bottom: 0.5rem;">0</h3>
+                            <p style="color: white; font-size: 0.9rem;">Asistencias Hoy</p>
                         </div>
                     </div>
-                    <div class="overview-card">
-                        <i class="fas fa-shopping-bag"></i>
+                    <div class="overview-card" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 2rem; display: flex; align-items: center; gap: 1.5rem; border: 2px solid var(--violeta-claro);">
+                        <i class="fas fa-shopping-bag" style="font-size: 3rem; color: var(--violeta-muy-claro);"></i>
                         <div class="card-content">
-                            <h3 id="today-sales-count">0</h3>
-                            <p>Ventas Hoy</p>
-                        </div>
-                    </div>
-                    <div class="overview-card">
-                        <i class="fas fa-dollar-sign"></i>
-                        <div class="card-content">
-                            <h3 id="today-revenue">$0</h3>
-                            <p>Ingresos Hoy</p>
+                            <h3 id="pending-orders" style="font-size: 2rem; color: var(--blanco); margin-bottom: 0.5rem;">0</h3>
+                            <p style="color: white; font-size: 0.9rem;">Pedidos Pendientes</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Calendario de Clases -->
-        <section id="clases" class="admin-section">
+        <!-- Clases del Día -->
+        <section id="clases-hoy" class="admin-section" style="padding: 4rem 0; background: var(--gris-oscuro);">
             <div class="container">
-                <div class="section-header">
-                    <h2>📅 Calendario de Clases</h2>
-                    <div class="section-actions">
-                        <button class="btn btn-primary" onclick="refreshCalendar()">
-                            <i class="fas fa-sync"></i> Actualizar
-                        </button>
-                    </div>
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 style="color: var(--violeta-claro); font-size: 2rem;">📅 Clases de Hoy</h2>
+                    <button class="btn btn-primary" onclick="loadTodayClasses()">
+                        <i class="fas fa-sync"></i> Actualizar
+                    </button>
                 </div>
 
-                <div class="calendar-view">
-                    <div class="calendar-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                        <button class="calendar-nav" onclick="changeCalendarMonth(-1)">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <h3 id="calendar-month-year" style="color: var(--violeta-claro); margin: 0;">Mes Año</h3>
-                        <button class="calendar-nav" onclick="changeCalendarMonth(1)">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-
-                    <div class="calendar-grid">
-                        <div class="calendar-day-header">Dom</div>
-                        <div class="calendar-day-header">Lun</div>
-                        <div class="calendar-day-header">Mar</div>
-                        <div class="calendar-day-header">Mié</div>
-                        <div class="calendar-day-header">Jue</div>
-                        <div class="calendar-day-header">Vie</div>
-                        <div class="calendar-day-header">Sáb</div>
-                    </div>
-
-                    <div id="calendar-days" class="calendar-grid">
-                        <!-- Días generados dinámicamente -->
+                <div id="today-classes-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                    <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--gris-claro);">
+                        <i class="fas fa-calendar" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <p>Cargando clases del día...</p>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Control de Asistencia -->
-        <section id="asistencia" class="admin-section">
+        <section id="asistencia" class="admin-section" style="padding: 4rem 0; background: var(--negro);">
             <div class="container">
-                <h2>✅ Control de Asistencia</h2>
+                <h2 style="color: var(--violeta-claro); font-size: 2rem; margin-bottom: 2rem; text-align: center;">✅ Registro de Asistencia</h2>
                 
-                <div class="attendance-section">
-                    <div class="attendance-search">
-                        <input type="text" id="member-search" placeholder="Buscar miembro por nombre, email o DNI..." onkeyup="searchMembers()">
-                        <button class="btn btn-primary" onclick="scanQRCode()">
-                            <i class="fas fa-qrcode"></i> Escanear QR
+                <div style="background: var(--gris-oscuro); border-radius: 20px; padding: 2rem; border: 2px solid var(--violeta-medio);">
+                    <!-- Buscador -->
+                    <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                        <input type="text" id="member-search" placeholder="Buscar por nombre, email o DNI..." 
+                            style="flex: 1; padding: 1rem; border: 2px solid var(--violeta-medio); border-radius: 10px; background: var(--negro); color: var(--blanco); font-size: 1rem;"
+                            onkeyup="searchMembers()">
+                        <button class="btn btn-primary" onclick="searchMembers()">
+                            <i class="fas fa-search"></i> Buscar
                         </button>
                     </div>
 
+                    <!-- Resultados -->
                     <div id="members-list">
                         <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
                             <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                            <p>Busca un miembro para registrar su asistencia</p>
+                            <p>Ingresa al menos 3 caracteres para buscar un miembro</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Gestión de Tienda -->
-        <section id="tienda" class="admin-section">
+        <!-- Pedidos Pendientes -->
+        <section id="pedidos" class="admin-section" style="padding: 4rem 0; background: var(--gris-oscuro);">
             <div class="container">
-                <div class="section-header">
-                    <h2>🛍️ Gestión de Tienda</h2>
-                    <div class="section-actions">
-                        <button class="btn btn-primary" onclick="showAddProductModal()">
-                            <i class="fas fa-plus"></i> Agregar Producto
-                        </button>
-                    </div>
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 style="color: var(--violeta-claro); font-size: 2rem;">📦 Pedidos Pendientes</h2>
+                    <button class="btn btn-primary" onclick="loadPendingOrders()">
+                        <i class="fas fa-sync"></i> Actualizar
+                    </button>
                 </div>
 
-                <div class="search-container">
-                    <input type="text" id="product-search" class="search-input" 
-                        placeholder="Buscar productos..." onkeyup="searchProducts()">
-                    <select id="product-category-filter" class="search-input" 
-                            onchange="filterProducts()" style="max-width: 200px;">
-                        <option value="">Todas las categorías</option>
-                    </select>
-                </div>
-
-                <div class="users-table-container">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Imagen</th>
-                                <th>Nombre</th>
-                                <th>Categoría</th>
-                                <th>Precio</th>
-                                <th>Stock</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="products-table-body">
-                            <tr>
-                                <td colspan="8" class="loading">Cargando productos...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- Ventas del Día -->
-        <section id="ventas" class="admin-section">
-            <div class="container">
-                <h2>💰 Ventas de Hoy</h2>
-                
-                <div class="daily-sales">
-                    <div class="sales-summary">
-                        <h3 style="color: white; margin-bottom: 1rem;">Ingresos del Día</h3>
-                        <div class="sales-amount" id="daily-total">$0</div>
-                        <p style="color: rgba(255,255,255,0.8);">
-                            <span id="daily-orders-count">0</span> órdenes completadas
-                        </p>
-                    </div>
-
-                    <h3 style="color: var(--violeta-claro); margin-bottom: 1rem;">
-                        Detalle de Ventas
-                    </h3>
-                    
-                    <div id="daily-sales-list">
-                        <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
-                            <i class="fas fa-receipt" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                            <p>No hay ventas registradas hoy</p>
-                        </div>
+                <div id="pending-orders-list" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
+                        <i class="fas fa-box" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <p>Cargando pedidos pendientes...</p>
                     </div>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- Modal de Producto (igual que admin) -->
-    <div id="product-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-box" style="max-width: 700px;">
-            <div class="modal-header">
-                <h3 id="product-modal-title">Agregar Producto</h3>
-                <span class="close" onclick="closeProductModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="product-form">
-                    <input type="hidden" id="product-id">
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="product-name">Nombre del Producto *</label>
-                            <input type="text" id="product-name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="product-category">Categoría *</label>
-                            <select id="product-category" required>
-                                <option value="">Seleccionar...</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="product-description">Descripción *</label>
-                        <textarea id="product-description" rows="3" required></textarea>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="product-price">Precio ($) *</label>
-                            <input type="number" id="product-price" step="0.01" min="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="product-stock">Stock *</label>
-                            <input type="number" id="product-stock" value="100" min="0" required>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="product-icon">Icono (Font Awesome)</label>
-                        <input type="text" id="product-icon" value="fas fa-box" placeholder="fas fa-box">
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary" onclick="closeProductModal()">
-                            Cancelar
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Guardar
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Detalles de Clase -->
-    <div id="class-details-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3>Detalles de la Clase</h3>
-                <span class="close" onclick="closeClassModal()">&times;</span>
-            </div>
-            <div class="modal-body" id="class-details-content">
-                <!-- Contenido dinámico -->
-            </div>
-        </div>
-    </div>
-
     <script>
-        // Variables globales
-        let currentDate = new Date();
-        let allClasses = [];
-        let allProducts = [];
-        let allMembers = [];
-        let dailySales = [];
+        // ==================== SCRIPT DEL PANEL DE EMPLEADOS ====================
+        
+        // Mostrar fecha actual
+        document.getElementById('current-date').textContent = new Date().toLocaleDateString('es-ES', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
 
-        // Cargar al iniciar
+        // Cargar datos al iniciar
         document.addEventListener('DOMContentLoaded', function() {
             loadEmployeeData();
-            generateCalendar();
-            loadProducts();
-            loadCategories();
-            loadDailySales();
+            loadTodayClasses();
+            loadPendingOrders();
             setupLogout();
         });
 
-        // Cargar datos del empleado
+        // Cargar información del empleado
         async function loadEmployeeData() {
             try {
-                const response = await fetch('/api/employee/dashboard-stats');
+                const response = await fetch('/api/user');
                 const data = await response.json();
-
+                
                 if (data.success) {
-                    document.getElementById('today-classes').textContent = data.stats.todayClasses || 0;
-                    document.getElementById('today-attendance').textContent = data.stats.todayAttendance || 0;
-                    document.getElementById('today-sales-count').textContent = data.stats.todaySales || 0;
-                    document.getElementById('today-revenue').textContent = `$${(data.stats.todayRevenue || 0).toLocaleString()}`;
+                    document.getElementById('employee-name').textContent = data.user.fullName;
                 }
             } catch (error) {
-                console.error('Error cargando datos:', error);
+                console.error('Error:', error);
             }
         }
 
-        // Generar calendario
-        function generateCalendar() {
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            
-            const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                              'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-            
-            document.getElementById('calendar-month-year').textContent = `${monthNames[month]} ${year}`;
-            
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const daysInMonth = lastDay.getDate();
-            const startingDayOfWeek = firstDay.getDay();
-            
-            const calendarDays = document.getElementById('calendar-days');
-            calendarDays.innerHTML = '';
-            
-            // Días vacíos
-            for (let i = 0; i < startingDayOfWeek; i++) {
-                const emptyDay = document.createElement('div');
-                emptyDay.className = 'calendar-day-cell';
-                emptyDay.style.opacity = '0.3';
-                calendarDays.appendChild(emptyDay);
-            }
-            
-            // Días del mes
-            const today = new Date();
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dayElement = document.createElement('div');
-                const currentDayDate = new Date(year, month, day);
+        // Cargar clases de hoy
+        async function loadTodayClasses() {
+            try {
+                const response = await fetch('/api/employee/today-classes');
+                const data = await response.json();
                 
-                dayElement.className = 'calendar-day-cell';
-                if (currentDayDate.toDateString() === today.toDateString()) {
-                    dayElement.classList.add('today');
+                const grid = document.getElementById('today-classes-grid');
+                
+                if (data.success && data.classes.length > 0) {
+                    document.getElementById('today-classes').textContent = data.classes.length;
+                    
+                    grid.innerHTML = data.classes.map(cls => `
+                        <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border: 2px solid var(--violeta-medio);">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                                <div>
+                                    <h4 style="color: var(--violeta-claro); font-size: 1.3rem; margin-bottom: 0.5rem;">
+                                        ${cls.className}
+                                    </h4>
+                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                        <i class="fas fa-clock"></i> ${cls.time}
+                                    </p>
+                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                        <i class="fas fa-users"></i> ${cls.reservations} / ${cls.capacity} inscritos
+                                    </p>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="background: ${cls.reservations >= cls.capacity ? '#ef4444' : '#22c55e'}; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">
+                                        ${cls.reservations >= cls.capacity ? 'LLENO' : 'DISPONIBLE'}
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary" onclick="viewClassDetails('${cls.classId}')" style="width: 100%; margin-top: 0.5rem;">
+                                <i class="fas fa-eye"></i> Ver Inscriptos
+                            </button>
+                        </div>
+                    `).join('');
+                } else {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
+                            <i class="fas fa-calendar-times" style="font-size: 4rem; color: var(--violeta-medio); margin-bottom: 1rem;"></i>
+                            <p style="color: var(--gris-claro); font-size: 1.2rem;">No hay clases programadas para hoy</p>
+                        </div>
+                    `;
+                    document.getElementById('today-classes').textContent = '0';
                 }
-                
-                dayElement.innerHTML = `
-                    <div class="day-number">${day}</div>
-                    <div class="day-class">F.E.C - 10:00</div>
-                    <div class="day-class">Yoga - 18:00</div>
-                `;
-                
-                dayElement.onclick = () => showClassDetails(day, month, year);
-                calendarDays.appendChild(dayElement);
+            } catch (error) {
+                console.error('Error:', error);
             }
-        }
-
-        function changeCalendarMonth(direction) {
-            currentDate.setMonth(currentDate.getMonth() + direction);
-            generateCalendar();
-        }
-
-        function showClassDetails(day, month, year) {
-            const content = document.getElementById('class-details-content');
-            content.innerHTML = `
-                <div class="form-group">
-                    <label>Fecha:</label>
-                    <p>${day}/${month + 1}/${year}</p>
-                </div>
-                <div class="form-group">
-                    <label>Clases programadas:</label>
-                    <div class="order-items">
-                        <div class="order-item" style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--violeta-medio);">
-                            <span>F.E.C</span>
-                            <span>10:00 - 11:00</span>
-                        </div>
-                        <div class="order-item" style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--violeta-medio);">
-                            <span>Yoga</span>
-                            <span>18:00 - 19:00</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.getElementById('class-details-modal').style.display = 'flex';
-        }
-
-        function closeClassModal() {
-            document.getElementById('class-details-modal').style.display = 'none';
         }
 
         // Buscar miembros
@@ -710,13 +536,17 @@
         function displayMembers(members) {
             const container = document.getElementById('members-list');
             container.innerHTML = members.map(member => `
-                <div class="member-card">
-                    <div class="member-info">
-                        <h4>${member.fullName}</h4>
-                        <p><i class="fas fa-envelope"></i> ${member.email}</p>
-                        <p><i class="fas fa-id-card"></i> DNI: ${member.dni || 'N/A'}</p>
+                <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border: 2px solid var(--violeta-medio); display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div>
+                        <h4 style="color: var(--blanco); font-size: 1.2rem; margin-bottom: 0.5rem;">${member.fullName}</h4>
+                        <p style="color: var(--gris-claro); margin: 0.2rem 0;">
+                            <i class="fas fa-envelope"></i> ${member.email}
+                        </p>
+                        <p style="color: var(--gris-claro); margin: 0.2rem 0;">
+                            <i class="fas fa-phone"></i> ${member.phone}
+                        </p>
                     </div>
-                    <button class="btn-check-in" onclick="registerAttendance('${member._id}', '${member.fullName}')">
+                    <button class="btn btn-primary" onclick="registerAttendance('${member._id}', '${member.fullName}')">
                         <i class="fas fa-check"></i> Registrar Asistencia
                     </button>
                 </div>
@@ -734,303 +564,156 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    showCustomAlert('success', '✅ Asistencia Registrada', 
-                        `La asistencia de ${userName} ha sido registrada correctamente.`);
-                    loadEmployeeData();
-                } else {
-                    showCustomAlert('error', 'Error', result.message || 'No se pudo registrar la asistencia');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showCustomAlert('error', 'Error de Conexión', 'No se pudo registrar la asistencia');
-            }
-        }
-
-        function scanQRCode() {
-            showCustomAlert('info', 'Función en Desarrollo', 
-                'La funcionalidad de escaneo QR estará disponible próximamente.');
-        }
-
-        // Gestión de productos (similar a admin pero simplificada)
-        async function loadProducts() {
-            try {
-                const response = await fetch('/api/admin/products');
-                const data = await response.json();
-
-                if (data.success) {
-                    allProducts = data.products;
-                    displayProducts(allProducts);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-
-        function displayProducts(products) {
-            const tbody = document.getElementById('products-table-body');
-
-            if (products.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="no-data">No hay productos</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = products.map(product => `
-                <tr>
-                    <td>#${product.productId || product._id.slice(-6)}</td>
-                    <td style="text-align: center;">
-                        <i class="${product.icon || 'fas fa-box'}" style="font-size: 2rem; color: var(--violeta-claro);"></i>
-                    </td>
-                    <td>${product.name}</td>
-                    <td>${product.categoryId?.name || product.category}</td>
-                    <td>${product.price.toLocaleString()}</td>
-                    <td>${product.stock}</td>
-                    <td>
-                        <span class="status ${product.active ? 'active' : ''}" 
-                            style="background: ${product.active ? '#4CAF50' : '#666'};">
-                            ${product.active ? 'Activo' : 'Inactivo'}
-                        </span>
-                    </td>
-                    <td>
-                        <button class="btn-table-action" onclick="editProduct('${product._id}')" title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-table-action delete" onclick="deleteProduct('${product._id}')" title="Eliminar">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function searchProducts() {
-            const searchTerm = document.getElementById('product-search').value.toLowerCase();
-            const filtered = allProducts.filter(product => 
-                product.name.toLowerCase().includes(searchTerm)
-            );
-            displayProducts(filtered);
-        }
-
-        function filterProducts() {
-            const category = document.getElementById('product-category-filter').value;
-            const filtered = category ? allProducts.filter(p => p.category === category) : allProducts;
-            displayProducts(filtered);
-        }
-
-        async function loadCategories() {
-            try {
-                const response = await fetch('/api/categories');
-                const data = await response.json();
-
-                if (data.success) {
-                    const select = document.getElementById('product-category');
-                    const filterSelect = document.getElementById('product-category-filter');
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('success', '✅ Asistencia Registrada', 
+                            `La asistencia de ${userName} ha sido registrada correctamente.`);
+                    } else {
+                        alert(`✅ Asistencia de ${userName} registrada`);
+                    }
                     
-                    select.innerHTML = '<option value="">Seleccionar...</option>' +
-                        data.categories.map(cat => `<option value="${cat.slug}">${cat.name}</option>`).join('');
+                    // Actualizar contador
+                    const current = parseInt(document.getElementById('today-attendance').textContent);
+                    document.getElementById('today-attendance').textContent = current + 1;
                     
-                    filterSelect.innerHTML = '<option value="">Todas las categorías</option>' +
-                        data.categories.map(cat => `<option value="${cat.slug}">${cat.name}</option>`).join('');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-
-        function showAddProductModal() {
-            document.getElementById('product-modal-title').textContent = 'Agregar Producto';
-            document.getElementById('product-form').reset();
-            document.getElementById('product-id').value = '';
-            document.getElementById('product-modal').style.display = 'flex';
-        }
-
-        function closeProductModal() {
-            document.getElementById('product-modal').style.display = 'none';
-        }
-
-        function editProduct(productId) {
-            const product = allProducts.find(p => p._id === productId);
-            if (!product) return;
-
-            document.getElementById('product-modal-title').textContent = 'Editar Producto';
-            document.getElementById('product-id').value = product._id;
-            document.getElementById('product-name').value = product.name;
-            document.getElementById('product-description').value = product.description;
-            document.getElementById('product-price').value = product.price;
-            document.getElementById('product-stock').value = product.stock;
-            document.getElementById('product-category').value = product.category;
-            document.getElementById('product-icon').value = product.icon || 'fas fa-box';
-
-            document.getElementById('product-modal').style.display = 'flex';
-        }
-
-        document.getElementById('product-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const productId = document.getElementById('product-id').value;
-            const productData = {
-                name: document.getElementById('product-name').value,
-                description: document.getElementById('product-description').value,
-                price: parseFloat(document.getElementById('product-price').value),
-                category: document.getElementById('product-category').value,
-                stock: parseInt(document.getElementById('product-stock').value),
-                icon: document.getElementById('product-icon').value,
-                imageType: 'icon'
-            };
-
-            try {
-                const url = productId ? `/api/admin/products/${productId}` : '/api/admin/products';
-                const method = productId ? 'PUT' : 'POST';
-
-                const response = await fetch(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(productData)
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    showCustomAlert('success', '✅ Producto Guardado', result.message);
-                    closeProductModal();
-                    loadProducts();
+                    // Limpiar búsqueda
+                    document.getElementById('member-search').value = '';
+                    document.getElementById('members-list').innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
+                            <i class="fas fa-check-circle" style="font-size: 3rem; color: #22c55e; margin-bottom: 1rem;"></i>
+                            <p>Asistencia registrada exitosamente</p>
+                        </div>
+                    `;
                 } else {
-                    showCustomAlert('error', 'Error', result.message);
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error', result.message || 'No se pudo registrar la asistencia');
+                    } else {
+                        alert(result.message || 'Error al registrar asistencia');
+                    }
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showCustomAlert('error', 'Error de Conexión', 'No se pudo guardar el producto');
-            }
-        });
-
-        async function deleteProduct(productId) {
-            const confirmDelete = await new Promise(resolve => {
-                showConfirmAlert(
-                    'Eliminar Producto',
-                    '¿Estás seguro de eliminar este producto?',
-                    () => resolve(true),
-                    () => resolve(false)
-                );
-            });
-
-            if (!confirmDelete) return;
-
-            try {
-                const response = await fetch(`/api/admin/products/${productId}`, {
-                    method: 'DELETE'
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    showCustomAlert('success', '✅ Producto Eliminado', result.message);
-                    loadProducts();
-                } else {
-                    showCustomAlert('error', 'Error', result.message);
+                if (typeof showCustomAlert === 'function') {
+                    showCustomAlert('error', 'Error de Conexión', 'No se pudo registrar la asistencia');
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                showCustomAlert('error', 'Error', 'No se pudo eliminar el producto');
             }
         }
 
-        // Cargar ventas del día
-        async function loadDailySales() {
+        // Cargar pedidos pendientes
+        async function loadPendingOrders() {
             try {
-                const response = await fetch('/api/employee/daily-sales');
+                const response = await fetch('/api/employee/pending-orders');
                 const data = await response.json();
-
-                if (data.success) {
-                    displayDailySales(data.sales);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-
-        function displayDailySales(sales) {
-            const container = document.getElementById('daily-sales-list');
-            
-            if (sales.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
-                        <i class="fas fa-receipt" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                        <p>No hay ventas registradas hoy</p>
-                    </div>
-                `;
                 
-                document.getElementById('daily-total').textContent = '$0';
-                document.getElementById('daily-orders-count').textContent = '0';
-                return;
+                const container = document.getElementById('pending-orders-list');
+                
+                if (data.success && data.orders.length > 0) {
+                    document.getElementById('pending-orders').textContent = data.orders.length;
+                    
+                    container.innerHTML = data.orders.map(order => `
+                        <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border-left: 4px solid var(--violeta-claro);">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                                <div>
+                                    <h4 style="color: var(--violeta-claro); margin-bottom: 0.5rem;">
+                                        Pedido #${order._id.slice(-8).toUpperCase()}
+                                    </h4>
+                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                        <i class="fas fa-user"></i> ${order.customer?.name || 'Cliente'}
+                                    </p>
+                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                        <i class="fas fa-envelope"></i> ${order.customer?.email || 'N/A'}
+                                    </p>
+                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                        <i class="fas fa-shopping-bag"></i> ${order.items.length} productos
+                                    </p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--violeta-claro); margin-bottom: 0.5rem;">
+                                        $${order.total.toLocaleString()}
+                                    </div>
+                                    <button class="btn btn-primary" onclick="markAsDelivered('${order._id}')" style="font-size: 0.9rem;">
+                                        <i class="fas fa-check"></i> Marcar Entregado
+                                    </button>
+                                </div>
+                            </div>
+                            <div style="padding-top: 1rem; border-top: 1px solid var(--violeta-medio);">
+                                <strong style="color: var(--violeta-claro); display: block; margin-bottom: 0.5rem;">Productos:</strong>
+                                ${order.items.map(item => `
+                                    <div style="color: var(--gris-claro); padding: 0.3rem 0;">
+                                        • ${item.name} x${item.quantity} - $${(item.price * item.quantity).toLocaleString()}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
+                            <i class="fas fa-check-circle" style="font-size: 4rem; color: #22c55e; margin-bottom: 1rem;"></i>
+                            <p style="color: var(--gris-claro); font-size: 1.2rem;">¡No hay pedidos pendientes!</p>
+                        </div>
+                    `;
+                    document.getElementById('pending-orders').textContent = '0';
+                }
+            } catch (error) {
+                console.error('Error:', error);
             }
-
-            const total = sales.reduce((sum, sale) => sum + sale.total, 0);
-            document.getElementById('daily-total').textContent = `${total.toLocaleString()}`;
-            document.getElementById('daily-orders-count').textContent = sales.length;
-
-            container.innerHTML = sales.map(sale => `
-                <div class="sale-item">
-                    <div class="sale-header">
-                        <span class="order-code">#${sale._id.slice(-8).toUpperCase()}</span>
-                        <span class="sale-price">${sale.total.toLocaleString()}</span>
-                    </div>
-                    <div class="sale-customer">
-                        <i class="fas fa-user"></i> ${sale.userInfo?.fullName || 'Cliente'} 
-                        (${sale.userInfo?.email || 'N/A'})
-                    </div>
-                    <div class="sale-products">
-                        <i class="fas fa-shopping-bag"></i> 
-                        ${sale.items.map(item => `${item.name} (x${item.quantity})`).join(', ')}
-                    </div>
-                    <div style="margin-top: 0.5rem; color: var(--gris-claro); font-size: 0.85rem;">
-                        <i class="fas fa-clock"></i> ${new Date(sale.createdAt).toLocaleTimeString('es-ES')}
-                    </div>
-                </div>
-            `).join('');
         }
 
-        function refreshCalendar() {
-            generateCalendar();
-            showCustomAlert('success', '✅ Actualizado', 'El calendario ha sido actualizado');
+        async function markAsDelivered(orderId) {
+            const confirmDeliver = confirm('¿Confirmar que el pedido fue entregado?');
+            if (!confirmDeliver) return;
+            
+            try {
+                const response = await fetch(`/api/employee/mark-delivered/${orderId}`, {
+                    method: 'PATCH'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('success', '✅ Pedido Entregado', 'El pedido ha sido marcado como entregado');
+                    } else {
+                        alert('✅ Pedido marcado como entregado');
+                    }
+                    loadPendingOrders();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function viewClassDetails(classId) {
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert('info', 'Función en Desarrollo', 
+                    'La visualización de inscriptos estará disponible próximamente');
+            } else {
+                alert('Función en desarrollo');
+            }
         }
 
         // Cerrar sesión
         function setupLogout() {
-            const logoutBtn = document.querySelector('.btn-logout');
+            const logoutBtn = document.getElementById('logout-btn');
             
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', async function(e) {
                     e.preventDefault();
                     
-                    const confirmLogout = await new Promise(resolve => {
-                        showConfirmAlert(
-                            'Cerrar Sesión',
-                            '¿Estás seguro de que quieres cerrar sesión?',
-                            () => resolve(true),
-                            () => resolve(false)
-                        );
-                    });
-                    
+                    const confirmLogout = confirm('¿Cerrar sesión?');
                     if (!confirmLogout) return;
                     
                     try {
                         await fetch('/api/logout', { method: 'POST' });
-                        window.location.href = '/';
+                        window.location.href = '/login-empleado';
                     } catch (error) {
-                        window.location.href = '/';
+                        window.location.href = '/login-empleado';
                     }
                 });
             }
         }
 
-        // Cerrar modales al hacer clic fuera
-        window.addEventListener('click', function(event) {
-            const modals = document.querySelectorAll('.modal-overlay');
-            modals.forEach(modal => {
-                if (event.target === modal) {
-                    modal.style.display = 'none';
-                }
-            });
-        });
+        console.log('✅ Panel de empleados cargado correctamente');
     </script>
 </body>
 </html>

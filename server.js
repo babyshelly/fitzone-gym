@@ -3159,6 +3159,106 @@ app.patch('/api/admin/products/:id/toggle', requireAuth, requireAdmin, async (re
     }
 });
 
+// ==================== APIs PARA EMPLEADOS ====================
+
+// Stats del dashboard de empleados
+app.get('/api/employee/today-classes', async (req, res) => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Obtener todas las clases
+        const classes = await Class.find({ active: true });
+        
+        // Filtrar clases de hoy
+        const todayClasses = [];
+        const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const todayName = dayNames[today.getDay()];
+        
+        for (const classItem of classes) {
+            if (classItem.scheduleDetails) {
+                const todaySchedule = classItem.scheduleDetails.filter(s => s.day === todayName);
+                
+                for (const schedule of todaySchedule) {
+                    // Contar reservas
+                    const reservationCount = await Reservation.countDocuments({
+                        classId: classItem._id,
+                        date: {
+                            $gte: today,
+                            $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+                        },
+                        status: 'active'
+                    });
+                    
+                    todayClasses.push({
+                        classId: classItem._id,
+                        className: classItem.name,
+                        time: schedule.time,
+                        capacity: classItem.capacity,
+                        reservations: reservationCount
+                    });
+                }
+            }
+        }
+        
+        res.json({ success: true, classes: todayClasses });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ success: false, message: 'Error al cargar clases' });
+    }
+});
+
+// Pedidos pendientes
+app.get('/api/employee/pending-orders', async (req, res) => {
+    try {
+        const pendingOrders = await Order.find({ 
+            status: { $in: ['pending', 'processing'] }
+        })
+        .populate('userId', 'fullName email phone')
+        .sort({ createdAt: -1 })
+        .limit(20);
+        
+        const formattedOrders = pendingOrders.map(order => ({
+            _id: order._id,
+            customer: {
+                name: order.userId?.fullName || 'Cliente eliminado',
+                email: order.userId?.email || 'N/A',
+                phone: order.userId?.phone || 'N/A'
+            },
+            items: order.items,
+            total: order.total,
+            createdAt: order.createdAt
+        }));
+        
+        res.json({ success: true, orders: formattedOrders });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ success: false, message: 'Error al cargar pedidos' });
+    }
+});
+
+// Marcar pedido como entregado
+app.patch('/api/employee/mark-delivered/:orderId', async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        
+        const order = await Order.findByIdAndUpdate(
+            orderId,
+            { status: 'completed' },
+            { new: true }
+        );
+        
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Pedido no encontrado' });
+        }
+        
+        res.json({ success: true, message: 'Pedido marcado como entregado' });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ success: false, message: 'Error al actualizar pedido' });
+    }
+});
+
 // ============== ACTUALIZAR LA FUNCIÓN initializeData() ====================
 // AGREGAR esta llamada dentro de initializeData() existente
 
