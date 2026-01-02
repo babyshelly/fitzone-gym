@@ -421,6 +421,45 @@ function verificarEmpleado(req, res, next) {
     res.redirect('/login-empleado');
 }
 
+async function crearUsuariosIniciales() {
+    try {
+        // Crear admin si no existe
+        const adminExists = await User.findOne({ email: 'admin@fitzone.com' });
+        
+        if (!adminExists) {
+            const hashedPassword = await bcrypt.hash('admin123', 10);
+            await User.create({
+                fullName: 'Administrador FitZone',
+                email: 'admin@fitzone.com',
+                phone: '(11) 1234-5678',
+                password: hashedPassword,
+                role: 'admin',
+                status: 'active'
+            });
+            console.log('✅ Usuario admin creado');
+        }
+        
+        // ⭐ AGREGAR EMPLEADO DE PRUEBA
+        const employeeExists = await User.findOne({ email: 'empleado@fitzone.com' });
+        
+        if (!employeeExists) {
+            const hashedPassword = await bcrypt.hash('empleado123', 10);
+            await User.create({
+                fullName: 'Empleado FitZone',
+                email: 'empleado@fitzone.com',
+                phone: '(11) 8765-4321',
+                password: hashedPassword,
+                role: 'employee',
+                status: 'active'
+            });
+            console.log('✅ Usuario empleado creado');
+        }
+        
+    } catch (error) {
+        console.error('Error creando usuarios iniciales:', error);
+    }
+}
+
 // ============== RUTAS HTML CORREGIDAS ==============
 
 app.get('/', (req, res) => {
@@ -882,6 +921,128 @@ app.delete('/api/admin/users/:userId', requireAuth, requireAdmin, async (req, re
 });
 
 console.log('✅ Rutas de administración configuradas correctamente');
+
+// ==================== GESTIÓN DE EMPLEADOS ====================
+
+// Obtener todos los empleados
+app.get('/api/admin/employees', verificarAdmin, async (req, res) => {
+    try {
+        const employees = await User.find({ role: 'employee' }).select('-password');
+        res.json({ success: true, employees });
+    } catch (error) {
+        console.error('Error obteniendo empleados:', error);
+        res.status(500).json({ success: false, message: 'Error al cargar empleados' });
+    }
+});
+
+// Crear nuevo empleado
+app.post('/api/admin/employees', verificarAdmin, async (req, res) => {
+    try {
+        const { fullName, email, phone, password } = req.body;
+        
+        // Validar datos
+        if (!fullName || !email || !phone || !password) {
+            return res.json({ success: false, message: 'Todos los campos son requeridos' });
+        }
+        
+        if (password.length < 6) {
+            return res.json({ success: false, message: 'La contraseña debe tener al menos 6 caracteres' });
+        }
+        
+        // Verificar si el email ya existe
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
+        if (existingUser) {
+            return res.json({ success: false, message: 'El email ya está registrado' });
+        }
+        
+        // Crear empleado
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newEmployee = await User.create({
+            fullName,
+            email: email.toLowerCase(),
+            phone,
+            password: hashedPassword,
+            role: 'employee',
+            status: 'active'
+        });
+        
+        res.json({ 
+            success: true, 
+            message: 'Empleado creado correctamente',
+            employee: {
+                _id: newEmployee._id,
+                fullName: newEmployee.fullName,
+                email: newEmployee.email,
+                phone: newEmployee.phone,
+                status: newEmployee.status
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error creando empleado:', error);
+        res.status(500).json({ success: false, message: 'Error al crear empleado' });
+    }
+});
+
+// Actualizar empleado
+app.put('/api/admin/employees/:id', verificarAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { fullName, email, phone, status, password } = req.body;
+        
+        const updateData = { fullName, email, phone, status };
+        
+        // Si hay nueva contraseña, hashearla
+        if (password && password.length > 0) {
+            if (password.length < 6) {
+                return res.json({ success: false, message: 'La contraseña debe tener al menos 6 caracteres' });
+            }
+            updateData.password = await bcrypt.hash(password, 10);
+        }
+        
+        const updatedEmployee = await User.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true }
+        ).select('-password');
+        
+        if (!updatedEmployee) {
+            return res.status(404).json({ success: false, message: 'Empleado no encontrado' });
+        }
+        
+        res.json({ 
+            success: true, 
+            message: 'Empleado actualizado correctamente',
+            employee: updatedEmployee
+        });
+        
+    } catch (error) {
+        console.error('Error actualizando empleado:', error);
+        res.status(500).json({ success: false, message: 'Error al actualizar empleado' });
+    }
+});
+
+// Eliminar empleado
+app.delete('/api/admin/employees/:id', verificarAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const deletedEmployee = await User.findByIdAndDelete(id);
+        
+        if (!deletedEmployee) {
+            return res.status(404).json({ success: false, message: 'Empleado no encontrado' });
+        }
+        
+        res.json({ 
+            success: true, 
+            message: 'Empleado eliminado correctamente'
+        });
+        
+    } catch (error) {
+        console.error('Error eliminando empleado:', error);
+        res.status(500).json({ success: false, message: 'Error al eliminar empleado' });
+    }
+});
 
 // GET: Obtener todas las órdenes
 app.get('/api/admin/orders', requireAuth, requireAdmin, async (req, res) => {

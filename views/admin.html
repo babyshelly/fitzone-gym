@@ -19,6 +19,7 @@
                     </a>
                     <ul class="nav-menu">
                         <li><a href="#usuarios">Usuarios</a></li>
+                        <li><a href="#empleados">Empleados</a></li>
                         <li><a href="#stats">Estadísticas</a></li>
                         <li><a href="#clases">Clases</a></li>
                         <li><a href="#ordenes">Órdenes</a></li>
@@ -121,6 +122,49 @@
                         
                         <!-- Paginación -->
                         <div id="users-pagination" class="pagination"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gestión de Empleados -->
+            <section id="empleados" class="admin-section">
+                <div class="container">
+                    <div class="section-header">
+                        <h2>👔 Gestión de Empleados</h2>
+                        <div class="section-actions">
+                            <button class="btn btn-primary" onclick="showAddEmployeeModal()">
+                                <i class="fas fa-user-plus"></i> Agregar Empleado
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Búsqueda -->
+                    <div class="search-container">
+                        <input type="text" id="employee-search" class="search-input" 
+                            placeholder="Buscar empleados..." onkeyup="searchEmployees()">
+                    </div>
+
+                    <div class="users-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Teléfono</th>
+                                    <th>Fecha Registro</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employees-table-body">
+                                <tr>
+                                    <td colspan="7" class="loading">Cargando empleados...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div id="employees-pagination" class="pagination"></div>
                     </div>
                 </div>
             </section>
@@ -439,6 +483,61 @@
                             </button>
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para Agregar/Editar Empleado -->
+        <div id="employee-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <h3 id="employee-modal-title">Agregar Empleado</h3>
+                    <span class="close" onclick="closeEmployeeModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="employee-form">
+                        <input type="hidden" id="employee-id">
+                        
+                        <div class="form-group">
+                            <label for="employee-fullname">Nombre Completo *</label>
+                            <input type="text" id="employee-fullname" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="employee-email">Email *</label>
+                            <input type="email" id="employee-email" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="employee-phone">Teléfono *</label>
+                            <input type="tel" id="employee-phone" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="employee-password">Contraseña *</label>
+                            <input type="password" id="employee-password" required>
+                            <small style="color: var(--gris-claro); display: block; margin-top: 0.3rem;">
+                                Mínimo 6 caracteres. El empleado podrá cambiarla después.
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="employee-status">Estado *</label>
+                            <select id="employee-status" required>
+                                <option value="active">Activo</option>
+                                <option value="inactive">Inactivo</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeEmployeeModal()">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Empleado
                             </button>
                         </div>
                     </form>
@@ -1564,6 +1663,252 @@
                     }
                 } catch (error) {
                     console.error('Error:', error);
+                }
+            }
+
+            // ==================== GESTIÓN DE EMPLEADOS ====================
+
+            let allEmployees = [];
+            let filteredEmployees = [];
+            let currentEmployeePage = 1;
+            const employeesPerPage = 10;
+
+            // Cargar empleados al iniciar (agregar a DOMContentLoaded existente)
+            // BUSCAR: document.addEventListener('DOMContentLoaded', function() {
+            // Y AGREGAR dentro: loadEmployees();
+
+            async function loadEmployees() {
+                console.log('👔 Cargando empleados...');
+                
+                const tbody = document.getElementById('employees-table-body');
+                if (!tbody) return;
+                
+                tbody.innerHTML = '<tr><td colspan="7" class="loading">Cargando empleados...</td></tr>';
+                
+                try {
+                    const response = await fetch('/api/admin/employees', {
+                        credentials: 'same-origin'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        console.log(`✅ ${data.employees.length} empleados cargados`);
+                        allEmployees = data.employees;
+                        filteredEmployees = [...allEmployees];
+                        displayEmployees();
+                        setupEmployeesPagination();
+                    } else {
+                        throw new Error(data.message || 'Error en respuesta');
+                    }
+                } catch (error) {
+                    console.error('❌ Error cargando empleados:', error);
+                    tbody.innerHTML = '<tr><td colspan="7" class="error">Error cargando empleados</td></tr>';
+                }
+            }
+
+            function displayEmployees() {
+                const tbody = document.getElementById('employees-table-body');
+                
+                if (filteredEmployees.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="no-data">No hay empleados registrados</td></tr>';
+                    return;
+                }
+
+                const startIndex = (currentEmployeePage - 1) * employeesPerPage;
+                const endIndex = startIndex + employeesPerPage;
+                const employeesToShow = filteredEmployees.slice(startIndex, endIndex);
+
+                tbody.innerHTML = employeesToShow.map(employee => `
+                    <tr>
+                        <td>${employee._id.slice(-6)}</td>
+                        <td>${employee.fullName}</td>
+                        <td>${employee.email}</td>
+                        <td>${employee.phone}</td>
+                        <td>${new Date(employee.createdAt).toLocaleDateString('es-ES')}</td>
+                        <td>
+                            <span class="status ${employee.status === 'active' ? 'active' : ''}" 
+                                style="background: ${employee.status === 'active' ? '#4CAF50' : '#666'};">
+                                ${employee.status === 'active' ? 'Activo' : 'Inactivo'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn-table-action" onclick="editEmployee('${employee._id}')" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-table-action delete" onclick="deleteEmployee('${employee._id}')" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            function setupEmployeesPagination() {
+                const totalPages = Math.ceil(filteredEmployees.length / employeesPerPage);
+                const pagination = document.getElementById('employees-pagination');
+                
+                if (!pagination || totalPages <= 1) {
+                    if (pagination) pagination.innerHTML = '';
+                    return;
+                }
+
+                let paginationHTML = `
+                    <button onclick="changeEmployeePage(${currentEmployeePage - 1})" ${currentEmployeePage === 1 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span class="page-info">Página ${currentEmployeePage} de ${totalPages}</span>
+                    <button onclick="changeEmployeePage(${currentEmployeePage + 1})" ${currentEmployeePage === totalPages ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                `;
+                
+                pagination.innerHTML = paginationHTML;
+            }
+
+            function changeEmployeePage(page) {
+                currentEmployeePage = page;
+                displayEmployees();
+                setupEmployeesPagination();
+            }
+
+            function searchEmployees() {
+                const searchTerm = document.getElementById('employee-search').value.toLowerCase();
+                filteredEmployees = allEmployees.filter(employee => 
+                    employee.fullName.toLowerCase().includes(searchTerm) || 
+                    employee.email.toLowerCase().includes(searchTerm)
+                );
+                currentEmployeePage = 1;
+                displayEmployees();
+                setupEmployeesPagination();
+            }
+
+            function showAddEmployeeModal() {
+                document.getElementById('employee-modal-title').textContent = 'Agregar Empleado';
+                document.getElementById('employee-form').reset();
+                document.getElementById('employee-id').value = '';
+                document.getElementById('employee-password').required = true;
+                document.getElementById('employee-modal').style.display = 'flex';
+            }
+
+            function closeEmployeeModal() {
+                document.getElementById('employee-modal').style.display = 'none';
+            }
+
+            function editEmployee(employeeId) {
+                const employee = allEmployees.find(e => e._id === employeeId);
+                if (!employee) return;
+
+                document.getElementById('employee-modal-title').textContent = 'Editar Empleado';
+                document.getElementById('employee-id').value = employee._id;
+                document.getElementById('employee-fullname').value = employee.fullName;
+                document.getElementById('employee-email').value = employee.email;
+                document.getElementById('employee-phone').value = employee.phone;
+                document.getElementById('employee-status').value = employee.status;
+                document.getElementById('employee-password').required = false;
+                document.getElementById('employee-password').value = '';
+
+                document.getElementById('employee-modal').style.display = 'flex';
+            }
+
+            document.getElementById('employee-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const employeeId = document.getElementById('employee-id').value;
+                const formData = {
+                    fullName: document.getElementById('employee-fullname').value,
+                    email: document.getElementById('employee-email').value,
+                    phone: document.getElementById('employee-phone').value,
+                    status: document.getElementById('employee-status').value
+                };
+                
+                const password = document.getElementById('employee-password').value;
+                if (password) {
+                    formData.password = password;
+                }
+
+                try {
+                    const url = employeeId ? `/api/admin/employees/${employeeId}` : '/api/admin/employees';
+                    const method = employeeId ? 'PUT' : 'POST';
+                    
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'same-origin',
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', '✅ Empleado Guardado', result.message, () => {
+                                closeEmployeeModal();
+                                loadEmployees();
+                            });
+                        } else {
+                            alert(result.message);
+                            closeEmployeeModal();
+                            loadEmployees();
+                        }
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error', error.message || 'No se pudo guardar el empleado');
+                    } else {
+                        alert('Error al guardar empleado');
+                    }
+                }
+            });
+
+            async function deleteEmployee(employeeId) {
+                const confirmDelete = typeof showConfirmAlert === 'function'
+                    ? await new Promise(resolve => {
+                        showConfirmAlert(
+                            'Eliminar Empleado',
+                            '¿Estás seguro de eliminar este empleado? Esta acción no se puede deshacer.',
+                            () => resolve(true),
+                            () => resolve(false)
+                        );
+                    })
+                    : confirm('¿Estás seguro de eliminar este empleado?');
+
+                if (!confirmDelete) return;
+
+                try {
+                    const response = await fetch(`/api/admin/employees/${employeeId}`, {
+                        method: 'DELETE',
+                        credentials: 'same-origin'
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('success', '✅ Empleado Eliminado', 'El empleado fue eliminado correctamente', () => {
+                                loadEmployees();
+                            });
+                        } else {
+                            alert('Empleado eliminado correctamente');
+                            loadEmployees();
+                        }
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error', error.message || 'No se pudo eliminar el empleado');
+                    } else {
+                        alert('Error al eliminar empleado');
+                    }
                 }
             }
         </script>
