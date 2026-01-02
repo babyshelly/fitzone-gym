@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Empleados - FitZone</title>
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234b1c71'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='%23dbb6ee' font-family='Arial, sans-serif' font-weight='bold'>F</text></svg>">
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="/js/alerts.js"></script>
+    <style>
+        .employee-badge {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .login-box {
+            border: 3px solid #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header simple -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <a href="/" class="logo" style="text-decoration: none; color: inherit; display: flex; align-items: center; cursor: pointer;">
+                    <i class="fas fa-dumbbell"></i>
+                    <span>FitZone</span>
+                </a>
+                <ul class="nav-menu">
+                    <li><a href="/login">Login Clientes</a></li>
+                    <li><a href="/">Volver al Inicio</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Formulario de Login -->
+    <main class="login-main">
+        <div class="login-container">
+            <div class="login-box">
+                <div class="employee-badge">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Panel de Empleados</span>
+                </div>
+                
+                <div class="login-header">
+                    <i class="fas fa-briefcase"></i>
+                    <h2>Acceso para Empleados</h2>
+                    <p>Ingresa con tus credenciales de empleado</p>
+                </div>
+
+                <form class="login-form" id="loginForm">
+                    <div class="input-group">
+                        <label for="email">Correo Electrónico</label>
+                        <input type="email" id="email" name="email" required placeholder="empleado@fitzone.com">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="password">Contraseña</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+
+                    <button type="submit" class="btn-login-form">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                    </button>
+                </form>
+
+                <div class="login-footer" style="text-align: center; margin-top: 2rem;">
+                    <p style="color: var(--gris-claro); font-size: 0.9rem;">
+                        <i class="fas fa-info-circle"></i> Solo personal autorizado
+                    </p>
+                    <p style="margin-top: 0.5rem;">
+                        <a href="/login" style="color: var(--violeta-claro);">¿Eres cliente? Ingresa aquí</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const submitBtn = document.querySelector('.btn-login-form');
+            
+            if (!email || !password) {
+                if (typeof showCustomAlert === 'function') {
+                    showCustomAlert('warning', 'Datos Incompletos', 'Por favor completa todos los campos');
+                } else {
+                    alert('Por favor completa todos los campos');
+                }
+                return;
+            }
+            
+            // Deshabilitar botón
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
+            
+            try {
+                const response = await fetch('/api/login-empleado', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('success', '¡Acceso Concedido!', 
+                            'Bienvenido al panel de empleados',
+                            () => {
+                                window.location.href = '/empleados';
+                            }
+                        );
+                    } else {
+                        alert('¡Login exitoso!');
+                        window.location.href = '/empleados';
+                    }
+                } else {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Acceso Denegado', 
+                            result.message || 'Credenciales incorrectas o no tienes permisos de empleado'
+                        );
+                    } else {
+                        alert(result.message || 'Credenciales incorrectas');
+                    }
+                    
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                if (typeof showCustomAlert === 'function') {
+                    showCustomAlert('error', 'Error de Conexión', 
+                        'No se pudo conectar con el servidor. Verifica tu conexión.'
+                    );
+                } else {
+                    alert('Error de conexión. Intenta nuevamente.');
+                }
+                
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        });
+        
+        // Demo rápido para pruebas
+        console.log('💼 Panel de Login para Empleados');
+        console.log('Usuario de prueba: empleado@fitzone.com / empleado123');
+    </script>
+</body>
+</html>

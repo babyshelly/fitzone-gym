@@ -415,10 +415,24 @@ function requireAdmin(req, res, next) {
 
 // Middleware para verificar si es empleado
 function verificarEmpleado(req, res, next) {
-    if (req.session.userId && (req.session.role === 'employee' || req.session.role === 'admin')) {
-        return next();
+    console.log('🔍 Verificando acceso empleado:', {
+        userId: req.session?.userId,
+        role: req.session?.role,
+        hasSession: !!req.session
+    });
+    
+    if (!req.session || !req.session.userId) {
+        console.log('❌ No hay sesión activa');
+        return res.redirect('/login-empleado');
     }
-    res.redirect('/login-empleado');
+    
+    if (req.session.role !== 'employee' && req.session.role !== 'admin') {
+        console.log('❌ Rol no autorizado:', req.session.role);
+        return res.redirect('/login-empleado');
+    }
+    
+    console.log('✅ Acceso empleado autorizado');
+    next();
 }
 
 async function crearUsuariosIniciales() {
@@ -436,10 +450,10 @@ async function crearUsuariosIniciales() {
                 role: 'admin',
                 status: 'active'
             });
-            console.log('✅ Usuario admin creado');
+            console.log('✅ Usuario admin creado: admin@fitzone.com / admin123');
         }
         
-        // ⭐ AGREGAR EMPLEADO DE PRUEBA
+        // ⭐ CREAR EMPLEADO DE PRUEBA
         const employeeExists = await User.findOne({ email: 'empleado@fitzone.com' });
         
         if (!employeeExists) {
@@ -452,13 +466,14 @@ async function crearUsuariosIniciales() {
                 role: 'employee',
                 status: 'active'
             });
-            console.log('✅ Usuario empleado creado');
+            console.log('✅ Usuario empleado creado: empleado@fitzone.com / empleado123');
         }
         
     } catch (error) {
-        console.error('Error creando usuarios iniciales:', error);
+        console.error('❌ Error creando usuarios iniciales:', error);
     }
 }
+
 
 // ============== RUTAS HTML CORREGIDAS ==============
 
@@ -489,10 +504,18 @@ app.get('/register', (req, res) => {
 });
 
 // Ruta de login para empleados
-app.get('/login-empleado', (req, res) => res.sendFile(path.join(__dirname, 'views', 'login-empleado.html')));
+app.get('/login-empleado', (req, res) => {
+    // Si ya está logueado como empleado, redirigir
+    if (req.session && req.session.userId && 
+        (req.session.role === 'employee' || req.session.role === 'admin')) {
+        return res.redirect('/empleados');
+    }
+    res.sendFile(path.join(__dirname, 'views', 'login-empleado.html'));
+});
 
 // Ruta del panel de empleados (protegida)
 app.get('/empleados', verificarEmpleado, (req, res) => {
+    console.log('📊 Accediendo al dashboard de empleados');
     res.sendFile(path.join(__dirname, 'views', 'empleados.html'));
 });
 
@@ -633,38 +656,76 @@ app.post('/api/login-empleado', async (req, res) => {
     try {
         const { email, password } = req.body;
         
-        const user = await User.findOne({ email: email.toLowerCase() });
+        console.log('🔐 Intento de login empleado:', email);
+        
+        // Buscar usuario
+        const user = await User.findOne({ 
+            email: email.toLowerCase(),
+            status: 'active'
+        });
         
         if (!user) {
-            return res.json({ success: false, message: 'Credenciales incorrectas' });
+            console.log('❌ Usuario no encontrado:', email);
+            return res.json({ 
+                success: false, 
+                message: 'Credenciales incorrectas' 
+            });
         }
+        
+        console.log('👤 Usuario encontrado:', {
+            email: user.email,
+            role: user.role,
+            status: user.status
+        });
         
         // Verificar que sea empleado o admin
         if (user.role !== 'employee' && user.role !== 'admin') {
-            return res.json({ success: false, message: 'No tienes permisos de empleado' });
+            console.log('❌ Usuario no es empleado/admin:', user.role);
+            return res.json({ 
+                success: false, 
+                message: 'No tienes permisos de empleado. Usa el login de clientes.' 
+            });
         }
         
+        // Verificar contraseña
         const passwordMatch = await bcrypt.compare(password, user.password);
         
         if (!passwordMatch) {
-            return res.json({ success: false, message: 'Credenciales incorrectas' });
+            console.log('❌ Contraseña incorrecta para:', email);
+            return res.json({ 
+                success: false, 
+                message: 'Credenciales incorrectas' 
+            });
         }
         
+        // Crear sesión
         req.session.userId = user._id;
         req.session.role = user.role;
         req.session.userEmail = user.email;
+        req.session.fullName = user.fullName;
+        
+        console.log('✅ Login empleado exitoso:', {
+            email: user.email,
+            role: user.role,
+            sessionId: req.session.userId
+        });
         
         res.json({ 
             success: true, 
             message: 'Login exitoso',
-            role: user.role
+            role: user.role,
+            redirectUrl: '/empleados'
         });
         
     } catch (error) {
-        console.error('Error en login de empleado:', error);
-        res.status(500).json({ success: false, message: 'Error en el servidor' });
+        console.error('❌ Error en login de empleado:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error en el servidor. Intenta nuevamente.' 
+        });
     }
 });
+
 
 app.post('/api/logout', (req, res) => {
     if (req.session) {
@@ -2705,6 +2766,181 @@ async function cleanOldReservations() {
     }
 }
 
+// Stats del dashboard empleado
+app.get('/api/employee/dashboard-stats', verificarEmpleado, async (req, res) => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        // Datos reales desde la BD
+        const todayReservations = await Reservation.countDocuments({
+            date: { $gte: today, $lt: tomorrow },
+            status: 'active'
+        });
+
+        const todayOrders = await Order.countDocuments({
+            createdAt: { $gte: today, $lt: tomorrow }
+        });
+
+        const stats = {
+            todayClasses: 5, // Esto lo puedes calcular desde Class
+            todayAttendance: todayReservations,
+            todaySales: todayOrders,
+            todayRevenue: 0 // Calcular desde órdenes
+        };
+
+        res.json({ success: true, stats });
+    } catch (error) {
+        console.error('Error en dashboard-stats:', error);
+        res.status(500).json({ success: false, message: 'Error al cargar estadísticas' });
+    }
+});
+
+// Buscar miembros
+app.get('/api/employee/search-members', verificarEmpleado, async (req, res) => {
+    try {
+        const { q } = req.query;
+        
+        if (!q || q.length < 3) {
+            return res.json({ success: true, members: [] });
+        }
+
+        const searchTerm = q.toLowerCase();
+        const members = await User.find({
+            role: 'user',
+            $or: [
+                { fullName: { $regex: searchTerm, $options: 'i' } },
+                { email: { $regex: searchTerm, $options: 'i' } }
+            ]
+        }).select('-password').limit(10);
+
+        res.json({ success: true, members });
+    } catch (error) {
+        console.error('Error en search-members:', error);
+        res.status(500).json({ success: false, message: 'Error al buscar miembros' });
+    }
+});
+
+// Registrar asistencia
+app.post('/api/employee/register-attendance', verificarEmpleado, async (req, res) => {
+    try {
+        const { userId } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ success: false, message: 'Usuario requerido' });
+        }
+
+        // Aquí puedes guardar en una colección Attendance si la creas
+        console.log(`✅ Asistencia registrada para usuario: ${userId}`);
+
+        res.json({ 
+            success: true, 
+            message: 'Asistencia registrada correctamente',
+            timestamp: new Date()
+        });
+    } catch (error) {
+        console.error('Error registrando asistencia:', error);
+        res.status(500).json({ success: false, message: 'Error al registrar asistencia' });
+    }
+});
+
+// Obtener clases de hoy
+app.get('/api/employee/today-classes', verificarEmpleado, async (req, res) => {
+    try {
+        const classes = await Class.find({ active: true });
+        
+        // Filtrar clases de hoy según scheduleDetails
+        const today = new Date();
+        const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const todayName = dayNames[today.getDay()];
+        
+        const todayClasses = [];
+        
+        for (const classItem of classes) {
+            if (classItem.scheduleDetails) {
+                const todaySchedule = classItem.scheduleDetails.filter(s => s.day === todayName);
+                
+                for (const schedule of todaySchedule) {
+                    const reservationCount = await Reservation.countDocuments({
+                        classId: classItem._id,
+                        date: {
+                            $gte: today,
+                            $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+                        },
+                        status: 'active'
+                    });
+                    
+                    todayClasses.push({
+                        classId: classItem._id,
+                        className: classItem.name,
+                        time: schedule.time,
+                        capacity: classItem.capacity,
+                        reservations: reservationCount
+                    });
+                }
+            }
+        }
+        
+        res.json({ success: true, classes: todayClasses });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ success: false, message: 'Error al cargar clases' });
+    }
+});
+
+// Obtener pedidos pendientes
+app.get('/api/employee/pending-orders', verificarEmpleado, async (req, res) => {
+    try {
+        const pendingOrders = await Order.find({ 
+            status: { $in: ['pending', 'processing'] }
+        })
+        .populate('userId', 'fullName email phone')
+        .sort({ createdAt: -1 })
+        .limit(20);
+        
+        const formattedOrders = pendingOrders.map(order => ({
+            _id: order._id,
+            customer: {
+                name: order.userId?.fullName || 'Cliente eliminado',
+                email: order.userId?.email || 'N/A',
+                phone: order.userId?.phone || 'N/A'
+            },
+            items: order.items,
+            total: order.total,
+            createdAt: order.createdAt
+        }));
+        
+        res.json({ success: true, orders: formattedOrders });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ success: false, message: 'Error al cargar pedidos' });
+    }
+});
+
+// Marcar pedido como entregado
+app.patch('/api/employee/mark-delivered/:orderId', verificarEmpleado, async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        
+        const order = await Order.findByIdAndUpdate(
+            orderId,
+            { status: 'completed' },
+            { new: true }
+        );
+        
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Pedido no encontrado' });
+        }
+        
+        res.json({ success: true, message: 'Pedido marcado como entregado' });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ success: false, message: 'Error al actualizar pedido' });
+    }
+});
+
 // Conectar a MongoDB
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://abrilcarchedi_db_user:GZ22MDMYUTM22_m@gym-proyecto.vhxnxsq.mongodb.net/?appName=Gym-proyecto';
 mongoose.connect(MONGODB_URI, {
@@ -2712,6 +2948,7 @@ mongoose.connect(MONGODB_URI, {
 .then(() => {
     console.log('âœ… Conectado a MongoDB Local');
     initializeData();
+    crearUsuariosIniciales(); // ⭐ AGREGAR ESTA LÍNEA
 })
 .catch(err => console.log('âŒ Error conectando a MongoDB:', err));
 
