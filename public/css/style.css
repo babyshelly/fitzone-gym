@@ -5982,3 +5982,80 @@ input[type="file"]::file-selector-button:hover {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==================== CORRECCIÓN NAV ==================== */
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-menu li {
+    margin: 0;
+    padding: 0;
+}
+
+.nav-menu a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    height: 38px; /* ⭐ Altura fija para todos */
+    box-sizing: border-box;
+}
+
+/* Botón Login */
+.btn-login {
+    background: transparent;
+    color: var(--blanco);
+    border: 2px solid var(--violeta-medio);
+}
+
+.btn-login:hover {
+    background: var(--violeta-medio);
+    transform: translateY(-2px);
+}
+
+/* Botón Register */
+.btn-register {
+    background: linear-gradient(135deg, var(--violeta-medio), var(--violeta-oscuro));
+    color: white;
+    border: none;
+}
+
+.btn-register:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(127, 76, 165, 0.4);
+}
+
+/* Botón Empleados */
+.btn-employee {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    color: white !important;
+    border: none;
+}
+
+.btn-employee:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+}
+
+/* Botón Logout */
+.btn-logout {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    border: none;
+}
+
+.btn-logout:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+}
