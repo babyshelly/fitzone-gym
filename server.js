@@ -151,7 +151,13 @@ const orderSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     items: [cartItemSchema],
     total: { type: Number, required: true },
-    status: { type: String, enum: ['pending', 'completed', 'cancelled'], default: 'completed' },
+    status: { 
+        type: String, 
+        enum: ['pending', 'completed', 'cancelled', 'delivered'],
+        default: 'completed' 
+    },
+    deliveredAt: { type: Date },
+    deliveredBy: { type: String },
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -302,6 +308,21 @@ async function initializeData() {
             console.log('✅ Usuario admin creado: admin@fitzone.com / admin123');
         }
 
+        const employeeExists = await User.findOne({ email: 'empleado@fitzone.com' });
+        
+        if (!employeeExists) {
+            const hashedPassword = await bcrypt.hash('empleado123', 10);
+            await User.create({
+                fullName: 'Empleado FitZone',
+                email: 'empleado@fitzone.com',
+                phone: '(11) 8765-4321',
+                password: hashedPassword,
+                role: 'employee',
+                status: 'active'
+            });
+            console.log('✅ Usuario empleado creado: empleado@fitzone.com / empleado123');
+        }
+
         // Crear clases predefinidas (incluyendo Pilates)
         const existingClasses = await Class.countDocuments();
         if (existingClasses === 0) {
@@ -415,23 +436,18 @@ function requireAdmin(req, res, next) {
 
 // Middleware para verificar si es empleado
 function verificarEmpleado(req, res, next) {
-    console.log('🔍 Verificando acceso empleado:', {
-        userId: req.session?.userId,
-        role: req.session?.role,
-        hasSession: !!req.session
-    });
-    
     if (!req.session || !req.session.userId) {
-        console.log('❌ No hay sesión activa');
         return res.redirect('/login-empleado');
     }
     
-    if (req.session.role !== 'employee' && req.session.role !== 'admin') {
-        console.log('❌ Rol no autorizado:', req.session.role);
+    // SOLO empleados
+    if (req.session.role !== 'employee') {
+        if (req.session.role === 'admin') {
+            return res.redirect('/admin');
+        }
         return res.redirect('/login-empleado');
     }
     
-    console.log('✅ Acceso empleado autorizado');
     next();
 }
 
@@ -600,8 +616,9 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-
-        // Buscar usuario
+        
+        console.log('🔐 Login cliente:', email);
+        
         const user = await User.findOne({ email, status: 'active' });
         if (!user) {
             return res.json({
@@ -609,8 +626,15 @@ app.post('/api/login', async (req, res) => {
                 message: 'Credenciales incorrectas'
             });
         }
-
-        // Verificar contraseña
+        
+        // ⭐ RESTRICCIÓN: Empleados no pueden usar este login
+        if (user.role === 'employee') {
+            return res.json({
+                success: false,
+                message: 'Los empleados deben usar /login-empleado'
+            });
+        }
+        
         const isValidPassword = await bcrypt.compare(password, user.password);
         if (!isValidPassword) {
             return res.json({
@@ -618,8 +642,7 @@ app.post('/api/login', async (req, res) => {
                 message: 'Credenciales incorrectas'
             });
         }
-
-        // Crear sesión
+        
         req.session.user = {
             id: user._id,
             fullName: user.fullName,
@@ -627,23 +650,24 @@ app.post('/api/login', async (req, res) => {
             phone: user.phone,
             role: user.role
         };
-
-        // Redirigir según el rol
+        
         const redirectUrl = user.role === 'admin' ? '/admin' : '/dashboard';
-
+        
+        console.log('✅ Login exitoso:', redirectUrl);
+        
         res.json({
             success: true,
             message: 'Login exitoso',
             redirectUrl: redirectUrl,
-            userId: user._id, // Importante para verificar membresía
+            userId: user._id,
             user: {
                 role: user.role,
                 fullName: user.fullName
             }
         });
-
+        
     } catch (error) {
-        console.error('Error en login:', error);
+        console.error('❌ Error en login:', error);
         res.json({
             success: false,
             message: 'Error interno del servidor'
@@ -656,59 +680,49 @@ app.post('/api/login-empleado', async (req, res) => {
     try {
         const { email, password } = req.body;
         
-        console.log('🔐 Intento de login empleado:', email);
+        console.log('🔐 Login empleado:', email);
         
-        // Buscar usuario
         const user = await User.findOne({ 
             email: email.toLowerCase(),
             status: 'active'
         });
         
         if (!user) {
-            console.log('❌ Usuario no encontrado:', email);
             return res.json({ 
                 success: false, 
                 message: 'Credenciales incorrectas' 
             });
         }
         
-        console.log('👤 Usuario encontrado:', {
-            email: user.email,
-            role: user.role,
-            status: user.status
-        });
-        
-        // Verificar que sea empleado o admin
-        if (user.role !== 'employee' && user.role !== 'admin') {
-            console.log('❌ Usuario no es empleado/admin:', user.role);
+        // ⭐ RESTRICCIÓN: SOLO empleados
+        if (user.role !== 'employee') {
+            if (user.role === 'admin') {
+                return res.json({ 
+                    success: false, 
+                    message: 'Los administradores deben usar /login'
+                });
+            }
             return res.json({ 
                 success: false, 
-                message: 'No tienes permisos de empleado. Usa el login de clientes.' 
+                message: 'Los clientes deben usar /login'
             });
         }
         
-        // Verificar contraseña
         const passwordMatch = await bcrypt.compare(password, user.password);
         
         if (!passwordMatch) {
-            console.log('❌ Contraseña incorrecta para:', email);
             return res.json({ 
                 success: false, 
                 message: 'Credenciales incorrectas' 
             });
         }
         
-        // Crear sesión
         req.session.userId = user._id;
         req.session.role = user.role;
         req.session.userEmail = user.email;
         req.session.fullName = user.fullName;
         
-        console.log('✅ Login empleado exitoso:', {
-            email: user.email,
-            role: user.role,
-            sessionId: req.session.userId
-        });
+        console.log('✅ Login empleado exitoso');
         
         res.json({ 
             success: true, 
@@ -718,10 +732,10 @@ app.post('/api/login-empleado', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('❌ Error en login de empleado:', error);
+        console.error('❌ Error:', error);
         res.status(500).json({ 
             success: false, 
-            message: 'Error en el servidor. Intenta nuevamente.' 
+            message: 'Error en el servidor' 
         });
     }
 });
@@ -991,7 +1005,7 @@ app.get('/api/admin/employees', requireAuth, requireAdmin, async (req, res) => {
         const employees = await User.find({ role: 'employee' }).select('-password');
         res.json({ success: true, employees });
     } catch (error) {
-        console.error('Error obteniendo empleados:', error);
+        console.error('Error:', error);
         res.status(500).json({ success: false, message: 'Error al cargar empleados' });
     }
 });
@@ -1873,6 +1887,99 @@ app.get('/api/user/membership', requireAuth, async (req, res) => {
         res.json({
             success: false,
             message: 'Error al obtener membresía'
+        });
+    }
+});
+
+app.post('/api/renew-membership', requireAuth, async (req, res) => {
+    try {
+        const { planType, paymentMethod } = req.body;
+        const userId = req.session.user.id;
+        
+        const validPlans = ['mes-libre', 'dos-personas', 'tres-veces', 'semanal', 'dia-clase', 'jubilados'];
+        if (!validPlans.includes(planType)) {
+            return res.json({
+                success: false,
+                message: 'Plan no válido'
+            });
+        }
+        
+        const prices = {
+            'mes-libre': 32000,
+            'dos-personas': 28000,
+            'tres-veces': 15000,
+            'semanal': 20000,
+            'dia-clase': 5000,
+            'jubilados': 20000
+        };
+        
+        let finalPrice = prices[planType];
+        if (paymentMethod === 'mercadopago') {
+            finalPrice = finalPrice * 1.05;
+        }
+        
+        const currentMembership = await Membership.findOne({
+            userId: userId,
+            status: { $in: ['active', 'expired'] }
+        }).sort({ createdAt: -1 });
+        
+        let startDate = new Date();
+        
+        if (currentMembership && currentMembership.status === 'active' && new Date(currentMembership.endDate) > new Date()) {
+            startDate = new Date(currentMembership.endDate);
+        }
+        
+        const endDate = new Date(startDate);
+        if (planType === 'dia-clase') {
+            endDate.setDate(endDate.getDate() + 1);
+        } else if (planType === 'semanal') {
+            endDate.setDate(endDate.getDate() + 7);
+        } else {
+            endDate.setMonth(endDate.getMonth() + 1);
+        }
+        
+        const newMembership = new Membership({
+            userId: userId,
+            planType: planType,
+            price: finalPrice,
+            startDate: startDate,
+            endDate: endDate,
+            status: 'active',
+            paymentMethod: paymentMethod
+        });
+        
+        await newMembership.save();
+        
+        if (currentMembership) {
+            currentMembership.status = 'expired';
+            await currentMembership.save();
+        }
+        
+        await Notification.create({
+            userId: userId,
+            type: 'general',
+            title: 'Membresía Renovada',
+            message: `Tu membresía ${planType} ha sido renovada. Válida hasta ${endDate.toLocaleDateString('es-ES')}`
+        });
+        
+        console.log('✅ Membresía renovada');
+        
+        res.json({
+            success: true,
+            message: 'Membresía renovada exitosamente',
+            membership: {
+                planType: newMembership.planType,
+                startDate: newMembership.startDate,
+                endDate: newMembership.endDate,
+                price: newMembership.price
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al renovar membresía'
         });
     }
 });
@@ -2893,14 +3000,23 @@ app.get('/api/employee/today-classes', verificarEmpleado, async (req, res) => {
 // Obtener pedidos pendientes
 app.get('/api/employee/pending-orders', verificarEmpleado, async (req, res) => {
     try {
-        const pendingOrders = await Order.find({ 
-            status: { $in: ['pending', 'processing'] }
+        console.log('📦 Cargando pedidos para empleado');
+        
+        // Últimos 30 días
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const recentOrders = await Order.find({ 
+            status: 'completed',
+            createdAt: { $gte: thirtyDaysAgo }
         })
         .populate('userId', 'fullName email phone')
         .sort({ createdAt: -1 })
-        .limit(20);
+        .limit(100);
         
-        const formattedOrders = pendingOrders.map(order => ({
+        console.log(`✅ ${recentOrders.length} pedidos encontrados`);
+        
+        const formattedOrders = recentOrders.map(order => ({
             _id: order._id,
             customer: {
                 name: order.userId?.fullName || 'Cliente eliminado',
@@ -2909,12 +3025,13 @@ app.get('/api/employee/pending-orders', verificarEmpleado, async (req, res) => {
             },
             items: order.items,
             total: order.total,
-            createdAt: order.createdAt
+            createdAt: order.createdAt,
+            status: order.status
         }));
         
         res.json({ success: true, orders: formattedOrders });
     } catch (error) {
-        console.error('Error:', error);
+        console.error('❌ Error:', error);
         res.status(500).json({ success: false, message: 'Error al cargar pedidos' });
     }
 });
@@ -2926,7 +3043,11 @@ app.patch('/api/employee/mark-delivered/:orderId', verificarEmpleado, async (req
         
         const order = await Order.findByIdAndUpdate(
             orderId,
-            { status: 'completed' },
+            { 
+                status: 'delivered',
+                deliveredAt: new Date(),
+                deliveredBy: req.session.fullName || 'Empleado'
+            },
             { new: true }
         );
         
@@ -2936,8 +3057,8 @@ app.patch('/api/employee/mark-delivered/:orderId', verificarEmpleado, async (req
         
         res.json({ success: true, message: 'Pedido marcado como entregado' });
     } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ success: false, message: 'Error al actualizar pedido' });
+        console.error('❌ Error:', error);
+        res.status(500).json({ success: false, message: 'Error al actualizar' });
     }
 });
 

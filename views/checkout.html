@@ -654,23 +654,17 @@
                     
                     if (result.success) {
                         console.log('🎉 ¡COMPRA EXITOSA!');
-                        console.log('🆔 Order ID:', result.orderId);
-                        
-                        // Limpiar carrito
                         localStorage.removeItem('fitzone_cart');
                         cartItems = [];
                         
-                        // Mostrar éxito
+                        // NUEVO MENSAJE SIN TELÉFONO
                         if (typeof showCustomAlert === 'function') {
                             showCustomAlert('success', '🎉 ¡Compra Exitosa!', 
                                 `<div style="text-align: center;">
-                                    <p style="font-size: 1.2rem; margin-bottom: 1rem;">Tu pedido <strong>#${result.orderId}</strong> ha sido registrado</p>
-                                    <p style="font-size: 1.4rem; color: var(--violeta-claro); margin: 1rem 0;">
-                                        💰 Total: <strong>$${Math.round(total).toLocaleString()}</strong>
-                                    </p>
-                                    <p style="margin: 1rem 0;">📧 Para consultas comunicate al:</p>
-                                    <p style="font-weight: bold; color: var(--violeta-muy-claro);">+54 9 11 2170-8945</p>
-                                    <p style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--gris-claro);">Redirigiendo al dashboard...</p>
+                                    <p style="font-size: 1.2rem; margin-bottom: 1rem;">Pedido <strong>#${result.orderId}</strong> registrado</p>
+                                    <p style="font-size: 1.4rem; color: var(--violeta-claro);">💰 Total: <strong>$${Math.round(total).toLocaleString()}</strong></p>
+                                    <p style="margin: 1rem 0;">Retira en el gimnasio</p>
+                                    <p style="font-size: 0.9rem; color: var(--gris-claro);">Redirigiendo...</p>
                                 </div>`,
                                 () => {
                                     setTimeout(() => {
@@ -679,12 +673,11 @@
                                 }
                             );
                         } else {
-                            alert(`¡Compra exitosa!\n\nPedido #${result.orderId}\nTotal: $${Math.round(total).toLocaleString()}\n\nPara consultas comunicate al.`);
+                            alert(`¡Compra exitosa!\n\nPedido #${result.orderId}\n\nRetira en el gimnasio`);
                             setTimeout(() => {
                                 window.location.href = '/dashboard';
                             }, 2000);
                         }
-                        
                     } else {
                         console.error('❌ Compra rechazada:', result.message);
                         throw new Error(result.message || 'La compra fue rechazada');

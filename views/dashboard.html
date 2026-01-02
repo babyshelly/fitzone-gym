@@ -29,6 +29,118 @@
             </nav>
         </header>
 
+        <!-- Modal de Renovación -->
+        <div id="renewal-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-box" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h3>🔄 Renovar Membresía</h3>
+                    <span class="close" onclick="closeRenewalModal()" style="cursor: pointer; font-size: 2rem;">&times;</span>
+                </div>
+                <div class="modal-body" style="padding: 2rem;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                        <div class="renewal-plan" onclick="selectRenewalPlan('mes-libre')" data-plan="mes-libre" style="border: 2px solid var(--violeta-medio); padding: 1.5rem; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.3s;">
+                            <i class="fas fa-infinity" style="font-size: 2rem; color: var(--violeta-claro);"></i>
+                            <h4 style="margin: 0.5rem 0;">Mes Libre</h4>
+                            <p style="color: var(--violeta-claro); font-weight: bold;">$32.000</p>
+                        </div>
+                        <div class="renewal-plan" onclick="selectRenewalPlan('tres-veces')" data-plan="tres-veces" style="border: 2px solid var(--violeta-medio); padding: 1.5rem; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.3s;">
+                            <i class="fas fa-calendar-week" style="font-size: 2rem; color: var(--violeta-claro);"></i>
+                            <h4 style="margin: 0.5rem 0;">3 Veces/Sem</h4>
+                            <p style="color: var(--violeta-claro); font-weight: bold;">$15.000</p>
+                        </div>
+                        <div class="renewal-plan" onclick="selectRenewalPlan('semanal')" data-plan="semanal" style="border: 2px solid var(--violeta-medio); padding: 1.5rem; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.3s;">
+                            <i class="fas fa-calendar-alt" style="font-size: 2rem; color: var(--violeta-claro);"></i>
+                            <h4 style="margin: 0.5rem 0;">Semanal</h4>
+                            <p style="color: var(--violeta-claro); font-weight: bold;">$20.000</p>
+                        </div>
+                    </div>
+                    
+                    <h4 style="color: var(--violeta-claro); margin-bottom: 1rem;">Método de Pago</h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2rem;">
+                        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="radio" name="renewal-payment" value="efectivo" checked>
+                            <span>Efectivo</span>
+                        </label>
+                        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="radio" name="renewal-payment" value="transferencia">
+                            <span>Transferencia</span>
+                        </label>
+                    </div>
+                    
+                    <button class="btn-primary" onclick="confirmRenewal()" style="width: 100%;">
+                        Confirmar Renovación
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .renewal-plan:hover {
+                border-color: var(--violeta-claro);
+                transform: translateY(-3px);
+            }
+            .renewal-plan.selected {
+                border-color: #22c55e;
+                background: rgba(34, 197, 94, 0.1);
+            }
+        </style>
+
+        <script>
+            let selectedRenewalPlan = null;
+
+            function showRenewalModal() {
+                document.getElementById('renewal-modal').style.display = 'flex';
+            }
+
+            function closeRenewalModal() {
+                document.getElementById('renewal-modal').style.display = 'none';
+            }
+
+            function selectRenewalPlan(plan) {
+                selectedRenewalPlan = plan;
+                document.querySelectorAll('.renewal-plan').forEach(p => p.classList.remove('selected'));
+                document.querySelector(`[data-plan="${plan}"]`).classList.add('selected');
+            }
+
+            async function confirmRenewal() {
+                if (!selectedRenewalPlan) {
+                    alert('Selecciona un plan');
+                    return;
+                }
+                
+                const paymentMethod = document.querySelector('input[name="renewal-payment"]:checked').value;
+                
+                try {
+                    const response = await fetch('/api/renew-membership', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({
+                            planType: selectedRenewalPlan,
+                            paymentMethod: paymentMethod
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        closeRenewalModal();
+                        alert('¡Membresía renovada exitosamente!');
+                        location.reload();
+                    } else {
+                        alert(result.message || 'Error al renovar');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error de conexión');
+                }
+            }
+
+            // Modificar función existente
+            function renewMembership() {
+                showRenewalModal();
+            }
+        </script>
         <!-- Dashboard Principal -->
         <main class="dashboard-main">
             <!-- Bienvenida -->
