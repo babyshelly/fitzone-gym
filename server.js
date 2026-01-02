@@ -23,7 +23,7 @@ app.use(express.static('public'));
 
 // Configurar sesiones
 app.use(session({
-    secret: process.env.SESSION_SECRET || require('crypto').randomBytes(32).toString('hex'),
+    secret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
     resave: false,
     saveUninitialized: false,
     cookie: { 
@@ -925,7 +925,7 @@ console.log('✅ Rutas de administración configuradas correctamente');
 // ==================== GESTIÓN DE EMPLEADOS ====================
 
 // Obtener todos los empleados
-app.get('/api/admin/employees', verificarAdmin, async (req, res) => {
+app.get('/api/admin/employees', requireAuth, requireAdmin, async (req, res) => {
     try {
         const employees = await User.find({ role: 'employee' }).select('-password');
         res.json({ success: true, employees });
@@ -936,7 +936,8 @@ app.get('/api/admin/employees', verificarAdmin, async (req, res) => {
 });
 
 // Crear nuevo empleado
-app.post('/api/admin/employees', verificarAdmin, async (req, res) => {
+app.post('/api/admin/employees', requireAuth, requireAdmin, async (req, res) => {
+
     try {
         const { fullName, email, phone, password } = req.body;
         
@@ -985,7 +986,7 @@ app.post('/api/admin/employees', verificarAdmin, async (req, res) => {
 });
 
 // Actualizar empleado
-app.put('/api/admin/employees/:id', verificarAdmin, async (req, res) => {
+app.put('/api/admin/employees/:id', requireAuth, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { fullName, email, phone, status, password } = req.body;
@@ -1023,7 +1024,7 @@ app.put('/api/admin/employees/:id', verificarAdmin, async (req, res) => {
 });
 
 // Eliminar empleado
-app.delete('/api/admin/employees/:id', verificarAdmin, async (req, res) => {
+app.delete('/api/admin/employees/:id', requireAuth, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         
