@@ -3000,23 +3000,19 @@ app.get('/api/employee/today-classes', verificarEmpleado, async (req, res) => {
 // Obtener pedidos pendientes
 app.get('/api/employee/pending-orders', verificarEmpleado, async (req, res) => {
     try {
-        console.log('📦 Cargando pedidos para empleado');
+        console.log('📦 Cargando pedidos pendientes para empleado');
         
-        // Últimos 30 días
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        
-        const recentOrders = await Order.find({ 
-            status: 'completed',
-            createdAt: { $gte: thirtyDaysAgo }
+        // Pedidos con status 'completed' (pagados pero no entregados)
+        const pendingOrders = await Order.find({ 
+            status: 'completed' // Cambiamos de 'pending' a 'completed'
         })
         .populate('userId', 'fullName email phone')
         .sort({ createdAt: -1 })
         .limit(100);
         
-        console.log(`✅ ${recentOrders.length} pedidos encontrados`);
+        console.log(`✅ ${pendingOrders.length} pedidos pendientes encontrados`);
         
-        const formattedOrders = recentOrders.map(order => ({
+        const formattedOrders = pendingOrders.map(order => ({
             _id: order._id,
             customer: {
                 name: order.userId?.fullName || 'Cliente eliminado',
@@ -3466,6 +3462,77 @@ app.delete('/api/admin/categories/:id', requireAuth, requireAdmin, async (req, r
     }
 });
 
+app.get('/api/admin/sales-stats', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const { period } = req.query; // 'day', 'week', 'month', 'year'
+        
+        let startDate = new Date();
+        
+        switch (period) {
+            case 'day':
+                startDate.setHours(0, 0, 0, 0);
+                break;
+            case 'week':
+                startDate.setDate(startDate.getDate() - 7);
+                break;
+            case 'month':
+                startDate.setMonth(startDate.getMonth() - 1);
+                break;
+            case 'year':
+                startDate.setFullYear(startDate.getFullYear() - 1);
+                break;
+            default:
+                startDate.setMonth(startDate.getMonth() - 1); // Por defecto último mes
+        }
+        
+        // Pedidos completados y entregados
+        const orders = await Order.find({
+            status: { $in: ['completed', 'delivered'] },
+            createdAt: { $gte: startDate }
+        });
+        
+        const totalSales = orders.reduce((sum, order) => sum + order.total, 0);
+        const totalOrders = orders.length;
+        
+        // Pedidos solo entregados
+        const deliveredOrders = orders.filter(o => o.status === 'delivered');
+        const deliveredRevenue = deliveredOrders.reduce((sum, order) => sum + order.total, 0);
+        
+        // Productos más vendidos
+        const productSales = {};
+        orders.forEach(order => {
+            order.items.forEach(item => {
+                if (productSales[item.name]) {
+                    productSales[item.name] += item.quantity;
+                } else {
+                    productSales[item.name] = item.quantity;
+                }
+            });
+        });
+        
+        const topProducts = Object.entries(productSales)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(([name, quantity]) => ({ name, quantity }));
+        
+        res.json({
+            success: true,
+            stats: {
+                totalSales,
+                totalOrders,
+                deliveredOrders: deliveredOrders.length,
+                deliveredRevenue,
+                pendingOrders: totalOrders - deliveredOrders.length,
+                pendingRevenue: totalSales - deliveredRevenue,
+                topProducts
+            }
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ success: false, message: 'Error al obtener estadísticas' });
+    }
+});
+
 // ============== APIs DE PRODUCTOS ==============
 
 // Obtener todos los productos (público)
@@ -3679,6 +3746,252 @@ app.patch('/api/admin/products/:id/toggle', requireAuth, requireAdmin, async (re
     }
 });
 
+// Schema de Instructores
+const instructorSchema = new mongoose.Schema({
+    fullName: {
+        type: String,
+        required: true
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true
+    },
+    phone: {
+        type: String,
+        required: true
+    },
+    specialties: [{
+        type: String,
+        enum: ['F.E.C', 'Yoga', 'Spinning', 'Pilates', 'Musculación', 'Cardio']
+    }],
+    certifications: String,
+    bio: String,
+    photo: String, // URL o base64
+    active: {
+        type: Boolean,
+        default: true
+    },
+    assignedClasses: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Class'
+    }],
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+instructorSchema.index({ fullName: 1, active: 1 });
+
+const Instructor = mongoose.model('Instructor', instructorSchema);
+
+// ==================== APIs DE INSTRUCTORES ====================
+
+// Obtener todos los instructores (Admin)
+app.get('/api/admin/instructors', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const instructors = await Instructor.find()
+            .populate('assignedClasses', 'name schedule')
+            .sort({ fullName: 1 });
+        
+        res.json({ success: true, instructors });
+    } catch (error) {
+        console.error('Error obteniendo instructores:', error);
+        res.status(500).json({ success: false, message: 'Error al cargar instructores' });
+    }
+});
+
+// Obtener instructores activos (Público)
+app.get('/api/instructors/active', async (req, res) => {
+    try {
+        const instructors = await Instructor.find({ active: true })
+            .populate('assignedClasses', 'name schedule')
+            .sort({ fullName: 1 });
+        
+        res.json({ success: true, instructors });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ success: false, message: 'Error al cargar instructores' });
+    }
+});
+
+// Crear instructor (Admin)
+app.post('/api/admin/instructors', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const { fullName, email, phone, specialties, certifications, bio, photo } = req.body;
+        
+        if (!fullName || !email || !phone) {
+            return res.json({ success: false, message: 'Campos requeridos incompletos' });
+        }
+        
+        const existingInstructor = await Instructor.findOne({ email: email.toLowerCase() });
+        if (existingInstructor) {
+            return res.json({ success: false, message: 'Ya existe un instructor con este email' });
+        }
+        
+        const instructor = new Instructor({
+            fullName,
+            email: email.toLowerCase(),
+            phone,
+            specialties: specialties || [],
+            certifications,
+            bio,
+            photo,
+            active: true
+        });
+        
+        await instructor.save();
+        
+        res.json({ 
+            success: true, 
+            message: 'Instructor creado exitosamente',
+            instructor 
+        });
+    } catch (error) {
+        console.error('Error creando instructor:', error);
+        res.status(500).json({ success: false, message: 'Error al crear instructor' });
+    }
+});
+
+// Actualizar instructor (Admin)
+app.put('/api/admin/instructors/:id', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const { fullName, email, phone, specialties, certifications, bio, photo, active } = req.body;
+        
+        const instructor = await Instructor.findByIdAndUpdate(
+            req.params.id,
+            { fullName, email, phone, specialties, certifications, bio, photo, active },
+            { new: true, runValidators: true }
+        );
+        
+        if (!instructor) {
+            return res.status(404).json({ success: false, message: 'Instructor no encontrado' });
+        }
+        
+        res.json({ 
+            success: true, 
+            message: 'Instructor actualizado exitosamente',
+            instructor 
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ success: false, message: 'Error al actualizar instructor' });
+    }
+});
+
+// Eliminar instructor (Admin)
+app.delete('/api/admin/instructors/:id', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const instructor = await Instructor.findByIdAndDelete(req.params.id);
+        
+        if (!instructor) {
+            return res.status(404).json({ success: false, message: 'Instructor no encontrado' });
+        }
+        
+        // Actualizar clases que tenían este instructor
+        await Class.updateMany(
+            { instructor: instructor.fullName },
+            { instructor: 'Instructor FitZone' }
+        );
+        
+        res.json({ 
+            success: true, 
+            message: 'Instructor eliminado exitosamente'
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ success: false, message: 'Error al eliminar instructor' });
+    }
+});
+
+// Asignar instructor a clase (Admin)
+app.post('/api/admin/instructors/:instructorId/assign-class/:classId', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const { instructorId, classId } = req.params;
+        
+        const instructor = await Instructor.findById(instructorId);
+        const classItem = await Class.findById(classId);
+        
+        if (!instructor || !classItem) {
+            return res.status(404).json({ success: false, message: 'Instructor o clase no encontrada' });
+        }
+        
+        // Agregar clase al instructor
+        if (!instructor.assignedClasses.includes(classId)) {
+            instructor.assignedClasses.push(classId);
+            await instructor.save();
+        }
+        
+        // Actualizar instructor en la clase
+        classItem.instructor = instructor.fullName;
+        await classItem.save();
+        
+        res.json({ 
+            success: true, 
+            message: 'Instructor asignado exitosamente'
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ success: false, message: 'Error al asignar instructor' });
+    }
+});
+
+// ==================== INICIALIZAR INSTRUCTORES POR DEFECTO ====================
+// Agregar esta función en initializeData() en server.js
+
+async function initializeInstructors() {
+    try {
+        const count = await Instructor.countDocuments();
+        if (count === 0) {
+            const instructors = [
+                {
+                    fullName: 'Carlos Mendoza',
+                    email: 'carlos.mendoza@fitzone.com',
+                    phone: '(11) 5555-0001',
+                    specialties: ['F.E.C', 'Musculación'],
+                    certifications: 'Certificado en Entrenamiento Funcional',
+                    bio: 'Instructor con 8 años de experiencia en entrenamiento funcional',
+                    active: true
+                },
+                {
+                    fullName: 'Ana García',
+                    email: 'ana.garcia@fitzone.com',
+                    phone: '(11) 5555-0002',
+                    specialties: ['Yoga'],
+                    certifications: 'Instructor de Yoga certificado RYT-200',
+                    bio: 'Especialista en Hatha y Vinyasa Yoga',
+                    active: true
+                },
+                {
+                    fullName: 'Roberto Silva',
+                    email: 'roberto.silva@fitzone.com',
+                    phone: '(11) 5555-0003',
+                    specialties: ['Spinning'],
+                    certifications: 'Certificado en Ciclismo Indoor',
+                    bio: 'Instructor de spinning con pasión por el ciclismo',
+                    active: true
+                },
+                {
+                    fullName: 'María López',
+                    email: 'maria.lopez@fitzone.com',
+                    phone: '(11) 5555-0004',
+                    specialties: ['Pilates'],
+                    certifications: 'Certificado en Método Pilates',
+                    bio: 'Instructora de Pilates con enfoque en rehabilitación',
+                    active: true
+                }
+            ];
+            
+            await Instructor.insertMany(instructors);
+            console.log('✅ Instructores predefinidos creados');
+        }
+    } catch (error) {
+        console.error('Error inicializando instructores:', error);
+    }
+}
+
 // ==================== APIs PARA EMPLEADOS ====================
 
 // Stats del dashboard de empleados
@@ -3776,6 +4089,109 @@ app.patch('/api/employee/mark-delivered/:orderId', async (req, res) => {
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ success: false, message: 'Error al actualizar pedido' });
+    }
+});
+
+// Obtener inscriptos de una clase (Empleados)
+app.get('/api/employee/class-reservations/:classId', verificarEmpleado, async (req, res) => {
+    try {
+        const { classId } = req.params;
+        
+        // Obtener información de la clase
+        const classItem = await Class.findById(classId);
+        
+        if (!classItem) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Clase no encontrada' 
+            });
+        }
+        
+        // Obtener reservas de hoy para esta clase
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        const reservations = await Reservation.find({
+            classId: classId,
+            date: {
+                $gte: today,
+                $lt: tomorrow
+            },
+            status: 'active'
+        })
+        .populate('userId', 'fullName email phone')
+        .sort({ time: 1 });
+        
+        // Formatear respuesta
+        const formattedReservations = reservations.map(res => ({
+            _id: res._id,
+            user: {
+                fullName: res.userId?.fullName || 'Usuario',
+                email: res.userId?.email || 'N/A',
+                phone: res.userId?.phone || 'N/A'
+            },
+            time: res.time,
+            date: res.date,
+            createdAt: res.createdAt
+        }));
+        
+        console.log(`✅ ${formattedReservations.length} inscriptos en ${classItem.name}`);
+        
+        res.json({
+            success: true,
+            className: classItem.name,
+            reservations: formattedReservations
+        });
+        
+    } catch (error) {
+        console.error('❌ Error obteniendo inscriptos:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al cargar inscriptos' 
+        });
+    }
+});
+
+// Obtener pedidos entregados (Empleados)
+app.get('/api/employee/delivered-orders', verificarEmpleado, async (req, res) => {
+    try {
+        console.log('📦 Cargando pedidos entregados');
+        
+        // Últimos 30 días de pedidos entregados
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const deliveredOrders = await Order.find({ 
+            status: 'delivered',
+            deliveredAt: { $gte: thirtyDaysAgo }
+        })
+        .populate('userId', 'fullName email phone')
+        .sort({ deliveredAt: -1 })
+        .limit(100);
+        
+        console.log(`✅ ${deliveredOrders.length} pedidos entregados encontrados`);
+        
+        const formattedOrders = deliveredOrders.map(order => ({
+            _id: order._id,
+            customer: {
+                name: order.userId?.fullName || 'Cliente eliminado',
+                email: order.userId?.email || 'N/A',
+                phone: order.userId?.phone || 'N/A'
+            },
+            items: order.items,
+            total: order.total,
+            createdAt: order.createdAt,
+            deliveredAt: order.deliveredAt,
+            deliveredBy: order.deliveredBy,
+            status: order.status
+        }));
+        
+        res.json({ success: true, orders: formattedOrders });
+    } catch (error) {
+        console.error('❌ Error:', error);
+        res.status(500).json({ success: false, message: 'Error al cargar pedidos entregados' });
     }
 });
 

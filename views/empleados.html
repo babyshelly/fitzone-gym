@@ -396,204 +396,85 @@
         <section id="pedidos" class="admin-section" style="padding: 4rem 0; background: var(--gris-oscuro);">
             <div class="container">
                 <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <h2 style="color: var(--violeta-claro); font-size: 2rem;">📦 Pedidos Pendientes</h2>
+                    <h2 style="color: var(--violeta-claro); font-size: 2rem;">📦 Gestión de Pedidos</h2>
                     <button class="btn btn-primary" onclick="loadPendingOrders()">
                         <i class="fas fa-sync"></i> Actualizar
                     </button>
                 </div>
 
-                <div id="pending-orders-list" style="display: flex; flex-direction: column; gap: 1rem;">
-                    <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
-                        <i class="fas fa-box" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                        <p>Cargando pedidos pendientes...</p>
+                <!-- Tabs de Pedidos -->
+                <div class="orders-tabs" style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid var(--violeta-medio); padding-bottom: 0;">
+                    <button class="tab-btn active" onclick="switchOrdersTab('pending', this)" style="background: none; border: none; padding: 1rem 2rem; color: var(--violeta-claro); font-weight: bold; cursor: pointer; border-bottom: 3px solid var(--violeta-claro); transition: all 0.3s;">
+                        <i class="fas fa-clock"></i> Pendientes (<span id="pending-count">0</span>)
+                    </button>
+                    <button class="tab-btn" onclick="switchOrdersTab('delivered', this)" style="background: none; border: none; padding: 1rem 2rem; color: var(--gris-claro); font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s;">
+                        <i class="fas fa-check-circle"></i> Entregados
+                    </button>
+                </div>
+
+                <!-- Pedidos Pendientes -->
+                <div id="pending-orders-section" style="display: block;">
+                    <div id="pending-orders-list" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
+                            <i class="fas fa-box" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                            <p>Cargando pedidos pendientes...</p>
+                        </div>
                     </div>
+
+                    <!-- Paginación para pendientes -->
+                    <div id="pending-pagination" class="pagination" style="margin-top: 2rem;"></div>
+                </div>
+
+                <!-- Pedidos Entregados -->
+                <div id="delivered-orders-section" style="display: none;">
+                    <div id="delivered-orders-list" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
+                            <i class="fas fa-box" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                            <p>Cargando pedidos entregados...</p>
+                        </div>
+                    </div>
+
+                    <!-- Paginación para entregados -->
+                    <div id="delivered-pagination" class="pagination" style="margin-top: 2rem;"></div>
                 </div>
             </div>
         </section>
     </main>
 
+    <!-- ==================== SCRIPT ACTUALIZADO PARA EMPLEADOS ==================== -->
     <script>
-        // ==================== SCRIPT DEL PANEL DE EMPLEADOS ====================
-        
-        // Mostrar fecha actual
-        document.getElementById('current-date').textContent = new Date().toLocaleDateString('es-ES', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-        });
+        // Variables para paginación de pedidos
+        let allPendingOrders = [];
+        let allDeliveredOrders = [];
+        let currentPendingPage = 1;
+        let currentDeliveredPage = 1;
+        const ordersPerPage = 5; // Mostrar solo 5 pedidos por página
 
-        // Cargar datos al iniciar
-        document.addEventListener('DOMContentLoaded', function() {
-            loadEmployeeData();
-            loadTodayClasses();
-            loadPendingOrders();
-            setupLogout();
-        });
-
-        // Cargar información del empleado
-        async function loadEmployeeData() {
-            try {
-                const response = await fetch('/api/user');
-                const data = await response.json();
-                
-                if (data.success) {
-                    document.getElementById('employee-name').textContent = data.user.fullName;
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-
-        // Cargar clases de hoy
-        async function loadTodayClasses() {
-            try {
-                const response = await fetch('/api/employee/today-classes');
-                const data = await response.json();
-                
-                const grid = document.getElementById('today-classes-grid');
-                
-                if (data.success && data.classes.length > 0) {
-                    document.getElementById('today-classes').textContent = data.classes.length;
-                    
-                    grid.innerHTML = data.classes.map(cls => `
-                        <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border: 2px solid var(--violeta-medio);">
-                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                                <div>
-                                    <h4 style="color: var(--violeta-claro); font-size: 1.3rem; margin-bottom: 0.5rem;">
-                                        ${cls.className}
-                                    </h4>
-                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
-                                        <i class="fas fa-clock"></i> ${cls.time}
-                                    </p>
-                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
-                                        <i class="fas fa-users"></i> ${cls.reservations} / ${cls.capacity} inscritos
-                                    </p>
-                                </div>
-                                <div style="text-align: center;">
-                                    <div style="background: ${cls.reservations >= cls.capacity ? '#ef4444' : '#22c55e'}; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">
-                                        ${cls.reservations >= cls.capacity ? 'LLENO' : 'DISPONIBLE'}
-                                    </div>
-                                </div>
-                            </div>
-                            <button class="btn btn-secondary" onclick="viewClassDetails('${cls.classId}')" style="width: 100%; margin-top: 0.5rem;">
-                                <i class="fas fa-eye"></i> Ver Inscriptos
-                            </button>
-                        </div>
-                    `).join('');
-                } else {
-                    grid.innerHTML = `
-                        <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
-                            <i class="fas fa-calendar-times" style="font-size: 4rem; color: var(--violeta-medio); margin-bottom: 1rem;"></i>
-                            <p style="color: var(--gris-claro); font-size: 1.2rem;">No hay clases programadas para hoy</p>
-                        </div>
-                    `;
-                    document.getElementById('today-classes').textContent = '0';
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-
-        // Buscar miembros
-        let searchTimeout;
-        async function searchMembers() {
-            clearTimeout(searchTimeout);
+        // Cambiar entre tabs
+        function switchOrdersTab(tab, button) {
+            // Actualizar botones
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.color = 'var(--gris-claro)';
+                btn.style.borderBottom = '3px solid transparent';
+            });
             
-            const searchTerm = document.getElementById('member-search').value.trim();
+            button.classList.add('active');
+            button.style.color = 'var(--violeta-claro)';
+            button.style.borderBottom = '3px solid var(--violeta-claro)';
             
-            if (searchTerm.length < 3) {
-                document.getElementById('members-list').innerHTML = `
-                    <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
-                        <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                        <p>Ingresa al menos 3 caracteres para buscar</p>
-                    </div>
-                `;
-                return;
-            }
-
-            searchTimeout = setTimeout(async () => {
-                try {
-                    const response = await fetch(`/api/employee/search-members?q=${encodeURIComponent(searchTerm)}`);
-                    const data = await response.json();
-
-                    if (data.success && data.members.length > 0) {
-                        displayMembers(data.members);
-                    } else {
-                        document.getElementById('members-list').innerHTML = `
-                            <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
-                                <i class="fas fa-user-slash" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                                <p>No se encontraron miembros</p>
-                            </div>
-                        `;
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
+            // Mostrar sección correspondiente
+            if (tab === 'pending') {
+                document.getElementById('pending-orders-section').style.display = 'block';
+                document.getElementById('delivered-orders-section').style.display = 'none';
+                if (allPendingOrders.length === 0) {
+                    loadPendingOrders();
                 }
-            }, 500);
-        }
-
-        function displayMembers(members) {
-            const container = document.getElementById('members-list');
-            container.innerHTML = members.map(member => `
-                <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border: 2px solid var(--violeta-medio); display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <div>
-                        <h4 style="color: var(--blanco); font-size: 1.2rem; margin-bottom: 0.5rem;">${member.fullName}</h4>
-                        <p style="color: var(--gris-claro); margin: 0.2rem 0;">
-                            <i class="fas fa-envelope"></i> ${member.email}
-                        </p>
-                        <p style="color: var(--gris-claro); margin: 0.2rem 0;">
-                            <i class="fas fa-phone"></i> ${member.phone}
-                        </p>
-                    </div>
-                    <button class="btn btn-primary" onclick="registerAttendance('${member._id}', '${member.fullName}')">
-                        <i class="fas fa-check"></i> Registrar Asistencia
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        async function registerAttendance(userId, userName) {
-            try {
-                const response = await fetch('/api/employee/register-attendance', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('success', '✅ Asistencia Registrada', 
-                            `La asistencia de ${userName} ha sido registrada correctamente.`);
-                    } else {
-                        alert(`✅ Asistencia de ${userName} registrada`);
-                    }
-                    
-                    // Actualizar contador
-                    const current = parseInt(document.getElementById('today-attendance').textContent);
-                    document.getElementById('today-attendance').textContent = current + 1;
-                    
-                    // Limpiar búsqueda
-                    document.getElementById('member-search').value = '';
-                    document.getElementById('members-list').innerHTML = `
-                        <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
-                            <i class="fas fa-check-circle" style="font-size: 3rem; color: #22c55e; margin-bottom: 1rem;"></i>
-                            <p>Asistencia registrada exitosamente</p>
-                        </div>
-                    `;
-                } else {
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('error', 'Error', result.message || 'No se pudo registrar la asistencia');
-                    } else {
-                        alert(result.message || 'Error al registrar asistencia');
-                    }
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                if (typeof showCustomAlert === 'function') {
-                    showCustomAlert('error', 'Error de Conexión', 'No se pudo registrar la asistencia');
+            } else {
+                document.getElementById('pending-orders-section').style.display = 'none';
+                document.getElementById('delivered-orders-section').style.display = 'block';
+                if (allDeliveredOrders.length === 0) {
+                    loadDeliveredOrders();
                 }
             }
         }
@@ -604,65 +485,303 @@
                 const response = await fetch('/api/employee/pending-orders');
                 const data = await response.json();
                 
-                const container = document.getElementById('pending-orders-list');
-                
                 if (data.success && data.orders.length > 0) {
+                    allPendingOrders = data.orders;
+                    displayPendingOrders();
                     document.getElementById('pending-orders').textContent = data.orders.length;
-                    
-                    container.innerHTML = data.orders.map(order => `
-                        <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border-left: 4px solid var(--violeta-claro);">
-                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                                <div>
-                                    <h4 style="color: var(--violeta-claro); margin-bottom: 0.5rem;">
-                                        Pedido #${order._id.slice(-8).toUpperCase()}
-                                    </h4>
-                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
-                                        <i class="fas fa-user"></i> ${order.customer?.name || 'Cliente'}
-                                    </p>
-                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
-                                        <i class="fas fa-envelope"></i> ${order.customer?.email || 'N/A'}
-                                    </p>
-                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
-                                        <i class="fas fa-shopping-bag"></i> ${order.items.length} productos
-                                    </p>
-                                </div>
-                                <div style="text-align: right;">
-                                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--violeta-claro); margin-bottom: 0.5rem;">
-                                        $${order.total.toLocaleString()}
-                                    </div>
-                                    <button class="btn btn-primary" onclick="markAsDelivered('${order._id}')" style="font-size: 0.9rem;">
-                                        <i class="fas fa-check"></i> Marcar Entregado
-                                    </button>
-                                </div>
-                            </div>
-                            <div style="padding-top: 1rem; border-top: 1px solid var(--violeta-medio);">
-                                <strong style="color: var(--violeta-claro); display: block; margin-bottom: 0.5rem;">Productos:</strong>
-                                ${order.items.map(item => `
-                                    <div style="color: var(--gris-claro); padding: 0.3rem 0;">
-                                        • ${item.name} x${item.quantity} - $${(item.price * item.quantity).toLocaleString()}
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `).join('');
+                    document.getElementById('pending-count').textContent = data.orders.length;
                 } else {
-                    container.innerHTML = `
+                    document.getElementById('pending-orders-list').innerHTML = `
                         <div style="text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
                             <i class="fas fa-check-circle" style="font-size: 4rem; color: #22c55e; margin-bottom: 1rem;"></i>
                             <p style="color: var(--gris-claro); font-size: 1.2rem;">¡No hay pedidos pendientes!</p>
                         </div>
                     `;
                     document.getElementById('pending-orders').textContent = '0';
+                    document.getElementById('pending-count').textContent = '0';
                 }
             } catch (error) {
                 console.error('Error:', error);
             }
         }
 
-        async function markAsDelivered(orderId) {
-            const confirmDeliver = confirm('¿Confirmar que el pedido fue entregado?');
-            if (!confirmDeliver) return;
+        // Mostrar pedidos pendientes con paginación
+        function displayPendingOrders() {
+            const start = (currentPendingPage - 1) * ordersPerPage;
+            const end = start + ordersPerPage;
+            const ordersToShow = allPendingOrders.slice(start, end);
             
+            const container = document.getElementById('pending-orders-list');
+            
+            container.innerHTML = ordersToShow.map(order => `
+                <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border-left: 4px solid var(--violeta-claro);">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div>
+                            <h4 style="color: var(--violeta-claro); margin-bottom: 0.5rem;">
+                                Pedido #${order._id.slice(-8).toUpperCase()}
+                            </h4>
+                            <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                <i class="fas fa-user"></i> ${order.customer?.name || 'Cliente'}
+                            </p>
+                            <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                <i class="fas fa-envelope"></i> ${order.customer?.email || 'N/A'}
+                            </p>
+                            <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                <i class="fas fa-calendar"></i> ${new Date(order.createdAt).toLocaleDateString('es-ES')}
+                            </p>
+                            <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                <i class="fas fa-shopping-bag"></i> ${order.items.length} productos
+                            </p>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: var(--violeta-claro); margin-bottom: 0.5rem;">
+                                $${order.total.toLocaleString()}
+                            </div>
+                            <button class="btn btn-primary" onclick="confirmMarkAsDelivered('${order._id}')" style="font-size: 0.9rem;">
+                                <i class="fas fa-check"></i> Marcar Entregado
+                            </button>
+                        </div>
+                    </div>
+                    <div style="padding-top: 1rem; border-top: 1px solid var(--violeta-medio);">
+                        <strong style="color: var(--violeta-claro); display: block; margin-bottom: 0.5rem;">Productos:</strong>
+                        ${order.items.map(item => `
+                            <div style="color: var(--gris-claro); padding: 0.3rem 0;">
+                                • ${item.name} x${item.quantity} - $${(item.price * item.quantity).toLocaleString()}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+            
+            // Paginación
+            setupPagination('pending', allPendingOrders.length);
+        }
+
+        // Cargar pedidos entregados
+        async function loadDeliveredOrders() {
+            try {
+                const response = await fetch('/api/employee/delivered-orders');
+                const data = await response.json();
+                
+                if (data.success && data.orders.length > 0) {
+                    allDeliveredOrders = data.orders;
+                    displayDeliveredOrders();
+                } else {
+                    document.getElementById('delivered-orders-list').innerHTML = `
+                        <div style="text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
+                            <i class="fas fa-box-open" style="font-size: 4rem; color: var(--gris-claro); margin-bottom: 1rem;"></i>
+                            <p style="color: var(--gris-claro); font-size: 1.2rem;">No hay pedidos entregados aún</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function viewClassDetails(classId) {
+            try {
+                const response = await fetch(`/api/employee/class-reservations/${classId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const { className, reservations } = data;
+                    
+                    let content = `
+                        <div style="padding: 1.5rem;">
+                            <h3 style="color: var(--violeta-claro); margin-bottom: 1.5rem;">
+                                <i class="fas fa-users"></i> Inscriptos en ${className}
+                            </h3>
+                    `;
+                    
+                    if (reservations.length === 0) {
+                        content += `
+                            <div style="text-align: center; padding: 2rem; background: var(--negro); border-radius: 10px;">
+                                <i class="fas fa-user-slash" style="font-size: 3rem; color: var(--gris-claro); margin-bottom: 1rem;"></i>
+                                <p style="color: var(--gris-claro);">No hay inscriptos para esta clase hoy</p>
+                            </div>
+                        `;
+                    } else {
+                        content += `
+                            <div style="background: var(--negro); border-radius: 10px; overflow: hidden;">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr style="background: var(--violeta-medio); color: white;">
+                                            <th style="padding: 1rem; text-align: left;">Nombre</th>
+                                            <th style="padding: 1rem; text-align: left;">Email</th>
+                                            <th style="padding: 1rem; text-align: left;">Horario</th>
+                                            <th style="padding: 1rem; text-align: center;">Fecha Reserva</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${reservations.map((res, index) => `
+                                            <tr style="border-bottom: 1px solid var(--violeta-medio); ${index % 2 === 0 ? 'background: rgba(127, 76, 165, 0.1);' : ''}">
+                                                <td style="padding: 1rem; color: var(--blanco);">${res.user?.fullName || 'Usuario'}</td>
+                                                <td style="padding: 1rem; color: var(--gris-claro);">${res.user?.email || 'N/A'}</td>
+                                                <td style="padding: 1rem; color: var(--violeta-claro); font-weight: bold;">${res.time}</td>
+                                                <td style="padding: 1rem; color: var(--gris-claro); text-align: center;">
+                                                    ${new Date(res.createdAt).toLocaleDateString('es-ES')}
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="margin-top: 1rem; padding: 1rem; background: var(--negro); border-radius: 10px; text-align: center;">
+                                <p style="color: var(--violeta-claro); font-weight: bold; font-size: 1.1rem;">
+                                    Total: ${reservations.length} personas inscritas
+                                </p>
+                            </div>
+                        `;
+                    }
+                    
+                    content += `</div>`;
+                    
+                    // Mostrar en un modal personalizado
+                    if (typeof showCustomAlert === 'function') {
+                        // Crear modal personalizado más grande
+                        const modal = document.createElement('div');
+                        modal.className = 'custom-alert-overlay show';
+                        modal.innerHTML = `
+                            <div class="custom-alert-box" style="max-width: 800px; width: 90%;">
+                                <div class="custom-alert-header info">
+                                    <div class="custom-alert-icon">ℹ</div>
+                                    <h3>Inscriptos en Clase</h3>
+                                </div>
+                                <div class="custom-alert-body" style="max-height: 500px; overflow-y: auto;">
+                                    ${content}
+                                </div>
+                                <div class="custom-alert-actions">
+                                    <button class="custom-alert-btn primary" onclick="this.closest('.custom-alert-overlay').remove()">
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        document.body.appendChild(modal);
+                        
+                        // Cerrar al hacer clic fuera
+                        modal.addEventListener('click', function(e) {
+                            if (e.target === modal) {
+                                modal.remove();
+                            }
+                        });
+                    } else {
+                        alert('Por favor recarga la página para ver los inscriptos');
+                    }
+                } else {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error', data.message || 'No se pudieron cargar los inscriptos');
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                if (typeof showCustomAlert === 'function') {
+                    showCustomAlert('error', 'Error de Conexión', 'No se pudo conectar con el servidor');
+                }
+            }
+        }
+
+        // Mostrar pedidos entregados con paginación
+        function displayDeliveredOrders() {
+            const start = (currentDeliveredPage - 1) * ordersPerPage;
+            const end = start + ordersPerPage;
+            const ordersToShow = allDeliveredOrders.slice(start, end);
+            
+            const container = document.getElementById('delivered-orders-list');
+            
+            container.innerHTML = ordersToShow.map(order => `
+                <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border-left: 4px solid #22c55e;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div>
+                            <h4 style="color: #22c55e; margin-bottom: 0.5rem;">
+                                Pedido #${order._id.slice(-8).toUpperCase()} <i class="fas fa-check-circle"></i>
+                            </h4>
+                            <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                <i class="fas fa-user"></i> ${order.customer?.name || 'Cliente'}
+                            </p>
+                            <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                <i class="fas fa-calendar"></i> Entregado: ${new Date(order.deliveredAt || order.updatedAt).toLocaleDateString('es-ES')}
+                            </p>
+                            <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                <i class="fas fa-user-tie"></i> Por: ${order.deliveredBy || 'Empleado'}
+                            </p>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #22c55e;">
+                                $${order.total.toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="padding-top: 1rem; border-top: 1px solid var(--violeta-medio);">
+                        <strong style="color: var(--violeta-claro); display: block; margin-bottom: 0.5rem;">Productos:</strong>
+                        ${order.items.map(item => `
+                            <div style="color: var(--gris-claro); padding: 0.3rem 0;">
+                                • ${item.name} x${item.quantity} - $${(item.price * item.quantity).toLocaleString()}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+            
+            // Paginación
+            setupPagination('delivered', allDeliveredOrders.length);
+        }
+
+        // Configurar paginación
+        function setupPagination(type, totalOrders) {
+            const totalPages = Math.ceil(totalOrders / ordersPerPage);
+            const currentPage = type === 'pending' ? currentPendingPage : currentDeliveredPage;
+            const paginationId = type === 'pending' ? 'pending-pagination' : 'delivered-pagination';
+            const pagination = document.getElementById(paginationId);
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            pagination.innerHTML = `
+                <button onclick="changeOrdersPage('${type}', ${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} style="padding: 0.5rem 1rem; background: var(--violeta-medio); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span style="color: var(--violeta-claro); padding: 0 1rem;">Página ${currentPage} de ${totalPages}</span>
+                <button onclick="changeOrdersPage('${type}', ${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} style="padding: 0.5rem 1rem; background: var(--violeta-medio); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            `;
+        }
+
+        // Cambiar página
+        function changeOrdersPage(type, page) {
+            if (type === 'pending') {
+                currentPendingPage = page;
+                displayPendingOrders();
+            } else {
+                currentDeliveredPage = page;
+                displayDeliveredOrders();
+            }
+        }
+
+        // Confirmar entrega CON ALERTA PERSONALIZADA
+        async function confirmMarkAsDelivered(orderId) {
+            if (typeof showConfirmAlert === 'function') {
+                showConfirmAlert(
+                    'Confirmar Entrega',
+                    '¿Confirmar que el pedido fue entregado al cliente?',
+                    async () => {
+                        await markAsDelivered(orderId);
+                    }
+                );
+            } else {
+                const confirm = window.confirm('¿Confirmar que el pedido fue entregado?');
+                if (confirm) {
+                    await markAsDelivered(orderId);
+                }
+            }
+        }
+
+        // Marcar como entregado
+        async function markAsDelivered(orderId) {
             try {
                 const response = await fetch(`/api/employee/mark-delivered/${orderId}`, {
                     method: 'PATCH'
@@ -673,47 +792,26 @@
                 if (result.success) {
                     if (typeof showCustomAlert === 'function') {
                         showCustomAlert('success', '✅ Pedido Entregado', 'El pedido ha sido marcado como entregado');
-                    } else {
-                        alert('✅ Pedido marcado como entregado');
                     }
-                    loadPendingOrders();
+                    // Recargar ambas listas
+                    await loadPendingOrders();
+                    await loadDeliveredOrders();
                 }
             } catch (error) {
                 console.error('Error:', error);
+                if (typeof showCustomAlert === 'function') {
+                    showCustomAlert('error', 'Error', 'No se pudo marcar el pedido como entregado');
+                }
             }
         }
 
-        function viewClassDetails(classId) {
-            if (typeof showCustomAlert === 'function') {
-                showCustomAlert('info', 'Función en Desarrollo', 
-                    'La visualización de inscriptos estará disponible próximamente');
-            } else {
-                alert('Función en desarrollo');
-            }
-        }
-
-        // Cerrar sesión
-        function setupLogout() {
-            const logoutBtn = document.getElementById('logout-btn');
-            
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    
-                    const confirmLogout = confirm('¿Cerrar sesión?');
-                    if (!confirmLogout) return;
-                    
-                    try {
-                        await fetch('/api/logout', { method: 'POST' });
-                        window.location.href = '/login-empleado';
-                    } catch (error) {
-                        window.location.href = '/login-empleado';
-                    }
-                });
-            }
-        }
-
-        console.log('✅ Panel de empleados cargado correctamente');
+        // Actualizar la carga inicial en DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEmployeeData();
+            loadTodayClasses();
+            loadPendingOrders(); // Solo cargar pendientes al inicio
+            setupLogout();
+        });
     </script>
 </body>
 </html>
