@@ -443,16 +443,323 @@
 
     <!-- ==================== SCRIPT ACTUALIZADO PARA EMPLEADOS ==================== -->
     <script>
-        // Variables para paginación de pedidos
+        // ==================== VARIABLES GLOBALES ====================
         let allPendingOrders = [];
         let allDeliveredOrders = [];
         let currentPendingPage = 1;
         let currentDeliveredPage = 1;
-        const ordersPerPage = 5; // Mostrar solo 5 pedidos por página
+        const ordersPerPage = 5;
 
-        // Cambiar entre tabs
+        // ==================== INICIALIZACIÓN ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Panel de Empleados: Iniciando...');
+            
+            // Mostrar fecha actual
+            const currentDateElement = document.getElementById('current-date');
+            if (currentDateElement) {
+                currentDateElement.textContent = new Date().toLocaleDateString('es-ES', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+            }
+            
+            // Cargar datos
+            loadEmployeeData();
+            loadDashboardStats();
+            loadTodayClasses();
+            loadPendingOrders();
+            setupLogout();
+        });
+
+        // ==================== CARGAR DATOS DEL EMPLEADO ====================
+        async function loadEmployeeData() {
+            try {
+                const response = await fetch('/api/user', {
+                    credentials: 'same-origin'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const nameElement = document.getElementById('employee-name');
+                    if (nameElement) {
+                        nameElement.textContent = data.user.fullName;
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Error cargando datos del empleado:', error);
+            }
+        }
+
+        // ==================== CARGAR ESTADÍSTICAS ====================
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch('/api/employee/dashboard-stats', {
+                    credentials: 'same-origin'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const todayClassesEl = document.getElementById('today-classes');
+                    const todayAttendanceEl = document.getElementById('today-attendance');
+                    const pendingOrdersEl = document.getElementById('pending-orders');
+                    
+                    if (todayClassesEl) todayClassesEl.textContent = data.stats.todayClasses || 0;
+                    if (todayAttendanceEl) todayAttendanceEl.textContent = data.stats.todayAttendance || 0;
+                    if (pendingOrdersEl) pendingOrdersEl.textContent = data.stats.todaySales || 0;
+                }
+            } catch (error) {
+                console.error('❌ Error cargando estadísticas:', error);
+            }
+        }
+
+        // ==================== CARGAR CLASES DE HOY ====================
+        async function loadTodayClasses() {
+            try {
+                const response = await fetch('/api/employee/today-classes', {
+                    credentials: 'same-origin'
+                });
+                const data = await response.json();
+                
+                const grid = document.getElementById('today-classes-grid');
+                if (!grid) return;
+                
+                if (data.success && data.classes.length > 0) {
+                    const todayClassesCount = document.getElementById('today-classes');
+                    if (todayClassesCount) {
+                        todayClassesCount.textContent = data.classes.length;
+                    }
+                    
+                    grid.innerHTML = data.classes.map(cls => `
+                        <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border: 2px solid var(--violeta-medio);">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                                <div>
+                                    <h4 style="color: var(--violeta-claro); font-size: 1.3rem; margin-bottom: 0.5rem;">
+                                        ${cls.className}
+                                    </h4>
+                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                        <i class="fas fa-clock"></i> ${cls.time}
+                                    </p>
+                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                        <i class="fas fa-users"></i> ${cls.reservations} / ${cls.capacity} inscritos
+                                    </p>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="background: ${cls.reservations >= cls.capacity ? '#ef4444' : '#22c55e'}; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">
+                                        ${cls.reservations >= cls.capacity ? 'LLENO' : 'DISPONIBLE'}
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary" onclick="viewClassDetails('${cls.classId}')" style="width: 100%; margin-top: 0.5rem;">
+                                <i class="fas fa-eye"></i> Ver Inscriptos
+                            </button>
+                        </div>
+                    `).join('');
+                } else {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
+                            <i class="fas fa-calendar-times" style="font-size: 4rem; color: var(--violeta-medio); margin-bottom: 1rem;"></i>
+                            <p style="color: var(--gris-claro); font-size: 1.2rem;">No hay clases programadas para hoy</p>
+                        </div>
+                    `;
+                    
+                    const todayClassesCount = document.getElementById('today-classes');
+                    if (todayClassesCount) {
+                        todayClassesCount.textContent = '0';
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Error cargando clases:', error);
+            }
+        }
+
+        // ==================== VER DETALLES DE CLASE ====================
+        async function viewClassDetails(classId) {
+            try {
+                const response = await fetch(`/api/employee/class-reservations/${classId}`, {
+                    credentials: 'same-origin'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const { className, reservations } = data;
+                    
+                    let content = `
+                        <div style="padding: 1.5rem;">
+                            <h3 style="color: var(--violeta-claro); margin-bottom: 1.5rem;">
+                                <i class="fas fa-users"></i> Inscriptos en ${className}
+                            </h3>
+                    `;
+                    
+                    if (reservations.length === 0) {
+                        content += `
+                            <div style="text-align: center; padding: 2rem; background: var(--negro); border-radius: 10px;">
+                                <i class="fas fa-user-slash" style="font-size: 3rem; color: var(--gris-claro); margin-bottom: 1rem;"></i>
+                                <p style="color: var(--gris-claro);">No hay inscriptos para esta clase hoy</p>
+                            </div>
+                        `;
+                    } else {
+                        content += `
+                            <div style="background: var(--negro); border-radius: 10px; overflow: hidden;">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr style="background: var(--violeta-medio); color: white;">
+                                            <th style="padding: 1rem; text-align: left;">Nombre</th>
+                                            <th style="padding: 1rem; text-align: left;">Email</th>
+                                            <th style="padding: 1rem; text-align: left;">Horario</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${reservations.map((res, index) => `
+                                            <tr style="border-bottom: 1px solid var(--violeta-medio); ${index % 2 === 0 ? 'background: rgba(127, 76, 165, 0.1);' : ''}">
+                                                <td style="padding: 1rem; color: var(--blanco);">${res.user?.fullName || 'Usuario'}</td>
+                                                <td style="padding: 1rem; color: var(--gris-claro);">${res.user?.email || 'N/A'}</td>
+                                                <td style="padding: 1rem; color: var(--violeta-claro); font-weight: bold;">${res.time}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="margin-top: 1rem; padding: 1rem; background: var(--negro); border-radius: 10px; text-align: center;">
+                                <p style="color: var(--violeta-claro); font-weight: bold; font-size: 1.1rem;">
+                                    Total: ${reservations.length} personas inscritas
+                                </p>
+                            </div>
+                        `;
+                    }
+                    
+                    content += `</div>`;
+                    
+                    // Mostrar modal
+                    if (typeof showCustomAlert === 'function') {
+                        const modal = document.createElement('div');
+                        modal.className = 'custom-alert-overlay show';
+                        modal.innerHTML = `
+                            <div class="custom-alert-box" style="max-width: 800px; width: 90%;">
+                                <div class="custom-alert-header info">
+                                    <div class="custom-alert-icon">ℹ</div>
+                                    <h3>Inscriptos en Clase</h3>
+                                </div>
+                                <div class="custom-alert-body" style="max-height: 500px; overflow-y: auto;">
+                                    ${content}
+                                </div>
+                                <div class="custom-alert-actions">
+                                    <button class="custom-alert-btn primary" onclick="this.closest('.custom-alert-overlay').remove()">
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        document.body.appendChild(modal);
+                        
+                        modal.addEventListener('click', function(e) {
+                            if (e.target === modal) {
+                                modal.remove();
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+            }
+        }
+
+        // ==================== BÚSQUEDA DE MIEMBROS ====================
+        let searchTimeout;
+        async function searchMembers() {
+            clearTimeout(searchTimeout);
+            
+            const searchTerm = document.getElementById('member-search').value.trim();
+            
+            if (searchTerm.length < 3) {
+                document.getElementById('members-list').innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
+                        <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <p>Ingresa al menos 3 caracteres para buscar</p>
+                    </div>
+                `;
+                return;
+            }
+
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`/api/employee/search-members?q=${encodeURIComponent(searchTerm)}`, {
+                        credentials: 'same-origin'
+                    });
+                    const data = await response.json();
+
+                    if (data.success && data.members.length > 0) {
+                        displayMembers(data.members);
+                    } else {
+                        document.getElementById('members-list').innerHTML = `
+                            <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
+                                <i class="fas fa-user-slash" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                <p>No se encontraron miembros</p>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }, 500);
+        }
+
+        function displayMembers(members) {
+            const container = document.getElementById('members-list');
+            container.innerHTML = members.map(member => `
+                <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border: 2px solid var(--violeta-medio); display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div>
+                        <h4 style="color: var(--blanco); font-size: 1.2rem; margin-bottom: 0.5rem;">${member.fullName}</h4>
+                        <p style="color: var(--gris-claro); margin: 0.2rem 0;">
+                            <i class="fas fa-envelope"></i> ${member.email}
+                        </p>
+                        <p style="color: var(--gris-claro); margin: 0.2rem 0;">
+                            <i class="fas fa-phone"></i> ${member.phone}
+                        </p>
+                    </div>
+                    <button class="btn btn-primary" onclick="registerAttendance('${member._id}', '${member.fullName}')">
+                        <i class="fas fa-check"></i> Registrar Asistencia
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        async function registerAttendance(userId, userName) {
+            try {
+                const response = await fetch('/api/employee/register-attendance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ userId })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('success', '✅ Asistencia Registrada', 
+                            `La asistencia de ${userName} ha sido registrada correctamente.`);
+                    }
+                    
+                    const current = parseInt(document.getElementById('today-attendance').textContent);
+                    document.getElementById('today-attendance').textContent = current + 1;
+                    
+                    document.getElementById('member-search').value = '';
+                    document.getElementById('members-list').innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
+                            <i class="fas fa-check-circle" style="font-size: 3rem; color: #22c55e; margin-bottom: 1rem;"></i>
+                            <p>Asistencia registrada exitosamente</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // ==================== GESTIÓN DE PEDIDOS ====================
         function switchOrdersTab(tab, button) {
-            // Actualizar botones
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('active');
                 btn.style.color = 'var(--gris-claro)';
@@ -463,7 +770,6 @@
             button.style.color = 'var(--violeta-claro)';
             button.style.borderBottom = '3px solid var(--violeta-claro)';
             
-            // Mostrar sección correspondiente
             if (tab === 'pending') {
                 document.getElementById('pending-orders-section').style.display = 'block';
                 document.getElementById('delivered-orders-section').style.display = 'none';
@@ -479,39 +785,51 @@
             }
         }
 
-        // Cargar pedidos pendientes
         async function loadPendingOrders() {
             try {
-                const response = await fetch('/api/employee/pending-orders');
+                const response = await fetch('/api/employee/pending-orders', {
+                    credentials: 'same-origin'
+                });
                 const data = await response.json();
                 
                 if (data.success && data.orders.length > 0) {
                     allPendingOrders = data.orders;
                     displayPendingOrders();
-                    document.getElementById('pending-orders').textContent = data.orders.length;
-                    document.getElementById('pending-count').textContent = data.orders.length;
+                    
+                    const pendingOrdersEl = document.getElementById('pending-orders');
+                    const pendingCountEl = document.getElementById('pending-count');
+                    
+                    if (pendingOrdersEl) pendingOrdersEl.textContent = data.orders.length;
+                    if (pendingCountEl) pendingCountEl.textContent = data.orders.length;
                 } else {
-                    document.getElementById('pending-orders-list').innerHTML = `
-                        <div style="text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
-                            <i class="fas fa-check-circle" style="font-size: 4rem; color: #22c55e; margin-bottom: 1rem;"></i>
-                            <p style="color: var(--gris-claro); font-size: 1.2rem;">¡No hay pedidos pendientes!</p>
-                        </div>
-                    `;
-                    document.getElementById('pending-orders').textContent = '0';
-                    document.getElementById('pending-count').textContent = '0';
+                    const container = document.getElementById('pending-orders-list');
+                    if (container) {
+                        container.innerHTML = `
+                            <div style="text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
+                                <i class="fas fa-check-circle" style="font-size: 4rem; color: #22c55e; margin-bottom: 1rem;"></i>
+                                <p style="color: var(--gris-claro); font-size: 1.2rem;">¡No hay pedidos pendientes!</p>
+                            </div>
+                        `;
+                    }
+                    
+                    const pendingOrdersEl = document.getElementById('pending-orders');
+                    const pendingCountEl = document.getElementById('pending-count');
+                    
+                    if (pendingOrdersEl) pendingOrdersEl.textContent = '0';
+                    if (pendingCountEl) pendingCountEl.textContent = '0';
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('❌ Error:', error);
             }
         }
 
-        // Mostrar pedidos pendientes con paginación
         function displayPendingOrders() {
             const start = (currentPendingPage - 1) * ordersPerPage;
             const end = start + ordersPerPage;
             const ordersToShow = allPendingOrders.slice(start, end);
             
             const container = document.getElementById('pending-orders-list');
+            if (!container) return;
             
             container.innerHTML = ordersToShow.map(order => `
                 <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border-left: 4px solid var(--violeta-claro);">
@@ -553,142 +871,42 @@
                 </div>
             `).join('');
             
-            // Paginación
             setupPagination('pending', allPendingOrders.length);
         }
 
-        // Cargar pedidos entregados
         async function loadDeliveredOrders() {
             try {
-                const response = await fetch('/api/employee/delivered-orders');
+                const response = await fetch('/api/employee/delivered-orders', {
+                    credentials: 'same-origin'
+                });
                 const data = await response.json();
                 
                 if (data.success && data.orders.length > 0) {
                     allDeliveredOrders = data.orders;
                     displayDeliveredOrders();
                 } else {
-                    document.getElementById('delivered-orders-list').innerHTML = `
-                        <div style="text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
-                            <i class="fas fa-box-open" style="font-size: 4rem; color: var(--gris-claro); margin-bottom: 1rem;"></i>
-                            <p style="color: var(--gris-claro); font-size: 1.2rem;">No hay pedidos entregados aún</p>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-
-        async function viewClassDetails(classId) {
-            try {
-                const response = await fetch(`/api/employee/class-reservations/${classId}`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    const { className, reservations } = data;
-                    
-                    let content = `
-                        <div style="padding: 1.5rem;">
-                            <h3 style="color: var(--violeta-claro); margin-bottom: 1.5rem;">
-                                <i class="fas fa-users"></i> Inscriptos en ${className}
-                            </h3>
-                    `;
-                    
-                    if (reservations.length === 0) {
-                        content += `
-                            <div style="text-align: center; padding: 2rem; background: var(--negro); border-radius: 10px;">
-                                <i class="fas fa-user-slash" style="font-size: 3rem; color: var(--gris-claro); margin-bottom: 1rem;"></i>
-                                <p style="color: var(--gris-claro);">No hay inscriptos para esta clase hoy</p>
+                    const container = document.getElementById('delivered-orders-list');
+                    if (container) {
+                        container.innerHTML = `
+                            <div style="text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
+                                <i class="fas fa-box-open" style="font-size: 4rem; color: var(--gris-claro); margin-bottom: 1rem;"></i>
+                                <p style="color: var(--gris-claro); font-size: 1.2rem;">No hay pedidos entregados aún</p>
                             </div>
                         `;
-                    } else {
-                        content += `
-                            <div style="background: var(--negro); border-radius: 10px; overflow: hidden;">
-                                <table style="width: 100%; border-collapse: collapse;">
-                                    <thead>
-                                        <tr style="background: var(--violeta-medio); color: white;">
-                                            <th style="padding: 1rem; text-align: left;">Nombre</th>
-                                            <th style="padding: 1rem; text-align: left;">Email</th>
-                                            <th style="padding: 1rem; text-align: left;">Horario</th>
-                                            <th style="padding: 1rem; text-align: center;">Fecha Reserva</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${reservations.map((res, index) => `
-                                            <tr style="border-bottom: 1px solid var(--violeta-medio); ${index % 2 === 0 ? 'background: rgba(127, 76, 165, 0.1);' : ''}">
-                                                <td style="padding: 1rem; color: var(--blanco);">${res.user?.fullName || 'Usuario'}</td>
-                                                <td style="padding: 1rem; color: var(--gris-claro);">${res.user?.email || 'N/A'}</td>
-                                                <td style="padding: 1rem; color: var(--violeta-claro); font-weight: bold;">${res.time}</td>
-                                                <td style="padding: 1rem; color: var(--gris-claro); text-align: center;">
-                                                    ${new Date(res.createdAt).toLocaleDateString('es-ES')}
-                                                </td>
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div style="margin-top: 1rem; padding: 1rem; background: var(--negro); border-radius: 10px; text-align: center;">
-                                <p style="color: var(--violeta-claro); font-weight: bold; font-size: 1.1rem;">
-                                    Total: ${reservations.length} personas inscritas
-                                </p>
-                            </div>
-                        `;
-                    }
-                    
-                    content += `</div>`;
-                    
-                    // Mostrar en un modal personalizado
-                    if (typeof showCustomAlert === 'function') {
-                        // Crear modal personalizado más grande
-                        const modal = document.createElement('div');
-                        modal.className = 'custom-alert-overlay show';
-                        modal.innerHTML = `
-                            <div class="custom-alert-box" style="max-width: 800px; width: 90%;">
-                                <div class="custom-alert-header info">
-                                    <div class="custom-alert-icon">ℹ</div>
-                                    <h3>Inscriptos en Clase</h3>
-                                </div>
-                                <div class="custom-alert-body" style="max-height: 500px; overflow-y: auto;">
-                                    ${content}
-                                </div>
-                                <div class="custom-alert-actions">
-                                    <button class="custom-alert-btn primary" onclick="this.closest('.custom-alert-overlay').remove()">
-                                        Cerrar
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                        document.body.appendChild(modal);
-                        
-                        // Cerrar al hacer clic fuera
-                        modal.addEventListener('click', function(e) {
-                            if (e.target === modal) {
-                                modal.remove();
-                            }
-                        });
-                    } else {
-                        alert('Por favor recarga la página para ver los inscriptos');
-                    }
-                } else {
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('error', 'Error', data.message || 'No se pudieron cargar los inscriptos');
                     }
                 }
             } catch (error) {
-                console.error('Error:', error);
-                if (typeof showCustomAlert === 'function') {
-                    showCustomAlert('error', 'Error de Conexión', 'No se pudo conectar con el servidor');
-                }
+                console.error('❌ Error:', error);
             }
         }
 
-        // Mostrar pedidos entregados con paginación
         function displayDeliveredOrders() {
             const start = (currentDeliveredPage - 1) * ordersPerPage;
             const end = start + ordersPerPage;
             const ordersToShow = allDeliveredOrders.slice(start, end);
             
             const container = document.getElementById('delivered-orders-list');
+            if (!container) return;
             
             container.innerHTML = ordersToShow.map(order => `
                 <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border-left: 4px solid #22c55e;">
@@ -724,19 +942,17 @@
                 </div>
             `).join('');
             
-            // Paginación
             setupPagination('delivered', allDeliveredOrders.length);
         }
 
-        // Configurar paginación
         function setupPagination(type, totalOrders) {
             const totalPages = Math.ceil(totalOrders / ordersPerPage);
             const currentPage = type === 'pending' ? currentPendingPage : currentDeliveredPage;
             const paginationId = type === 'pending' ? 'pending-pagination' : 'delivered-pagination';
             const pagination = document.getElementById(paginationId);
             
-            if (totalPages <= 1) {
-                pagination.innerHTML = '';
+            if (!pagination || totalPages <= 1) {
+                if (pagination) pagination.innerHTML = '';
                 return;
             }
             
@@ -751,7 +967,6 @@
             `;
         }
 
-        // Cambiar página
         function changeOrdersPage(type, page) {
             if (type === 'pending') {
                 currentPendingPage = page;
@@ -762,9 +977,16 @@
             }
         }
 
-        // Confirmar entrega CON ALERTA PERSONALIZADA
         async function confirmMarkAsDelivered(orderId) {
-            if (typeof showConfirmAlert === 'function') {
+            if (typeof confirmAsync === 'function') {
+                const confirmed = await confirmAsync(
+                    'Confirmar Entrega',
+                    '¿Confirmar que el pedido fue entregado al cliente?'
+                );
+                if (confirmed) {
+                    await markAsDelivered(orderId);
+                }
+            } else if (typeof showConfirmAlert === 'function') {
                 showConfirmAlert(
                     'Confirmar Entrega',
                     '¿Confirmar que el pedido fue entregado al cliente?',
@@ -772,19 +994,14 @@
                         await markAsDelivered(orderId);
                     }
                 );
-            } else {
-                const confirm = window.confirm('¿Confirmar que el pedido fue entregado?');
-                if (confirm) {
-                    await markAsDelivered(orderId);
-                }
             }
         }
 
-        // Marcar como entregado
         async function markAsDelivered(orderId) {
             try {
                 const response = await fetch(`/api/employee/mark-delivered/${orderId}`, {
-                    method: 'PATCH'
+                    method: 'PATCH',
+                    credentials: 'same-origin'
                 });
                 
                 const result = await response.json();
@@ -793,25 +1010,51 @@
                     if (typeof showCustomAlert === 'function') {
                         showCustomAlert('success', '✅ Pedido Entregado', 'El pedido ha sido marcado como entregado');
                     }
-                    // Recargar ambas listas
                     await loadPendingOrders();
                     await loadDeliveredOrders();
                 }
             } catch (error) {
-                console.error('Error:', error);
-                if (typeof showCustomAlert === 'function') {
-                    showCustomAlert('error', 'Error', 'No se pudo marcar el pedido como entregado');
-                }
+                console.error('❌ Error:', error);
             }
         }
 
-        // Actualizar la carga inicial en DOMContentLoaded
-        document.addEventListener('DOMContentLoaded', function() {
-            loadEmployeeData();
-            loadTodayClasses();
-            loadPendingOrders(); // Solo cargar pendientes al inicio
-            setupLogout();
-        });
+        // ==================== LOGOUT ====================
+        function setupLogout() {
+            const logoutBtn = document.getElementById('logout-btn');
+            
+            if (logoutBtn) {
+                // Clonar para remover listeners anteriores
+                const newLogoutBtn = logoutBtn.cloneNode(true);
+                logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
+                
+                newLogoutBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    let confirmLogout = false;
+                    
+                    if (typeof confirmAsync === 'function') {
+                        confirmLogout = await confirmAsync('Cerrar Sesión', '¿Cerrar sesión?');
+                    } else {
+                        confirmLogout = window.confirm('¿Cerrar sesión?');
+                    }
+                    
+                    if (!confirmLogout) return;
+                    
+                    try {
+                        await fetch('/api/logout', { 
+                            method: 'POST',
+                            credentials: 'same-origin'
+                        });
+                        window.location.href = '/login-empleado';
+                    } catch (error) {
+                        window.location.href = '/login-empleado';
+                    }
+                }, { once: true });
+            }
+        }
+
+        console.log('✅ Panel de empleados cargado correctamente');
     </script>
 </body>
 </html>

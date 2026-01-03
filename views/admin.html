@@ -575,14 +575,15 @@
                 // Cargar todos los datos
                 loadDashboardStats();
                 loadUsers();
+                loadEmployees(); // SI ESTA FUNCIÓN EXISTE
                 loadOrders();
                 loadStatistics();
-                loadCategories();
-                loadProducts();
+                loadCategories(); // SI EXISTE
+                loadProducts(); // SI EXISTE
                 
-                // Configurar botón de logout
+                // IMPORTANTE: Configurar logout SOLO UNA VEZ y AL FINAL
                 setupLogoutButton();
-            });
+            }, { once: true }); // Asegurar que solo se ejecuta una vez
 
             // ==================== CONFIGURAR BOTÓN DE LOGOUT ====================
             function setupLogoutButton() {
@@ -595,20 +596,37 @@
                 
                 console.log('✅ Configurando botón de logout...');
                 
-                logoutBtn.addEventListener('click', async function(e) {
+                // IMPORTANTE: Remover cualquier event listener anterior para evitar duplicados
+                const newLogoutBtn = logoutBtn.cloneNode(true);
+                logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
+                
+                newLogoutBtn.addEventListener('click', async function(e) {
                     e.preventDefault();
+                    e.stopPropagation(); // CRÍTICO: Prevenir propagación
+                    
                     console.log('🚪 Intentando cerrar sesión...');
                     
-                    const confirmLogout = typeof showConfirmAlert === 'function'
-                        ? await new Promise(resolve => {
+                    // Usar confirmAsync si está disponible, sino usar confirm nativo
+                    let confirmLogout = false;
+                    
+                    if (typeof confirmAsync === 'function') {
+                        confirmLogout = await confirmAsync(
+                            'Cerrar Sesión',
+                            '¿Estás seguro de que quieres cerrar sesión?'
+                        );
+                    } else if (typeof showConfirmAlert === 'function') {
+                        confirmLogout = await new Promise(resolve => {
                             showConfirmAlert(
                                 'Cerrar Sesión',
                                 '¿Estás seguro de que quieres cerrar sesión?',
                                 () => resolve(true),
                                 () => resolve(false)
                             );
-                        })
-                        : confirm('¿Estás seguro de que quieres cerrar sesión?');
+                        });
+                    } else {
+                        // Fallback a confirm nativo SOLO si no hay alternativa
+                        confirmLogout = window.confirm('¿Estás seguro de que quieres cerrar sesión?');
+                    }
                     
                     if (!confirmLogout) {
                         console.log('❌ Logout cancelado por el usuario');
@@ -632,7 +650,6 @@
                                     window.location.href = '/';
                                 });
                             } else {
-                                alert('Sesión cerrada. ¡Hasta pronto!');
                                 window.location.href = '/';
                             }
                         } else {
@@ -642,7 +659,7 @@
                         console.error('❌ Error cerrando sesión:', error);
                         window.location.href = '/';
                     }
-                });
+                }, { once: true }); // IMPORTANTE: Solo ejecutar una vez
             }
 
             // ==================== CARGAR ESTADÍSTICAS ====================
