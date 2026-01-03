@@ -1,131 +1,157 @@
-// ==================== SISTEMA DE MENSAJES DISCRETOS FITZONE ====================
-// Sin modales molestos, solo mensajes directos
-
-// Función para mostrar mensaje de error discreto
-function showError(message, elementId = null) {
-    // Si hay un elemento específico, mostrar el error ahí
-    if (elementId) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            let errorDiv = element.nextElementSibling;
-            if (!errorDiv || !errorDiv.classList.contains('error-message')) {
-                errorDiv = document.createElement('div');
-                errorDiv.className = 'error-message';
-                element.parentNode.insertBefore(errorDiv, element.nextSibling);
-            }
-            errorDiv.textContent = message;
-            errorDiv.style.cssText = `
-                color: #ef4444;
-                font-size: 0.85rem;
-                margin-top: 0.3rem;
-                display: block;
-            `;
-            
-            // Remover después de 5 segundos
-            setTimeout(() => {
-                if (errorDiv.parentNode) errorDiv.remove();
-            }, 5000);
-        }
-    } else {
-        // Mostrar en la parte superior de la página
-        showTopMessage(message, 'error');
-    }
-}
-
-// Función para mostrar mensaje de éxito discreto (solo cuando sea necesario)
-function showSuccess(message) {
-    showTopMessage(message, 'success');
-}
-
-// Mensaje superior discreto
-function showTopMessage(message, type = 'error') {
-    const existing = document.querySelector('.top-message');
-    if (existing) existing.remove();
+// Sistema de alertas personalizado para FitZone
+function showCustomAlert(type, title, message, callback) {
+    // Remover alertas anteriores
+    const existingAlerts = document.querySelectorAll('.custom-alert-overlay');
+    existingAlerts.forEach(alert => alert.remove());
     
-    const msg = document.createElement('div');
-    msg.className = 'top-message';
-    msg.textContent = message;
-    msg.style.cssText = `
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        font-weight: 500;
-        z-index: 9999;
-        animation: slideInRight 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        max-width: 400px;
-        ${type === 'error' 
-            ? 'background: #ef4444; color: white;' 
-            : 'background: #22c55e; color: white;'}
+    const overlay = document.createElement('div');
+    overlay.className = 'custom-alert-overlay show';
+    
+    const icons = {
+        success: '✓',
+        error: '✗',
+        warning: '⚠',
+        info: 'ℹ'
+    };
+    
+    overlay.innerHTML = `
+        <div class="custom-alert-box">
+            <div class="custom-alert-header ${type}">
+                <div class="custom-alert-icon">${icons[type] || 'ℹ'}</div>
+                <h3>${title}</h3>
+            </div>
+            <div class="custom-alert-body">
+                ${message}
+            </div>
+            <div class="custom-alert-actions">
+                <button class="custom-alert-btn primary" data-action="accept">
+                    Aceptar
+                </button>
+            </div>
+        </div>
     `;
     
-    document.body.appendChild(msg);
+    document.body.appendChild(overlay);
     
-    setTimeout(() => {
-        msg.style.animation = 'slideOutRight 0.3s ease';
-        setTimeout(() => msg.remove(), 300);
-    }, 4000);
+    // Manejar click en botón
+    const acceptBtn = overlay.querySelector('[data-action="accept"]');
+    acceptBtn.addEventListener('click', function() {
+        closeAlert(overlay);
+        if (callback) callback();
+    });
+    
+    // Cerrar al hacer clic fuera
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            closeAlert(overlay);
+            if (callback) callback();
+        }
+    });
+    
+    // Cerrar con ESC
+    function handleEscape(e) {
+        if (e.key === 'Escape') {
+            closeAlert(overlay);
+            if (callback) callback();
+            document.removeEventListener('keydown', handleEscape);
+        }
+    }
+    document.addEventListener('keydown', handleEscape);
 }
 
-// Limpiar mensajes de error
-function clearErrors() {
-    document.querySelectorAll('.error-message').forEach(el => el.remove());
-    const topMsg = document.querySelector('.top-message');
-    if (topMsg) topMsg.remove();
-}
-
-// CSS para animaciones
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideInRight {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    @keyframes slideOutRight {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
-    }
-    .error-message {
-        animation: fadeIn 0.3s ease;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-`;
-document.head.appendChild(style);
-
-// Mantener compatibilidad con código antiguo (pero sin modales)
-window.showCustomAlert = function(type, title, message, callback) {
-    if (type === 'error' || type === 'warning') {
-        showError(message);
-    } else {
-        showSuccess(message);
-    }
-    if (callback) setTimeout(callback, 100);
-};
-
-window.showConfirmAlert = function(title, message, onConfirm, onCancel) {
-    // Usar confirm nativo de JavaScript (simple y directo)
-    if (confirm(message)) {
+// Alerta de confirmación - NO USAR window.confirm internamente
+function showConfirmAlert(title, message, onConfirm, onCancel) {
+    // Remover alertas anteriores
+    const existingAlerts = document.querySelectorAll('.custom-alert-overlay');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'custom-alert-overlay show';
+    
+    overlay.innerHTML = `
+        <div class="custom-alert-box">
+            <div class="custom-alert-header warning">
+                <div class="custom-alert-icon">?</div>
+                <h3>${title}</h3>
+            </div>
+            <div class="custom-alert-body">
+                ${message}
+            </div>
+            <div class="custom-alert-actions">
+                <button class="custom-alert-btn secondary" data-action="cancel">
+                    Cancelar
+                </button>
+                <button class="custom-alert-btn primary" data-action="confirm">
+                    Confirmar
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Manejar botones
+    const confirmBtn = overlay.querySelector('[data-action="confirm"]');
+    const cancelBtn = overlay.querySelector('[data-action="cancel"]');
+    
+    confirmBtn.addEventListener('click', function() {
+        closeAlert(overlay);
         if (onConfirm) onConfirm();
-    } else {
+    });
+    
+    cancelBtn.addEventListener('click', function() {
+        closeAlert(overlay);
         if (onCancel) onCancel();
+    });
+    
+    // Cerrar al hacer clic fuera cuenta como cancelar
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            closeAlert(overlay);
+            if (onCancel) onCancel();
+        }
+    });
+    
+    // ESC para cancelar
+    function handleEscape(e) {
+        if (e.key === 'Escape') {
+            closeAlert(overlay);
+            if (onCancel) onCancel();
+            document.removeEventListener('keydown', handleEscape);
+        }
     }
-};
+    document.addEventListener('keydown', handleEscape);
+}
 
-window.showError = showError;
-window.showSuccess = showSuccess;
-window.clearErrors = clearErrors;
+function closeAlert(element) {
+    if (!element) return;
+    const overlay = element.classList.contains('custom-alert-overlay') ? element : element.closest('.custom-alert-overlay');
+    if (overlay) {
+        overlay.classList.remove('show');
+        setTimeout(() => overlay.remove(), 300);
+    }
+}
 
-console.log('✅ Sistema de mensajes discretos cargado');
+// ==================== FUNCIONES ASÍNCRONAS ====================
 
-// ==================== OVERRIDE DE ALERTAS NATIVAS ====================
-// Esto reemplaza todas las alertas nativas del navegador con nuestras alertas personalizadas
+async function confirmAsync(title, message) {
+    return new Promise((resolve) => {
+        showConfirmAlert(
+            title || 'Confirmación',
+            message || '¿Deseas continuar?',
+            () => resolve(true),
+            () => resolve(false)
+        );
+    });
+}
 
+async function alertAsync(title, message, type = 'info') {
+    return new Promise((resolve) => {
+        showCustomAlert(type, title, message, () => resolve(true));
+    });
+}
+
+// ==================== OVERRIDE SEGURO DE ALERTAS NATIVAS ====================
 (function() {
     // Guardar referencias a las funciones originales
     const originalAlert = window.alert;
@@ -142,36 +168,8 @@ console.log('✅ Sistema de mensajes discretos cargado');
         }
     };
     
-    // Override window.confirm()
-    window.confirm = function(message) {
-        // Los confirm() sincrónicos no se pueden reemplazar perfectamente con modales asíncronos
-        // Pero podemos intentar hacerlo funcionar en la mayoría de casos
-        if (typeof showConfirmAlert === 'function') {
-            // Crear una promesa que se resuelve con la respuesta del usuario
-            let result = false;
-            let promiseResolved = false;
-            
-            showConfirmAlert(
-                'Confirmación',
-                message || '¿Deseas continuar?',
-                () => {
-                    result = true;
-                    promiseResolved = true;
-                },
-                () => {
-                    result = false;
-                    promiseResolved = true;
-                }
-            );
-            
-            // NOTA: Esto no es perfecto ya que window.confirm() es síncrono
-            // pero nuestro showConfirmAlert es asíncrono
-            // La mayoría de los casos funcionarán si el código usa if/else directamente
-            return result;
-        } else {
-            return originalConfirm.call(window, message);
-        }
-    };
+    // NO REEMPLAZAR window.confirm() porque causa recursión infinita
+    // En su lugar, NO hacer nada y usar confirmAsync() en el código
     
     // Override window.prompt()
     window.prompt = function(message, defaultValue) {
@@ -199,41 +197,12 @@ console.log('✅ Sistema de mensajes discretos cargado');
     
     console.log('✅ Alertas nativas del navegador reemplazadas con alertas personalizadas');
 })();
-
-// ==================== FUNCIÓN HELPER PARA CONFIRM ASÍNCRONO ====================
-// Usar esta función cuando necesites un confirm que funcione con async/await
-
-async function confirmAsync(title, message) {
-    return new Promise((resolve) => {
-        if (typeof showConfirmAlert === 'function') {
-            showConfirmAlert(
-                title || 'Confirmación',
-                message || '¿Deseas continuar?',
-                () => resolve(true),
-                () => resolve(false)
-            );
-        } else {
-            resolve(window.confirm(message));
-        }
-    });
-}
-
-// Hacer disponible globalmente
+// Hacer disponibles globalmente
 window.confirmAsync = confirmAsync;
-
-// ==================== FUNCIÓN HELPER PARA ALERT ASÍNCRONO ====================
-async function alertAsync(title, message, type = 'info') {
-    return new Promise((resolve) => {
-        if (typeof showCustomAlert === 'function') {
-            showCustomAlert(type, title, message, () => resolve(true));
-        } else {
-            window.alert(message);
-            resolve(true);
-        }
-    });
-}
-
-// Hacer disponible globalmente
 window.alertAsync = alertAsync;
+window.showCustomAlert = showCustomAlert;
+window.showConfirmAlert = showConfirmAlert;
 
-console.log('✅ Funciones asíncronas de alerta disponibles: confirmAsync() y alertAsync()');
+console.log('✅ Sistema de alertas personalizado cargado');
+console.log('📌 Usa confirmAsync() para confirmaciones asíncronas');
+console.log('📌 Usa alertAsync() para alertas asíncronas');

@@ -581,9 +581,17 @@
                 loadCategories(); // SI EXISTE
                 loadProducts(); // SI EXISTE
                 
-                // IMPORTANTE: Configurar logout SOLO UNA VEZ y AL FINAL
-                setupLogoutButton();
-            }, { once: true }); // Asegurar que solo se ejecuta una vez
+                // Cargar categorías y productos SI EXISTEN
+                if (typeof loadCategories === 'function') loadCategories();
+                if (typeof loadProducts === 'function') loadProducts();
+                if (typeof loadEmployees === 'function') loadEmployees();
+                
+                // IMPORTANTE: Configurar logout AL FINAL y SOLO UNA VEZ
+                setTimeout(() => {
+                    setupLogoutButton();
+                }, 500); // Pequeño delay para asegurar que el DOM está listo
+                
+            }, { once: true }); // Ejecutar SOLO UNA 
 
             // ==================== CONFIGURAR BOTÓN DE LOGOUT ====================
             function setupLogoutButton() {
@@ -596,70 +604,63 @@
                 
                 console.log('✅ Configurando botón de logout...');
                 
-                // IMPORTANTE: Remover cualquier event listener anterior para evitar duplicados
+                // CRÍTICO: Clonar botón para eliminar TODOS los event listeners anteriores
                 const newLogoutBtn = logoutBtn.cloneNode(true);
                 logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
                 
-                newLogoutBtn.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    e.stopPropagation(); // CRÍTICO: Prevenir propagación
-                    
-                    console.log('🚪 Intentando cerrar sesión...');
-                    
-                    // Usar confirmAsync si está disponible, sino usar confirm nativo
-                    let confirmLogout = false;
-                    
-                    if (typeof confirmAsync === 'function') {
-                        confirmLogout = await confirmAsync(
-                            'Cerrar Sesión',
-                            '¿Estás seguro de que quieres cerrar sesión?'
-                        );
-                    } else if (typeof showConfirmAlert === 'function') {
-                        confirmLogout = await new Promise(resolve => {
-                            showConfirmAlert(
-                                'Cerrar Sesión',
-                                '¿Estás seguro de que quieres cerrar sesión?',
-                                () => resolve(true),
-                                () => resolve(false)
-                            );
-                        });
-                    } else {
-                        // Fallback a confirm nativo SOLO si no hay alternativa
-                        confirmLogout = window.confirm('¿Estás seguro de que quieres cerrar sesión?');
-                    }
-                    
-                    if (!confirmLogout) {
-                        console.log('❌ Logout cancelado por el usuario');
-                        return;
-                    }
-                    
-                    try {
-                        const response = await fetch('/api/logout', {
-                            method: 'POST',
-                            credentials: 'same-origin'
-                        });
-                        
-                        const result = await response.json();
-                        
-                        if (result.success) {
-                            localStorage.clear();
-                            sessionStorage.clear();
-                            
-                            if (typeof showCustomAlert === 'function') {
-                                showCustomAlert('success', 'Sesión Cerrada', '¡Hasta pronto!', () => {
-                                    window.location.href = '/';
-                                });
-                            } else {
-                                window.location.href = '/';
-                            }
-                        } else {
-                            window.location.href = '/';
+                // Agregar UN SOLO event listener
+                newLogoutBtn.addEventListener('click', handleLogout);
+            }
+
+            // Función separada para manejar logout (evita recursión)
+            async function handleLogout(e) {
+                e.preventDefault();
+                e.stopImmediatePropagation(); // CRÍTICO: detener propagación inmediatamente
+                
+                console.log('🚪 Click en logout detectado');
+                
+                // Usar la función asíncrona
+                const confirmed = await confirmAsync(
+                    'Cerrar Sesión',
+                    '¿Estás seguro de que quieres cerrar sesión?'
+                );
+                
+                if (!confirmed) {
+                    console.log('❌ Logout cancelado');
+                    return;
+                }
+                
+                console.log('✅ Logout confirmado, cerrando sesión...');
+                
+                try {
+                    const response = await fetch('/api/logout', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json'
                         }
-                    } catch (error) {
-                        console.error('❌ Error cerrando sesión:', error);
-                        window.location.href = '/';
-                    }
-                }, { once: true }); // IMPORTANTE: Solo ejecutar una vez
+                    });
+                    
+                    const result = await response.json();
+                    console.log('📤 Respuesta del servidor:', result);
+                    
+                    // Limpiar todo el storage
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    
+                    // Mostrar mensaje y redirigir
+                    await alertAsync('Sesión Cerrada', '¡Hasta pronto!', 'success');
+                    
+                    // Forzar redirección
+                    window.location.replace('/');
+                    
+                } catch (error) {
+                    console.error('❌ Error en logout:', error);
+                    // Forzar redirección de todos modos
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    window.location.replace('/');
+                }
             }
 
             // ==================== CARGAR ESTADÍSTICAS ====================

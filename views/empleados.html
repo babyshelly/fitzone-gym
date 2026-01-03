@@ -978,26 +978,25 @@
         }
 
         async function confirmMarkAsDelivered(orderId) {
-            if (typeof confirmAsync === 'function') {
-                const confirmed = await confirmAsync(
-                    'Confirmar Entrega',
-                    '¿Confirmar que el pedido fue entregado al cliente?'
-                );
-                if (confirmed) {
-                    await markAsDelivered(orderId);
-                }
-            } else if (typeof showConfirmAlert === 'function') {
-                showConfirmAlert(
-                    'Confirmar Entrega',
-                    '¿Confirmar que el pedido fue entregado al cliente?',
-                    async () => {
-                        await markAsDelivered(orderId);
-                    }
-                );
+            console.log('📦 Confirmando entrega de pedido:', orderId);
+            
+            // Usar confirmAsync (la función asíncrona que NO causa recursión)
+            const confirmed = await confirmAsync(
+                'Confirmar Entrega',
+                '¿Confirmar que el pedido fue entregado al cliente?'
+            );
+            
+            if (!confirmed) {
+                console.log('❌ Entrega cancelada');
+                return;
             }
+            
+            await markAsDelivered(orderId);
         }
 
         async function markAsDelivered(orderId) {
+            console.log('✅ Marcando pedido como entregado:', orderId);
+            
             try {
                 const response = await fetch(`/api/employee/mark-delivered/${orderId}`, {
                     method: 'PATCH',
@@ -1007,14 +1006,25 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('success', '✅ Pedido Entregado', 'El pedido ha sido marcado como entregado');
-                    }
+                    console.log('✅ Pedido marcado como entregado');
+                    
+                    // Mostrar alerta de éxito
+                    await alertAsync(
+                        'Pedido Entregado',
+                        'El pedido ha sido marcado como entregado correctamente',
+                        'success'
+                    );
+                    
+                    // Recargar listas
                     await loadPendingOrders();
                     await loadDeliveredOrders();
+                } else {
+                    console.error('❌ Error del servidor:', result.message);
+                    await alertAsync('Error', result.message || 'No se pudo marcar el pedido', 'error');
                 }
             } catch (error) {
-                console.error('❌ Error:', error);
+                console.error('❌ Error de red:', error);
+                await alertAsync('Error de Conexión', 'No se pudo conectar con el servidor', 'error');
             }
         }
 
@@ -1022,35 +1032,64 @@
         function setupLogout() {
             const logoutBtn = document.getElementById('logout-btn');
             
-            if (logoutBtn) {
-                // Clonar para remover listeners anteriores
-                const newLogoutBtn = logoutBtn.cloneNode(true);
-                logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
+            if (!logoutBtn) {
+                console.error('❌ Botón de logout no encontrado');
+                return;
+            }
+            
+            console.log('✅ Configurando logout de empleado...');
+            
+            // Clonar para limpiar listeners
+            const newLogoutBtn = logoutBtn.cloneNode(true);
+            logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
+            
+            // Un solo event listener
+            newLogoutBtn.addEventListener('click', handleEmployeeLogout);
+        }
+
+        async function handleEmployeeLogout(e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            
+            console.log('🚪 Empleado cerrando sesión...');
+            
+            const confirmed = await confirmAsync(
+                'Cerrar Sesión',
+                '¿Estás seguro de que quieres cerrar sesión?'
+            );
+            
+            if (!confirmed) {
+                console.log('❌ Logout cancelado');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
                 
-                newLogoutBtn.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    let confirmLogout = false;
-                    
-                    if (typeof confirmAsync === 'function') {
-                        confirmLogout = await confirmAsync('Cerrar Sesión', '¿Cerrar sesión?');
-                    } else {
-                        confirmLogout = window.confirm('¿Cerrar sesión?');
-                    }
-                    
-                    if (!confirmLogout) return;
-                    
-                    try {
-                        await fetch('/api/logout', { 
-                            method: 'POST',
-                            credentials: 'same-origin'
-                        });
-                        window.location.href = '/login-empleado';
-                    } catch (error) {
-                        window.location.href = '/login-empleado';
-                    }
-                }, { once: true });
+                const result = await response.json();
+                console.log('📤 Respuesta:', result);
+                
+                // Limpiar storage
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Mostrar mensaje y redirigir
+                await alertAsync('Sesión Cerrada', '¡Hasta pronto!', 'success');
+                
+                // Redirigir a login de empleados
+                window.location.replace('/login-empleado');
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.replace('/login-empleado');
             }
         }
 

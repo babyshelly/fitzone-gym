@@ -742,18 +742,30 @@ app.post('/api/login-empleado', async (req, res) => {
 
 
 app.post('/api/logout', (req, res) => {
+    console.log('🚪 Solicitud de logout recibida');
+    console.log('Session ID:', req.sessionID);
+    console.log('Usuario actual:', req.session?.user?.email || req.session?.userEmail || 'Sin usuario');
+    
     if (req.session) {
+        // Guardar referencia antes de destruir
+        const userEmail = req.session.user?.email || req.session.userEmail || 'usuario';
+        
+        // Destruir la sesión COMPLETAMENTE
         req.session.destroy((err) => {
             if (err) {
-                console.error('Error cerrando sesión:', err);
+                console.error('❌ Error destruyendo sesión:', err);
+                // Aún así, limpiar la cookie
+                res.clearCookie('connect.sid', { path: '/' });
                 return res.json({ 
-                    success: false, 
-                    message: 'Error al cerrar sesión' 
+                    success: true, // Devolver success true para que el frontend redirija
+                    message: 'Sesión cerrada con advertencias' 
                 });
             }
             
             // Limpiar cookie de sesión
-            res.clearCookie('connect.sid');
+            res.clearCookie('connect.sid', { path: '/' });
+            
+            console.log(`✅ Sesión de ${userEmail} cerrada exitosamente`);
             
             res.json({ 
                 success: true, 
@@ -761,12 +773,14 @@ app.post('/api/logout', (req, res) => {
             });
         });
     } else {
+        console.log('⚠️ No hay sesión activa para cerrar');
+        res.clearCookie('connect.sid', { path: '/' });
         res.json({ 
             success: true, 
             message: 'No hay sesión activa' 
         });
     }
-});
+});v 
 
 // ==================== RECUPERACION DE CONTRASEÑA ====================
 
