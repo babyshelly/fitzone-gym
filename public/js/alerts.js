@@ -1,4 +1,5 @@
-// Sistema de alertas personalizado para FitZone
+// ==================== FUNCIONES PRINCIPALES ====================
+
 function showCustomAlert(type, title, message, callback) {
     // Remover alertas anteriores
     const existingAlerts = document.querySelectorAll('.custom-alert-overlay');
@@ -59,7 +60,7 @@ function showCustomAlert(type, title, message, callback) {
     document.addEventListener('keydown', handleEscape);
 }
 
-// Alerta de confirmación - NO USAR window.confirm internamente
+// Alerta de confirmación - VERSIÓN CORREGIDA
 function showConfirmAlert(title, message, onConfirm, onCancel) {
     // Remover alertas anteriores
     const existingAlerts = document.querySelectorAll('.custom-alert-overlay');
@@ -151,14 +152,12 @@ async function alertAsync(title, message, type = 'info') {
     });
 }
 
-// ==================== OVERRIDE SEGURO DE ALERTAS NATIVAS ====================
+// ==================== OVERRIDE SEGURO DE window.alert ====================
 (function() {
-    // Guardar referencias a las funciones originales
+    // Guardar referencia a la función original
     const originalAlert = window.alert;
-    const originalConfirm = window.confirm;
-    const originalPrompt = window.prompt;
     
-    // Override window.alert()
+    // Override SOLO window.alert (NO tocar confirm ni prompt)
     window.alert = function(message) {
         if (typeof showCustomAlert === 'function') {
             showCustomAlert('info', 'Información', message || 'Sin mensaje');
@@ -168,41 +167,18 @@ async function alertAsync(title, message, type = 'info') {
         }
     };
     
-    // NO REEMPLAZAR window.confirm() porque causa recursión infinita
-    // En su lugar, NO hacer nada y usar confirmAsync() en el código
+    // ⭐ NO TOCAR window.confirm - dejarlo nativo
+    // ⭐ Usar confirmAsync() en el código en su lugar
     
-    // Override window.prompt()
-    window.prompt = function(message, defaultValue) {
-        // Similar a confirm, prompt es síncrono
-        // Por ahora, usamos la función original
-        // En el futuro podríamos crear un showPromptAlert personalizado
-        return originalPrompt.call(window, message, defaultValue);
-    };
-    
-    // Interceptar console.error para alertas de error
-    const originalConsoleError = console.error;
-    console.error = function(...args) {
-        // Llamar al console.error original
-        originalConsoleError.apply(console, args);
-        
-        // Si el error parece ser importante, mostrar alerta
-        const errorMessage = args.join(' ');
-        if (errorMessage.toLowerCase().includes('error') && 
-            !errorMessage.includes('404') && 
-            !errorMessage.includes('CORS')) {
-            // Puedes descomentar esto si quieres alertas para todos los errores
-            // showCustomAlert('error', 'Error del Sistema', errorMessage);
-        }
-    };
-    
-    console.log('✅ Alertas nativas del navegador reemplazadas con alertas personalizadas');
+    console.log('✅ Sistema de alertas personalizado cargado');
 })();
+
 // Hacer disponibles globalmente
 window.confirmAsync = confirmAsync;
 window.alertAsync = alertAsync;
 window.showCustomAlert = showCustomAlert;
 window.showConfirmAlert = showConfirmAlert;
 
-console.log('✅ Sistema de alertas personalizado cargado');
+console.log('✅ Sistema de alertas FitZone cargado correctamente');
 console.log('📌 Usa confirmAsync() para confirmaciones asíncronas');
 console.log('📌 Usa alertAsync() para alertas asíncronas');

@@ -978,18 +978,12 @@
         }
 
         async function confirmMarkAsDelivered(orderId) {
-            console.log('📦 Confirmando entrega de pedido:', orderId);
-            
-            // Usar confirmAsync (la función asíncrona que NO causa recursión)
             const confirmed = await confirmAsync(
                 'Confirmar Entrega',
                 '¿Confirmar que el pedido fue entregado al cliente?'
             );
             
-            if (!confirmed) {
-                console.log('❌ Entrega cancelada');
-                return;
-            }
+            if (!confirmed) return;
             
             await markAsDelivered(orderId);
         }
