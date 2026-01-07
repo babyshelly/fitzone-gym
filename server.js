@@ -780,7 +780,7 @@ app.post('/api/logout', (req, res) => {
             message: 'No hay sesión activa' 
         });
     }
-});v 
+});
 
 // ==================== RECUPERACION DE CONTRASEÑA ====================
 
