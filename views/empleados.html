@@ -726,7 +726,23 @@
         }
 
         async function registerAttendance(userId, userName) {
+            // Verificar nuevamente antes de registrar
             try {
+                const verifyResponse = await fetch('/api/employee/verify-membership', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ userId })
+                });
+                
+                const verification = await verifyResponse.json();
+                
+                if (!verification.success || !verification.hasMembership) {
+                    showToast('error', `No se puede registrar: ${verification.message}`);
+                    return;
+                }
+                
+                // Proceder con registro de asistencia
                 const response = await fetch('/api/employee/register-attendance', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -737,10 +753,7 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('success', '✅ Asistencia Registrada', 
-                            `La asistencia de ${userName} ha sido registrada correctamente.`);
-                    }
+                    showToast('success', `✅ Asistencia de ${userName} registrada`);
                     
                     const current = parseInt(document.getElementById('today-attendance').textContent);
                     document.getElementById('today-attendance').textContent = current + 1;
@@ -752,12 +765,15 @@
                             <p>Asistencia registrada exitosamente</p>
                         </div>
                     `;
+                } else {
+                    showToast('error', result.message || 'Error al registrar asistencia');
                 }
             } catch (error) {
                 console.error('Error:', error);
+                showToast('error', 'Error de conexión al registrar asistencia');
             }
         }
-
+        
         // ==================== GESTIÓN DE PEDIDOS ====================
         function switchOrdersTab(tab, button) {
             document.querySelectorAll('.tab-btn').forEach(btn => {

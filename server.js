@@ -408,6 +408,65 @@ function requireAuth(req, res, next) {
     }
 }
 
+// Middleware para verificar membresía activa
+async function requireActiveMembership(req, res, next) {
+    try {
+        const userId = req.session?.user?.id;
+        
+        if (!userId) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'No autorizado',
+                requiresLogin: true
+            });
+        }
+        
+        // Buscar membresía activa
+        const membership = await Membership.findOne({
+            userId: userId,
+            status: 'active'
+        }).sort({ createdAt: -1 });
+        
+        if (!membership) {
+            return res.status(403).json({
+                success: false,
+                message: 'No tienes una membresía activa',
+                membershipExpired: true,
+                requiresRenewal: true
+            });
+        }
+        
+        // Verificar fecha de vencimiento
+        const today = new Date();
+        const endDate = new Date(membership.endDate);
+        
+        if (endDate < today) {
+            // Marcar como expirada
+            membership.status = 'expired';
+            await membership.save();
+            
+            return res.status(403).json({
+                success: false,
+                message: 'Tu membresía ha expirado',
+                membershipExpired: true,
+                requiresRenewal: true,
+                expiredDate: endDate
+            });
+        }
+        
+        // Membresía válida
+        req.membership = membership;
+        next();
+        
+    } catch (error) {
+        console.error('Error verificando membresía:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al verificar membresía'
+        });
+    }
+}
+
 function requireAdmin(req, res, next) {
     // Para rutas API, devolver JSON
     if (req.path.startsWith('/api/')) {
@@ -1256,7 +1315,7 @@ app.get('/api/classes', async (req, res) => {
     }
 });
 
-app.get('/api/my-reservations', requireAuth, async (req, res) => {
+app.get('/api/my-reservations', requireAuth, requireActiveMembership, async (req, res) => {
     try {
         // Filtrar solo reservas futuras o de hoy
         const today = new Date();
@@ -1275,7 +1334,7 @@ app.get('/api/my-reservations', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/api/reserve-class', requireAuth, async (req, res) => {
+app.post('/api/reserve-class', requireAuth, requireActiveMembership, async (req, res) => {
     try {
         const { classId, date, time } = req.body;
 
@@ -1342,6 +1401,63 @@ app.delete('/api/cancel-reservation/:reservationId', requireAuth, async (req, re
     } catch (error) {
         console.error('Error cancelando reserva:', error);
         res.json({ success: false, message: 'Error interno del servidor' });
+    }
+});
+
+// ==================== API PARA VERIFICAR MEMBRESÍA EN EMPLEADOS ====================
+app.post('/api/employee/verify-membership', verificarEmpleado, async (req, res) => {
+    try {
+        const { userId } = req.body;
+        
+        if (!userId) {
+            return res.json({
+                success: false,
+                message: 'Usuario requerido'
+            });
+        }
+        
+        const membership = await Membership.findOne({
+            userId: userId,
+            status: 'active'
+        }).sort({ createdAt: -1 });
+        
+        if (!membership) {
+            return res.json({
+                success: false,
+                hasMembership: false,
+                message: 'Usuario sin membresía activa'
+            });
+        }
+        
+        const today = new Date();
+        const endDate = new Date(membership.endDate);
+        
+        if (endDate < today) {
+            return res.json({
+                success: false,
+                hasMembership: false,
+                message: 'Membresía expirada',
+                expiredDate: endDate
+            });
+        }
+        
+        // Membresía válida
+        res.json({
+            success: true,
+            hasMembership: true,
+            membership: {
+                planType: membership.planType,
+                endDate: membership.endDate,
+                daysRemaining: Math.ceil((endDate - today) / (1000 * 60 * 60 * 24))
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error verificando membresía'
+        });
     }
 });
 
@@ -2548,7 +2664,7 @@ app.post('/api/classes/available-dates', async (req, res) => {
 });
 
 // API mejorada: Reservar clase con validación de horario
-app.post('/api/reserve-class/improved', requireAuth, async (req, res) => {
+app.post('/api/reserve-class/improved', requireAuth, requireActiveMembership, async (req, res) => {
     try {
         const { classId, date, time } = req.body;
 
