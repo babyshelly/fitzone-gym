@@ -29,66 +29,204 @@
             </nav>
         </header>
 
-        <!-- Modal de Renovación -->
+        <!-- Modal de Renovación MEJORADO -->
         <div id="renewal-modal" class="modal-overlay" style="display: none;">
-            <div class="modal-box" style="max-width: 600px;">
+            <div class="modal-box" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header">
                     <h3>🔄 Renovar Membresía</h3>
                     <span class="close" onclick="closeRenewalModal()" style="cursor: pointer; font-size: 2rem;">&times;</span>
                 </div>
                 <div class="modal-body" style="padding: 2rem;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-                        <div class="renewal-plan" onclick="selectRenewalPlan('mes-libre')" data-plan="mes-libre" style="border: 2px solid var(--violeta-medio); padding: 1.5rem; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.3s;">
-                            <i class="fas fa-infinity" style="font-size: 2rem; color: var(--violeta-claro);"></i>
-                            <h4 style="margin: 0.5rem 0;">Mes Libre</h4>
-                            <p style="color: var(--violeta-claro); font-weight: bold;">$32.000</p>
+                    
+                    <!-- Paso 1: Selección de Plan -->
+                    <div id="renewal-step-1">
+                        <h4 style="color: var(--violeta-claro); margin-bottom: 1.5rem; text-align: center;">
+                            Selecciona tu nuevo plan
+                        </h4>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                            
+                            <!-- Mes Libre -->
+                            <div class="renewal-plan" onclick="selectRenewalPlan('mes-libre')" data-plan="mes-libre" 
+                                style="border: 2px solid var(--violeta-medio); padding: 1.5rem; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.3s;">
+                                <i class="fas fa-infinity" style="font-size: 2rem; color: var(--violeta-claro);"></i>
+                                <h4 style="margin: 0.5rem 0;">Mes Libre</h4>
+                                <p style="color: var(--violeta-claro); font-weight: bold;">$32.000</p>
+                                <small style="color: var(--gris-claro);">Acceso ilimitado</small>
+                            </div>
+                            
+                            <!-- 3 Veces -->
+                            <div class="renewal-plan" onclick="selectRenewalPlan('tres-veces')" data-plan="tres-veces" 
+                                style="border: 2px solid var(--violeta-medio); padding: 1.5rem; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.3s;">
+                                <i class="fas fa-calendar-week" style="font-size: 2rem; color: var(--violeta-claro);"></i>
+                                <h4 style="margin: 0.5rem 0;">3 Veces/Sem</h4>
+                                <p style="color: var(--violeta-claro); font-weight: bold;">$15.000</p>
+                                <small style="color: var(--gris-claro);">3 días/semana</small>
+                            </div>
+                            
+                            <!-- Semanal -->
+                            <div class="renewal-plan" onclick="selectRenewalPlan('semanal')" data-plan="semanal" 
+                                style="border: 2px solid var(--violeta-medio); padding: 1.5rem; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.3s;">
+                                <i class="fas fa-calendar-alt" style="font-size: 2rem; color: var(--violeta-claro);"></i>
+                                <h4 style="margin: 0.5rem 0;">Semanal</h4>
+                                <p style="color: var(--violeta-claro); font-weight: bold;">$20.000</p>
+                                <small style="color: var(--gris-claro);">7 días</small>
+                            </div>
+                            
                         </div>
-                        <div class="renewal-plan" onclick="selectRenewalPlan('tres-veces')" data-plan="tres-veces" style="border: 2px solid var(--violeta-medio); padding: 1.5rem; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.3s;">
-                            <i class="fas fa-calendar-week" style="font-size: 2rem; color: var(--violeta-claro);"></i>
-                            <h4 style="margin: 0.5rem 0;">3 Veces/Sem</h4>
-                            <p style="color: var(--violeta-claro); font-weight: bold;">$15.000</p>
+                        
+                        <!-- Días de entrenamiento (solo para 3 veces) -->
+                        <div id="training-days-selector" style="display: none; margin-bottom: 2rem;">
+                            <h4 style="color: var(--violeta-claro); margin-bottom: 1rem;">
+                                Selecciona tus 3 días de entrenamiento:
+                            </h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="renewal-days" value="lunes">
+                                    <span>Lunes</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="renewal-days" value="martes">
+                                    <span>Martes</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="renewal-days" value="miercoles">
+                                    <span>Miércoles</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="renewal-days" value="jueves">
+                                    <span>Jueves</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="renewal-days" value="viernes">
+                                    <span>Viernes</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="renewal-days" value="sabado">
+                                    <span>Sábado</span>
+                                </label>
+                            </div>
+                            <p style="color: var(--gris-claro); margin-top: 0.5rem; text-align: center;">
+                                Días seleccionados: <span id="renewal-days-count">0</span>/3
+                            </p>
                         </div>
-                        <div class="renewal-plan" onclick="selectRenewalPlan('semanal')" data-plan="semanal" style="border: 2px solid var(--violeta-medio); padding: 1.5rem; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.3s;">
-                            <i class="fas fa-calendar-alt" style="font-size: 2rem; color: var(--violeta-claro);"></i>
-                            <h4 style="margin: 0.5rem 0;">Semanal</h4>
-                            <p style="color: var(--violeta-claro); font-weight: bold;">$20.000</p>
-                        </div>
+                        
+                        <button class="btn-primary" onclick="goToRenewalPayment()" style="width: 100%;" disabled id="btn-continue-payment">
+                            Continuar al Pago <i class="fas fa-arrow-right"></i>
+                        </button>
                     </div>
                     
-                    <h4 style="color: var(--violeta-claro); margin-bottom: 1rem;">Método de Pago</h4>
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2rem;">
-                        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="radio" name="renewal-payment" value="efectivo" checked>
-                            <span>Efectivo</span>
-                        </label>
-                        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="radio" name="renewal-payment" value="transferencia">
-                            <span>Transferencia</span>
-                        </label>
+                    <!-- Paso 2: Método de Pago -->
+                    <div id="renewal-step-2" style="display: none;">
+                        <button class="btn-secondary" onclick="backToRenewalPlans()" style="margin-bottom: 1rem;">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </button>
+                        
+                        <h4 style="color: var(--violeta-claro); margin-bottom: 1.5rem; text-align: center;">
+                            Método de Pago
+                        </h4>
+                        
+                        <!-- Resumen -->
+                        <div style="background: var(--negro); padding: 1.5rem; border-radius: 10px; margin-bottom: 2rem; border: 2px solid var(--violeta-medio);">
+                            <h5 style="color: var(--violeta-claro); margin-bottom: 1rem;">Resumen de Renovación</h5>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span style="color: var(--gris-claro);">Plan seleccionado:</span>
+                                <strong id="renewal-summary-plan" style="color: var(--blanco);">-</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span style="color: var(--gris-claro);">Precio:</span>
+                                <strong id="renewal-summary-price" style="color: var(--violeta-claro);">$0</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding-top: 1rem; border-top: 1px solid var(--violeta-medio);">
+                                <span style="color: var(--blanco); font-weight: bold;">Total:</span>
+                                <strong id="renewal-summary-total" style="color: var(--violeta-claro); font-size: 1.3rem;">$0</strong>
+                            </div>
+                        </div>
+                        
+                        <!-- Métodos de pago -->
+                        <div style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+                            <label style="cursor: pointer; display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 2px solid var(--violeta-medio); border-radius: 10px; transition: all 0.3s;" onmouseover="this.style.borderColor='var(--violeta-claro)'" onmouseout="if(!this.querySelector('input').checked) this.style.borderColor='var(--violeta-medio)'">
+                                <input type="radio" name="renewal-payment" value="efectivo" checked onchange="updateRenewalTotal()">
+                                <i class="fas fa-money-bill-wave" style="font-size: 1.5rem; color: var(--violeta-claro);"></i>
+                                <div>
+                                    <strong style="color: var(--blanco);">Efectivo</strong>
+                                    <p style="color: var(--gris-claro); margin: 0; font-size: 0.9rem;">Paga en el gimnasio</p>
+                                </div>
+                            </label>
+                            
+                            <label style="cursor: pointer; display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 2px solid var(--violeta-medio); border-radius: 10px; transition: all 0.3s;" onmouseover="this.style.borderColor='var(--violeta-claro)'" onmouseout="if(!this.querySelector('input').checked) this.style.borderColor='var(--violeta-medio)'">
+                                <input type="radio" name="renewal-payment" value="transferencia" onchange="updateRenewalTotal()">
+                                <i class="fas fa-university" style="font-size: 1.5rem; color: var(--violeta-claro);"></i>
+                                <div>
+                                    <strong style="color: var(--blanco);">Transferencia</strong>
+                                    <p style="color: var(--gris-claro); margin: 0; font-size: 0.9rem;">Te enviaremos los datos</p>
+                                </div>
+                            </label>
+                            
+                            <label style="cursor: pointer; display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 2px solid var(--violeta-medio); border-radius: 10px; transition: all 0.3s;" onmouseover="this.style.borderColor='var(--violeta-claro)'" onmouseout="if(!this.querySelector('input').checked) this.style.borderColor='var(--violeta-medio)'">
+                                <input type="radio" name="renewal-payment" value="mercadopago" onchange="updateRenewalTotal()">
+                                <i class="fas fa-shopping-cart" style="font-size: 1.5rem; color: var(--violeta-claro);"></i>
+                                <div style="flex: 1;">
+                                    <strong style="color: var(--blanco);">Mercado Pago</strong>
+                                    <p style="color: var(--gris-claro); margin: 0; font-size: 0.9rem;">Recargo del 5%</p>
+                                </div>
+                                <span style="background: #f59e0b; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">+5%</span>
+                            </label>
+                        </div>
+                        
+                        <button class="btn-primary" onclick="confirmRenewalPurchase()" style="width: 100%;">
+                            <i class="fas fa-check"></i> Confirmar Renovación
+                        </button>
                     </div>
                     
-                    <button class="btn-primary" onclick="confirmRenewal()" style="width: 100%;">
-                        Confirmar Renovación
-                    </button>
                 </div>
             </div>
         </div>
 
         <style>
             .renewal-plan:hover {
-                border-color: var(--violeta-claro);
+                border-color: var(--violeta-claro) !important;
                 transform: translateY(-3px);
+                box-shadow: 0 5px 20px rgba(127, 76, 165, 0.4);
             }
             .renewal-plan.selected {
-                border-color: #22c55e;
+                border-color: #22c55e !important;
                 background: rgba(34, 197, 94, 0.1);
+                box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
             }
         </style>
 
         <script>
+            // ==================== VARIABLES PARA RENOVACIÓN ====================
             let selectedRenewalPlan = null;
+            let selectedRenewalDays = [];
+            const renewalPrices = {
+                'mes-libre': 32000,
+                'tres-veces': 15000,
+                'semanal': 20000
+            };
+
+            // ==================== FUNCIONES DE RENOVACIÓN ====================
 
             function showRenewalModal() {
+                // Resetear selección
+                selectedRenewalPlan = null;
+                selectedRenewalDays = [];
+                
+                // Limpiar selecciones visuales
+                document.querySelectorAll('.renewal-plan').forEach(p => p.classList.remove('selected'));
+                document.querySelectorAll('input[name="renewal-days"]').forEach(cb => {
+                    cb.checked = false;
+                    cb.disabled = false;
+                });
+                
+                // Mostrar paso 1
+                document.getElementById('renewal-step-1').style.display = 'block';
+                document.getElementById('renewal-step-2').style.display = 'none';
+                document.getElementById('training-days-selector').style.display = 'none';
+                document.getElementById('btn-continue-payment').disabled = true;
+                
+                // Mostrar modal
                 document.getElementById('renewal-modal').style.display = 'flex';
             }
 
@@ -97,42 +235,175 @@
             }
 
             function selectRenewalPlan(plan) {
+                console.log('🎯 Plan seleccionado para renovación:', plan);
+                
                 selectedRenewalPlan = plan;
+                
+                // Marcar visualmente
                 document.querySelectorAll('.renewal-plan').forEach(p => p.classList.remove('selected'));
-                document.querySelector(`[data-plan="${plan}"]`).classList.add('selected');
+                const selectedElement = document.querySelector(`[data-plan="${plan}"]`);
+                if (selectedElement) {
+                    selectedElement.classList.add('selected');
+                }
+                
+                // Mostrar selector de días si es 3 veces
+                const daysSelector = document.getElementById('training-days-selector');
+                if (plan === 'tres-veces') {
+                    daysSelector.style.display = 'block';
+                    document.getElementById('btn-continue-payment').disabled = true;
+                    
+                    // Agregar listener para días
+                    document.querySelectorAll('input[name="renewal-days"]').forEach(cb => {
+                        cb.addEventListener('change', validateRenewalDays);
+                    });
+                } else {
+                    daysSelector.style.display = 'none';
+                    document.getElementById('btn-continue-payment').disabled = false;
+                }
+                
+                // Mostrar alerta de éxito
+                if (typeof showToast === 'function') {
+                    const planNames = {
+                        'mes-libre': 'Mes Libre',
+                        'tres-veces': '3 Veces por Semana',
+                        'semanal': 'Semanal'
+                    };
+                    showToast('success', `Plan seleccionado: ${planNames[plan]}`);
+                }
             }
 
-            async function confirmRenewal() {
+            function validateRenewalDays() {
+                const checked = document.querySelectorAll('input[name="renewal-days"]:checked');
+                const count = checked.length;
+                
+                document.getElementById('renewal-days-count').textContent = count;
+                
+                // Deshabilitar checkboxes si ya hay 3 seleccionados
+                const allCheckboxes = document.querySelectorAll('input[name="renewal-days"]');
+                allCheckboxes.forEach(cb => {
+                    if (!cb.checked && count >= 3) {
+                        cb.disabled = true;
+                    } else {
+                        cb.disabled = false;
+                    }
+                });
+                
+                // Habilitar botón si hay exactamente 3
+                const btn = document.getElementById('btn-continue-payment');
+                if (count === 3) {
+                    btn.disabled = false;
+                    selectedRenewalDays = Array.from(checked).map(cb => cb.value);
+                } else {
+                    btn.disabled = true;
+                }
+            }
+
+            function goToRenewalPayment() {
                 if (!selectedRenewalPlan) {
-                    alert('Selecciona un plan');
+                    showToast('warning', 'Por favor selecciona un plan');
                     return;
                 }
                 
-                const paymentMethod = document.querySelector('input[name="renewal-payment"]:checked').value;
+                if (selectedRenewalPlan === 'tres-veces' && selectedRenewalDays.length !== 3) {
+                    showToast('warning', 'Debes seleccionar exactamente 3 días');
+                    return;
+                }
+                
+                // Actualizar resumen
+                const planNames = {
+                    'mes-libre': 'Mes Libre',
+                    'tres-veces': '3 Veces por Semana',
+                    'semanal': 'Semanal'
+                };
+                
+                document.getElementById('renewal-summary-plan').textContent = planNames[selectedRenewalPlan];
+                updateRenewalTotal();
+                
+                // Cambiar a paso 2
+                document.getElementById('renewal-step-1').style.display = 'none';
+                document.getElementById('renewal-step-2').style.display = 'block';
+            }
+
+            function backToRenewalPlans() {
+                document.getElementById('renewal-step-1').style.display = 'block';
+                document.getElementById('renewal-step-2').style.display = 'none';
+            }
+
+            function updateRenewalTotal() {
+                if (!selectedRenewalPlan) return;
+                
+                let price = renewalPrices[selectedRenewalPlan];
+                const paymentMethod = document.querySelector('input[name="renewal-payment"]:checked')?.value;
+                
+                // Aplicar recargo de Mercado Pago
+                if (paymentMethod === 'mercadopago') {
+                    price = Math.round(price * 1.05);
+                }
+                
+                document.getElementById('renewal-summary-price').textContent = `$${price.toLocaleString()}`;
+                document.getElementById('renewal-summary-total').textContent = `$${price.toLocaleString()}`;
+            }
+
+            async function confirmRenewalPurchase() {
+                if (!selectedRenewalPlan) {
+                    showToast('error', 'Error: No se seleccionó un plan');
+                    return;
+                }
+                
+                const paymentMethod = document.querySelector('input[name="renewal-payment"]:checked')?.value;
+                
+                if (!paymentMethod) {
+                    showToast('warning', 'Por favor selecciona un método de pago');
+                    return;
+                }
+                
+                // Confirmar con el usuario
+                const confirmed = await confirmAsync(
+                    'Confirmar Renovación',
+                    `¿Confirmas la renovación de tu membresía?\n\nPlan: ${selectedRenewalPlan}\nMétodo de pago: ${paymentMethod}`
+                );
+                
+                if (!confirmed) return;
+                
+                // Preparar datos
+                const renewalData = {
+                    planType: selectedRenewalPlan,
+                    paymentMethod: paymentMethod
+                };
+                
+                if (selectedRenewalPlan === 'tres-veces') {
+                    renewalData.trainingDays = selectedRenewalDays;
+                }
+                
+                console.log('📤 Enviando renovación:', renewalData);
                 
                 try {
                     const response = await fetch('/api/renew-membership', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'same-origin',
-                        body: JSON.stringify({
-                            planType: selectedRenewalPlan,
-                            paymentMethod: paymentMethod
-                        })
+                        body: JSON.stringify(renewalData)
                     });
                     
                     const result = await response.json();
                     
                     if (result.success) {
                         closeRenewalModal();
-                        alert('¡Membresía renovada exitosamente!');
+                        await alertAsync(
+                            '¡Renovación Exitosa!',
+                            `Tu membresía ha sido renovada exitosamente.\n\nVálida hasta: ${new Date(result.membership.endDate).toLocaleDateString('es-ES')}`,
+                            'success'
+                        );
+                        
+                        // Recargar datos
                         location.reload();
                     } else {
-                        alert(result.message || 'Error al renovar');
+                        await alertAsync('Error', result.message || 'No se pudo renovar la membresía', 'error');
                     }
+                    
                 } catch (error) {
-                    console.error('Error:', error);
-                    alert('Error de conexión');
+                    console.error('❌ Error:', error);
+                    await alertAsync('Error de Conexión', 'No se pudo conectar con el servidor', 'error');
                 }
             }
 

@@ -2052,10 +2052,13 @@ app.get('/api/user/membership', requireAuth, async (req, res) => {
 
 app.post('/api/renew-membership', requireAuth, async (req, res) => {
     try {
-        const { planType, paymentMethod } = req.body;
+        const { planType, paymentMethod, trainingDays } = req.body;
         const userId = req.session.user.id;
         
-        const validPlans = ['mes-libre', 'dos-personas', 'tres-veces', 'semanal', 'dia-clase', 'jubilados'];
+        console.log('🔄 Procesando renovación:', { planType, paymentMethod, userId });
+        
+        // Validar plan
+        const validPlans = ['mes-libre', 'tres-veces', 'semanal'];
         if (!validPlans.includes(planType)) {
             return res.json({
                 success: false,
@@ -2063,41 +2066,54 @@ app.post('/api/renew-membership', requireAuth, async (req, res) => {
             });
         }
         
+        // Validar días si es 3 veces
+        if (planType === 'tres-veces') {
+            if (!trainingDays || trainingDays.length !== 3) {
+                return res.json({
+                    success: false,
+                    message: 'Debes seleccionar exactamente 3 días de entrenamiento'
+                });
+            }
+        }
+        
         const prices = {
             'mes-libre': 32000,
-            'dos-personas': 28000,
             'tres-veces': 15000,
-            'semanal': 20000,
-            'dia-clase': 5000,
-            'jubilados': 20000
+            'semanal': 20000
         };
         
         let finalPrice = prices[planType];
         if (paymentMethod === 'mercadopago') {
-            finalPrice = finalPrice * 1.05;
+            finalPrice = Math.round(finalPrice * 1.05);
         }
         
+        // Buscar membresía actual
         const currentMembership = await Membership.findOne({
             userId: userId,
             status: { $in: ['active', 'expired'] }
         }).sort({ createdAt: -1 });
         
+        // Calcular fecha de inicio
         let startDate = new Date();
         
-        if (currentMembership && currentMembership.status === 'active' && new Date(currentMembership.endDate) > new Date()) {
-            startDate = new Date(currentMembership.endDate);
+        // Si tiene membresía activa y no expiró, extender desde la fecha de vencimiento
+        if (currentMembership && currentMembership.status === 'active') {
+            const endDate = new Date(currentMembership.endDate);
+            if (endDate > new Date()) {
+                startDate = endDate;
+            }
         }
         
+        // Calcular fecha de fin
         const endDate = new Date(startDate);
-        if (planType === 'dia-clase') {
-            endDate.setDate(endDate.getDate() + 1);
-        } else if (planType === 'semanal') {
+        if (planType === 'semanal') {
             endDate.setDate(endDate.getDate() + 7);
         } else {
             endDate.setMonth(endDate.getMonth() + 1);
         }
         
-        const newMembership = new Membership({
+        // Crear nueva membresía
+        const membershipData = {
             userId: userId,
             planType: planType,
             price: finalPrice,
@@ -2105,15 +2121,22 @@ app.post('/api/renew-membership', requireAuth, async (req, res) => {
             endDate: endDate,
             status: 'active',
             paymentMethod: paymentMethod
-        });
+        };
         
+        if (planType === 'tres-veces') {
+            membershipData.trainingDays = trainingDays;
+        }
+        
+        const newMembership = new Membership(membershipData);
         await newMembership.save();
         
+        // Marcar membresía anterior como expirada
         if (currentMembership) {
             currentMembership.status = 'expired';
             await currentMembership.save();
         }
         
+        // Crear notificación
         await Notification.create({
             userId: userId,
             type: 'general',
@@ -2121,7 +2144,7 @@ app.post('/api/renew-membership', requireAuth, async (req, res) => {
             message: `Tu membresía ${planType} ha sido renovada. Válida hasta ${endDate.toLocaleDateString('es-ES')}`
         });
         
-        console.log('✅ Membresía renovada');
+        console.log('✅ Membresía renovada exitosamente');
         
         res.json({
             success: true,
@@ -2135,7 +2158,7 @@ app.post('/api/renew-membership', requireAuth, async (req, res) => {
         });
         
     } catch (error) {
-        console.error('❌ Error:', error);
+        console.error('❌ Error renovando membresía:', error);
         res.status(500).json({
             success: false,
             message: 'Error al renovar membresía'
