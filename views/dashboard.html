@@ -646,11 +646,27 @@
                             displayMembershipInfo();
                             generateCalendar();
                         } else {
+                            // Si no hay membresía, mostrar valores por defecto
+                            console.log('⚠️ Sin membresía activa');
+                            
+                            // Evitar el error estableciendo valores seguros
+                            const planName = document.getElementById('membership-plan-name');
+                            const statusText = document.getElementById('membership-status-text');
+                            const daysRemaining = document.getElementById('days-remaining');
+                            const expiryDate = document.getElementById('expiry-date');
+                            const price = document.getElementById('membership-price');
+                            
+                            if (planName) planName.textContent = 'Sin Membresía Activa';
+                            if (statusText) statusText.textContent = 'Renueva para continuar';
+                            if (daysRemaining) daysRemaining.textContent = '0';
+                            if (expiryDate) expiryDate.textContent = 'Expirada';
+                            if (price) price.textContent = '$0';
+                            
+                            // Mostrar modal de renovación
                             showNoMembershipMessage();
                         }
                     } catch (error) {
                         console.error('Error cargando membresía:', error);
-                        showErrorMessage();
                     }
                 }
 
@@ -945,20 +961,21 @@
                     }
                 }
 
+                // Función para mostrar mensaje de renovación sin bloquear
                 function showNoMembershipMessage() {
                     const section = document.getElementById('membresia-activa');
-                    section.innerHTML = `
-                        <div class="container">
-                            <div class="no-membership-message">
-                                <i class="fas fa-id-card"></i>
-                                <h3>No tienes una membresía activa</h3>
-                                <p>Adquiere una membresía para comenzar a entrenar con nosotros</p>
-                                <a class="btn-primary">
-                                    <i class="fas fa-shopping-cart"></i> Ver Membresías
-                                </a>
-                            </div>
-                        </div>
-                    `;
+                    if (section) {
+                        const infoCard = section.querySelector('.membership-info-card');
+                        if (infoCard) {
+                            infoCard.style.border = '3px solid #ef4444';
+                            infoCard.style.background = 'rgba(239, 68, 68, 0.1)';
+                        }
+                    }
+                    
+                    // Mostrar el modal automáticamente
+                    setTimeout(() => {
+                        showRenewalModal();
+                    }, 500);
                 }
 
                 function showErrorMessage() {
@@ -1109,7 +1126,7 @@
             // ==================== REEMPLAZAR TODO EL SCRIPT DE dashboard.html ====================
             // Desde <script> hasta /script al final del archivo
 
-            // ⭐ VERIFICAR MEMBRESÍA AL CARGAR DASHBOARD
+            // ⭐ VERSIÓN CORREGIDA - NO BLOQUEA EL DASHBOARD
             async function checkMembershipAccess() {
                 try {
                     const response = await fetch('/api/user/membership', {
@@ -1117,68 +1134,20 @@
                     });
                     const data = await response.json();
                     
-                    // Si no tiene membresía o está expirada
-                    if (!data.success || data.membership.isExpired) {
-                        // Mostrar pantalla de renovación OBLIGATORIA
-                        document.body.innerHTML = `
-                            <style>
-                                body {
-                                    background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    min-height: 100vh;
-                                    margin: 0;
-                                    font-family: 'Segoe UI', sans-serif;
-                                }
-                            </style>
-                            
-                            <!-- Header -->
-                            <header class="header" style="position: fixed; top: 0; left: 0; right: 0; background: var(--violeta-oscuro); z-index: 1000;">
-                                <nav class="navbar">
-                                    <div class="nav-container">
-                                        <a href="/" class="logo" style="text-decoration: none; color: inherit; display: flex; align-items: center;">
-                                            <i class="fas fa-dumbbell"></i>
-                                            <span>FitZone</span>
-                                        </a>
-                                        <ul class="nav-menu">
-                                            <li><a href="/" class="btn-logout" style="background: #ef4444;">Salir</a></li>
-                                        </ul>
-                                    </div>
-                                </nav>
-                            </header>
-                            
-                            <!-- Contenido Principal -->
-                            <div style="max-width: 800px; width: 90%; padding: 2rem; background: #2d2d2d; border-radius: 20px; border: 3px solid #ef4444; text-align: center; margin-top: 80px;">
-                                <i class="fas fa-exclamation-triangle" style="font-size: 5rem; color: #ef4444; margin-bottom: 1.5rem;"></i>
-                                <h1 style="color: white; font-size: 2.5rem; margin-bottom: 1rem;">⚠️ Membresía Expirada</h1>
-                                <p style="color: #ccc; font-size: 1.2rem; margin-bottom: 2rem;">
-                                    Tu membresía ha vencido. Debes renovarla para acceder al gimnasio.
-                                </p>
-                                
-                                <div style="background: rgba(239, 68, 68, 0.1); padding: 1.5rem; border-radius: 10px; margin-bottom: 2rem; border-left: 4px solid #ef4444;">
-                                    <p style="color: #ef4444; font-size: 1.1rem; margin: 0;">
-                                        <strong>Sin membresía activa no puedes:</strong><br>
-                                        • Reservar clases<br>
-                                        • Acceder al gimnasio<br>
-                                        • Usar las instalaciones
-                                    </p>
-                                </div>
-                                
-                                <button onclick="window.location.href='/#membresias'" style="background: #22c55e; color: white; border: none; padding: 1.2rem 3rem; font-size: 1.2rem; border-radius: 12px; cursor: pointer; font-weight: bold; margin-right: 1rem;">
-                                    <i class="fas fa-sync"></i> Renovar Membresía
-                                </button>
-                                
-                                <button onclick="window.location.href='/'" style="background: #7f4ca5; color: white; border: none; padding: 1.2rem 3rem; font-size: 1.2rem; border-radius: 12px; cursor: pointer; font-weight: bold;">
-                                    <i class="fas fa-home"></i> Volver al Inicio
-                                </button>
-                            </div>
-                        `;
-                        return false;
+                    // Si no tiene membresía o está expirada, SOLO MOSTRAR ALERTA
+                    if (!data.success || (data.membership && data.membership.isExpired)) {
+                        console.log('⚠️ Membresía expirada - Mostrando modal de renovación');
+                        
+                        // NO bloquear el dashboard, solo mostrar el modal después de que cargue
+                        setTimeout(() => {
+                            showRenewalModal();
+                        }, 1000);
+                        
+                        return true; // ← CAMBIO CRÍTICO: Permitir que cargue el dashboard
                     }
                     
                     // Si está por vencer (últimos 7 días)
-                    if (data.membership.isExpiringSoon) {
+                    if (data.membership && data.membership.isExpiringSoon) {
                         showToast('warning', `⚠️ Tu membresía vence en ${data.membership.daysRemaining} días. ¡Renuévala pronto!`, 8000);
                     }
                     
@@ -1211,7 +1180,12 @@
                 loadAvailableClasses();
                 loadMembershipInfo();      // ← Esta carga la info de membresía
                 loadUserReservations();
-            });
+
+                // Verificar membresía DESPUÉS de cargar
+                setTimeout(() => {
+                    checkMembershipAccess();
+                }, 1500);
+            }), { once: true };
 
             // Cargar datos del usuario
             async function loadUserData() {
