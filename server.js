@@ -1315,7 +1315,7 @@ app.get('/api/classes', async (req, res) => {
     }
 });
 
-app.get('/api/my-reservations', requireAuth, requireActiveMembership, async (req, res) => {
+app.get('/api/my-reservations', requireAuth, async (req, res) => {
     try {
         // Filtrar solo reservas futuras o de hoy
         const today = new Date();
@@ -1324,8 +1324,10 @@ app.get('/api/my-reservations', requireAuth, requireActiveMembership, async (req
         const reservations = await Reservation.find({ 
             userId: req.session.user.id,
             status: 'active',
-            date: { $gte: today } // Solo reservas de hoy en adelante
+            date: { $gte: today } // ⭐ SOLO RESERVAS FUTURAS
         }).populate('classId').sort({ date: 1 });
+
+        console.log(`✅ ${reservations.length} reservas futuras encontradas`);
 
         res.json({ success: true, reservations: reservations });
     } catch (error) {
@@ -1333,6 +1335,33 @@ app.get('/api/my-reservations', requireAuth, requireActiveMembership, async (req
         res.json({ success: false, message: 'Error obteniendo reservas' });
     }
 });
+
+// ⭐ NUEVA RUTA: Limpiar reservas antiguas automáticamente
+app.post('/api/cleanup-old-reservations', requireAuth, async (req, res) => {
+    try {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        yesterday.setHours(23, 59, 59, 999);
+        
+        const result = await Reservation.deleteMany({
+            userId: req.session.user.id,
+            date: { $lt: yesterday },
+            status: 'active'
+        });
+        
+        console.log(`🗑️ ${result.deletedCount} reservas antiguas eliminadas`);
+        
+        res.json({ 
+            success: true, 
+            deleted: result.deletedCount,
+            message: 'Reservas antiguas eliminadas'
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.json({ success: false, message: 'Error limpiando reservas' });
+    }
+});
+
 
 app.post('/api/reserve-class', requireAuth, requireActiveMembership, async (req, res) => {
     try {

@@ -822,8 +822,102 @@
             // ==================== REEMPLAZAR TODO EL SCRIPT DE dashboard.html ====================
             // Desde <script> hasta /script al final del archivo
 
+            // ⭐ VERIFICAR MEMBRESÍA AL CARGAR DASHBOARD
+            async function checkMembershipAccess() {
+                try {
+                    const response = await fetch('/api/user/membership', {
+                        credentials: 'same-origin'
+                    });
+                    const data = await response.json();
+                    
+                    // Si no tiene membresía o está expirada
+                    if (!data.success || data.membership.isExpired) {
+                        // Mostrar pantalla de renovación OBLIGATORIA
+                        document.body.innerHTML = `
+                            <style>
+                                body {
+                                    background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    min-height: 100vh;
+                                    margin: 0;
+                                    font-family: 'Segoe UI', sans-serif;
+                                }
+                            </style>
+                            
+                            <!-- Header -->
+                            <header class="header" style="position: fixed; top: 0; left: 0; right: 0; background: var(--violeta-oscuro); z-index: 1000;">
+                                <nav class="navbar">
+                                    <div class="nav-container">
+                                        <a href="/" class="logo" style="text-decoration: none; color: inherit; display: flex; align-items: center;">
+                                            <i class="fas fa-dumbbell"></i>
+                                            <span>FitZone</span>
+                                        </a>
+                                        <ul class="nav-menu">
+                                            <li><a href="/" class="btn-logout" style="background: #ef4444;">Salir</a></li>
+                                        </ul>
+                                    </div>
+                                </nav>
+                            </header>
+                            
+                            <!-- Contenido Principal -->
+                            <div style="max-width: 800px; width: 90%; padding: 2rem; background: #2d2d2d; border-radius: 20px; border: 3px solid #ef4444; text-align: center; margin-top: 80px;">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 5rem; color: #ef4444; margin-bottom: 1.5rem;"></i>
+                                <h1 style="color: white; font-size: 2.5rem; margin-bottom: 1rem;">⚠️ Membresía Expirada</h1>
+                                <p style="color: #ccc; font-size: 1.2rem; margin-bottom: 2rem;">
+                                    Tu membresía ha vencido. Debes renovarla para acceder al gimnasio.
+                                </p>
+                                
+                                <div style="background: rgba(239, 68, 68, 0.1); padding: 1.5rem; border-radius: 10px; margin-bottom: 2rem; border-left: 4px solid #ef4444;">
+                                    <p style="color: #ef4444; font-size: 1.1rem; margin: 0;">
+                                        <strong>Sin membresía activa no puedes:</strong><br>
+                                        • Reservar clases<br>
+                                        • Acceder al gimnasio<br>
+                                        • Usar las instalaciones
+                                    </p>
+                                </div>
+                                
+                                <button onclick="window.location.href='/#membresias'" style="background: #22c55e; color: white; border: none; padding: 1.2rem 3rem; font-size: 1.2rem; border-radius: 12px; cursor: pointer; font-weight: bold; margin-right: 1rem;">
+                                    <i class="fas fa-sync"></i> Renovar Membresía
+                                </button>
+                                
+                                <button onclick="window.location.href='/'" style="background: #7f4ca5; color: white; border: none; padding: 1.2rem 3rem; font-size: 1.2rem; border-radius: 12px; cursor: pointer; font-weight: bold;">
+                                    <i class="fas fa-home"></i> Volver al Inicio
+                                </button>
+                            </div>
+                        `;
+                        return false;
+                    }
+                    
+                    // Si está por vencer (últimos 7 días)
+                    if (data.membership.isExpiringSoon) {
+                        showToast('warning', `⚠️ Tu membresía vence en ${data.membership.daysRemaining} días. ¡Renuévala pronto!`, 8000);
+                    }
+                    
+                    return true;
+                    
+                } catch (error) {
+                    console.error('Error verificando membresía:', error);
+                    return true; // Permitir acceso en caso de error de red
+                }
+            }
+
             // Script actualizado para dashboard con reservas funcionales
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', async function() {
+                console.log('🚀 Dashboard: Iniciando...');
+                
+                // ⭐ VERIFICAR MEMBRESÍA PRIMERO
+                const hasAccess = await checkMembershipAccess();
+                
+                if (!hasAccess) {
+                    console.log('❌ Acceso denegado: Membresía expirada');
+                    return; // Detener carga del dashboard
+                }
+                
+                console.log('✅ Membresía válida, cargando dashboard...');
+                
+                // Continuar con la carga normal
                 loadUserData();
                 loadMyReservations();
                 loadAvailableClasses();

@@ -424,18 +424,89 @@
             <!-- Estadísticas Reales -->
             <section id="stats" class="admin-section">
                 <div class="container">
-                    <h2>Estadísticas</h2>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <h3>Registros por Mes</h3>
-                            <div class="chart-container" id="registrations-chart">
-                                <canvas id="registrationChart" width="400" height="200"></canvas>
+                    <h2 style="color: var(--violeta-claro); margin-bottom: 2rem;">📊 Estadísticas del Negocio</h2>
+                    
+                    <!-- Período de Análisis -->
+                    <div style="display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center;">
+                        <label style="color: var(--blanco); font-weight: bold;">Período:</label>
+                        <select id="stats-period" onchange="loadBusinessStats()" style="padding: 0.8rem; border-radius: 8px; background: var(--gris-oscuro); color: var(--blanco); border: 2px solid var(--violeta-medio);">
+                            <option value="today">Hoy</option>
+                            <option value="week">Esta Semana</option>
+                            <option value="month" selected>Este Mes</option>
+                            <option value="year">Este Año</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="loadBusinessStats()">
+                            <i class="fas fa-sync"></i> Actualizar
+                        </button>
+                    </div>
+
+                    <!-- Cards de Estadísticas -->
+                    <div class="overview-cards" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+                        <!-- Ingresos -->
+                        <div class="overview-card" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
+                            <i class="fas fa-dollar-sign" style="font-size: 3rem; color: white;"></i>
+                            <div class="card-content">
+                                <h3 id="stat-revenue" style="color: white;">$0</h3>
+                                <p style="color: rgba(255,255,255,0.9);">Ingresos Totales</p>
+                                <small id="stat-revenue-change" style="color: rgba(255,255,255,0.7);"></small>
                             </div>
                         </div>
+
+                        <!-- Nuevos Miembros -->
+                        <div class="overview-card" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                            <i class="fas fa-user-plus" style="font-size: 3rem; color: white;"></i>
+                            <div class="card-content">
+                                <h3 id="stat-new-members" style="color: white;">0</h3>
+                                <p style="color: rgba(255,255,255,0.9);">Nuevos Miembros</p>
+                                <small id="stat-members-change" style="color: rgba(255,255,255,0.7);"></small>
+                            </div>
+                        </div>
+
+                        <!-- Asistencia Promedio -->
+                        <div class="overview-card" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                            <i class="fas fa-chart-line" style="font-size: 3rem; color: white;"></i>
+                            <div class="card-content">
+                                <h3 id="stat-attendance" style="color: white;">0</h3>
+                                <p style="color: rgba(255,255,255,0.9);">Asistencia/Día</p>
+                                <small id="stat-attendance-trend" style="color: rgba(255,255,255,0.7);"></small>
+                            </div>
+                        </div>
+
+                        <!-- Tasa de Renovación -->
+                        <div class="overview-card" style="background: linear-gradient(135deg, #7f4ca5, #4b1c71);">
+                            <i class="fas fa-sync-alt" style="font-size: 3rem; color: white;"></i>
+                            <div class="card-content">
+                                <h3 id="stat-renewal-rate" style="color: white;">0%</h3>
+                                <p style="color: rgba(255,255,255,0.9);">Tasa de Renovación</p>
+                                <small id="stat-renewal-info" style="color: rgba(255,255,255,0.7);"></small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alertas de Negocio -->
+                    <div id="business-alerts" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                        <!-- Se llenarán dinámicamente -->
+                    </div>
+
+                    <!-- Gráficos -->
+                    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem;">
+                        <!-- Top Clases -->
                         <div class="stat-card">
-                            <h3>Top Clases Reservadas</h3>
+                            <h3 style="color: var(--violeta-claro); margin-bottom: 1rem;">
+                                <i class="fas fa-trophy"></i> Clases Más Populares
+                            </h3>
                             <div id="top-classes" class="activity-list">
-                                <div class="loading">Cargando estadísticas...</div>
+                                <div class="loading">Cargando...</div>
+                            </div>
+                        </div>
+
+                        <!-- Productos Más Vendidos -->
+                        <div class="stat-card">
+                            <h3 style="color: var(--violeta-claro); margin-bottom: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Productos Top
+                            </h3>
+                            <div id="top-products" class="activity-list">
+                                <div class="loading">Cargando...</div>
                             </div>
                         </div>
                     </div>
@@ -1392,6 +1463,105 @@
                 } catch (error) {
                     console.error('Error:', error);
                 }
+            }
+
+            // ==================== CARGAR ESTADÍSTICAS DEL NEGOCIO ====================
+            async function loadBusinessStats() {
+                const period = document.getElementById('stats-period')?.value || 'month';
+                
+                try {
+                    const response = await fetch(`/api/admin/business-stats?period=${period}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const stats = data.stats;
+                        
+                        // Actualizar cards
+                        document.getElementById('stat-revenue').textContent = `$${stats.revenue.toLocaleString()}`;
+                        document.getElementById('stat-new-members').textContent = stats.newMembers;
+                        document.getElementById('stat-attendance').textContent = Math.round(stats.avgAttendance);
+                        document.getElementById('stat-renewal-rate').textContent = `${stats.renewalRate}%`;
+                        
+                        // Cambios respecto período anterior
+                        document.getElementById('stat-revenue-change').textContent = 
+                            stats.revenueChange >= 0 ? `↑ +${stats.revenueChange}%` : `↓ ${stats.revenueChange}%`;
+                        
+                        // Top clases
+                        displayTopClasses(stats.topClasses);
+                        
+                        // Top productos
+                        displayTopProducts(stats.topProducts);
+                        
+                        // Alertas de negocio
+                        displayBusinessAlerts(stats.alerts);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+
+            function displayBusinessAlerts(alerts) {
+                const container = document.getElementById('business-alerts');
+                
+                if (!alerts || alerts.length === 0) {
+                    container.innerHTML = '';
+                    return;
+                }
+                
+                container.innerHTML = alerts.map(alert => `
+                    <div style="background: ${alert.type === 'danger' ? '#ef4444' : alert.type === 'warning' ? '#f59e0b' : '#22c55e'}; padding: 1.5rem; border-radius: 12px; color: white;">
+                        <h4 style="margin-bottom: 0.5rem;">
+                            <i class="fas fa-${alert.icon}"></i> ${alert.title}
+                        </h4>
+                        <p style="margin: 0;">${alert.message}</p>
+                    </div>
+                `).join('');
+            }
+
+            function displayTopClasses(classes) {
+                const container = document.getElementById('top-classes');
+                
+                if (!classes || classes.length === 0) {
+                    container.innerHTML = '<p style="color: var(--gris-claro);">No hay datos</p>';
+                    return;
+                }
+                
+                const maxCount = Math.max(...classes.map(c => c.count));
+                
+                container.innerHTML = classes.map(c => `
+                    <div class="activity-item" style="margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="color: var(--blanco); font-weight: bold;">${c.name}</span>
+                            <span style="color: var(--violeta-claro);">${c.count} reservas</span>
+                        </div>
+                        <div style="background: var(--gris-oscuro); height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div style="background: var(--violeta-claro); height: 100%; width: ${(c.count / maxCount) * 100}%; transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            function displayTopProducts(products) {
+                const container = document.getElementById('top-products');
+                
+                if (!products || products.length === 0) {
+                    container.innerHTML = '<p style="color: var(--gris-claro);">No hay ventas</p>';
+                    return;
+                }
+                
+                const maxSales = Math.max(...products.map(p => p.sales));
+                
+                container.innerHTML = products.map(p => `
+                    <div class="activity-item" style="margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="color: var(--blanco); font-weight: bold;">${p.name}</span>
+                            <span style="color: var(--violeta-claro);">$${p.revenue.toLocaleString()}</span>
+                        </div>
+                        <div style="background: var(--gris-oscuro); height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div style="background: #22c55e; height: 100%; width: ${(p.sales / maxSales) * 100}%; transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                `).join('');
             }
 
             // ==================== GESTIÓN DE PRODUCTOS ====================
