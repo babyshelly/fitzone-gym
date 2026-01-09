@@ -1199,17 +1199,17 @@
                 
                 if (!hasAccess) {
                     console.log('❌ Acceso denegado: Membresía expirada');
-                    return; // Detener carga del dashboard
+                    return;
                 }
                 
                 console.log('✅ Membresía válida, cargando dashboard...');
                 
-                // Continuar con la carga normal
+                // ORDEN CORRECTO:
                 loadUserData();
+                loadDashboardStats();      // ← Asegúrate que esta función existe
                 loadMyReservations();
                 loadAvailableClasses();
-                loadDashboardStats();
-                loadMembershipInfo();
+                loadMembershipInfo();      // ← Esta carga la info de membresía
                 loadUserReservations();
             });
 
