@@ -514,6 +514,13 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- BOTÓN DE RENOVACIÓN - CORREGIDO -->
+                        <div style="text-align: center; margin-top: 1.5rem;">
+                            <button class="btn-primary" onclick="showRenewalModal()" style="padding: 1rem 2rem; font-size: 1.1rem;">
+                                <i class="fas fa-sync"></i> Renovar Membresía
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Alerta de Renovación (si está por vencer) -->
@@ -523,7 +530,7 @@
                             <h4>¡Tu membresía está por vencer!</h4>
                             <p id="renewal-message">Renueva ahora para seguir disfrutando de nuestros servicios.</p>
                         </div>
-                        <button class="btn-renew" onclick="renewMembership()">
+                        <button class="btn-renew" onclick="showRenewalModal()">
                             <i class="fas fa-sync"></i> Renovar Ahora
                         </button>
                     </div>
@@ -665,7 +672,6 @@
                     const daysRemaining = membershipData.daysRemaining;
                     document.getElementById('days-remaining').textContent = daysRemaining;
                     
-                    // ⭐ CORRECCIÓN: Parsear fecha correctamente
                     const expiryDate = new Date(membershipData.endDate);
                     const formattedDate = expiryDate.toLocaleDateString('es-ES', {
                         day: '2-digit',
@@ -682,8 +688,18 @@
                     if (membershipData.isExpired) {
                         statusBadge.className = 'membership-badge expired';
                         statusBadge.innerHTML = '<i class="fas fa-times-circle"></i><span>EXPIRADA</span>';
-                        statusText.textContent = 'Tu membresía ha expirado';
+                        statusText.textContent = 'Tu membresía ha expirado - Renuévala para continuar';
                         statusText.style.color = '#ef4444';
+                        
+                        // IMPORTANTE: Mostrar botón de renovación prominente
+                        const renewalAlert = document.getElementById('renewal-alert');
+                        if (renewalAlert) {
+                            renewalAlert.style.display = 'flex';
+                            const renewalMessage = document.getElementById('renewal-message');
+                            if (renewalMessage) {
+                                renewalMessage.textContent = 'Tu membresía ha expirado. Renueva ahora para seguir accediendo al gimnasio.';
+                            }
+                        }
                     } else if (membershipData.isExpiringSoon) {
                         statusBadge.className = 'membership-badge warning';
                         statusBadge.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>POR VENCER</span>';
@@ -937,7 +953,7 @@
                                 <i class="fas fa-id-card"></i>
                                 <h3>No tienes una membresía activa</h3>
                                 <p>Adquiere una membresía para comenzar a entrenar con nosotros</p>
-                                <a href="/#membresias" class="btn-primary">
+                                <a class="btn-primary">
                                     <i class="fas fa-shopping-cart"></i> Ver Membresías
                                 </a>
                             </div>
