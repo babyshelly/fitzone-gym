@@ -1120,6 +1120,203 @@ app.delete('/api/admin/users/:userId', requireAuth, requireAdmin, async (req, re
 
 console.log('✅ Rutas de administración configuradas correctamente');
 
+// API: Estadísticas del negocio para admin
+app.get('/api/admin/business-stats', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const { period = 'month' } = req.query;
+        
+        // Calcular fecha de inicio según período
+        let startDate = new Date();
+        switch (period) {
+            case 'today':
+                startDate.setHours(0, 0, 0, 0);
+                break;
+            case 'week':
+                startDate.setDate(startDate.getDate() - 7);
+                break;
+            case 'month':
+                startDate.setMonth(startDate.getMonth() - 1);
+                break;
+            case 'year':
+                startDate.setFullYear(startDate.getFullYear() - 1);
+                break;
+            default:
+                startDate.setMonth(startDate.getMonth() - 1);
+        }
+        
+        // 1. Ingresos totales (membresías + ventas)
+        const memberships = await Membership.find({
+            createdAt: { $gte: startDate },
+            status: { $in: ['active', 'expired'] }
+        });
+        
+        const orders = await Order.find({
+            createdAt: { $gte: startDate },
+            status: { $in: ['completed', 'delivered'] }
+        });
+        
+        const membershipRevenue = memberships.reduce((sum, m) => sum + m.price, 0);
+        const salesRevenue = orders.reduce((sum, o) => sum + o.total, 0);
+        const totalRevenue = membershipRevenue + salesRevenue;
+        
+        // 2. Nuevos miembros
+        const newMembers = await User.countDocuments({
+            createdAt: { $gte: startDate },
+            role: 'user'
+        });
+        
+        // 3. Asistencia promedio
+        const attendances = await Attendance.find({
+            date: { $gte: startDate }
+        });
+        
+        const daysDiff = Math.ceil((new Date() - startDate) / (1000 * 60 * 60 * 24));
+        const avgAttendance = daysDiff > 0 ? Math.round(attendances.length / daysDiff) : 0;
+        
+        // 4. Tasa de renovación
+        const expiredMemberships = await Membership.countDocuments({
+            endDate: { $lt: new Date(), $gte: startDate },
+            status: 'expired'
+        });
+        
+        const renewedMemberships = await Membership.countDocuments({
+            startDate: { $gte: startDate },
+            userId: {
+                $in: (await Membership.find({
+                    endDate: { $lt: new Date(), $gte: startDate }
+                }).distinct('userId'))
+            }
+        });
+        
+        const renewalRate = expiredMemberships > 0 
+            ? Math.round((renewedMemberships / expiredMemberships) * 100) 
+            : 0;
+        
+        // 5. Top clases más populares
+        const topClassesData = await Reservation.aggregate([
+            { 
+                $match: { 
+                    date: { $gte: startDate },
+                    status: 'active'
+                } 
+            },
+            { 
+                $group: { 
+                    _id: '$className', 
+                    count: { $sum: 1 } 
+                } 
+            },
+            { $sort: { count: -1 } },
+            { $limit: 5 }
+        ]);
+        
+        const topClasses = topClassesData.map(c => ({
+            name: c._id,
+            count: c.count
+        }));
+        
+        // 6. Top productos más vendidos
+        const topProductsData = {};
+        orders.forEach(order => {
+            order.items.forEach(item => {
+                if (topProductsData[item.name]) {
+                    topProductsData[item.name].sales += item.quantity;
+                    topProductsData[item.name].revenue += item.price * item.quantity;
+                } else {
+                    topProductsData[item.name] = {
+                        name: item.name,
+                        sales: item.quantity,
+                        revenue: item.price * item.quantity
+                    };
+                }
+            });
+        });
+        
+        const topProducts = Object.values(topProductsData)
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 5);
+        
+        // 7. Alertas de negocio
+        const alerts = [];
+        
+        // Alerta: Membresías por vencer
+        const expiringMemberships = await Membership.countDocuments({
+            endDate: {
+                $gte: new Date(),
+                $lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+            },
+            status: 'active'
+        });
+        
+        if (expiringMemberships > 0) {
+            alerts.push({
+                type: 'warning',
+                icon: 'exclamation-triangle',
+                title: 'Membresías por Vencer',
+                message: `${expiringMemberships} membresías vencen en los próximos 7 días`
+            });
+        }
+        
+        // Alerta: Ingresos bajos
+        if (totalRevenue < 100000 && period === 'month') {
+            alerts.push({
+                type: 'danger',
+                icon: 'dollar-sign',
+                title: 'Ingresos Bajos',
+                message: 'Los ingresos del mes están por debajo del objetivo'
+            });
+        }
+        
+        // Alerta: Asistencia baja
+        if (avgAttendance < 10) {
+            alerts.push({
+                type: 'warning',
+                icon: 'users',
+                title: 'Asistencia Baja',
+                message: `Promedio de ${avgAttendance} asistencias por día`
+            });
+        }
+        
+        // 8. Cambio respecto período anterior
+        const previousStartDate = new Date(startDate);
+        const daysDifference = Math.ceil((new Date() - startDate) / (1000 * 60 * 60 * 24));
+        previousStartDate.setDate(previousStartDate.getDate() - daysDifference);
+        
+        const previousMemberships = await Membership.find({
+            createdAt: { $gte: previousStartDate, $lt: startDate },
+            status: { $in: ['active', 'expired'] }
+        });
+        
+        const previousRevenue = previousMemberships.reduce((sum, m) => sum + m.price, 0);
+        const revenueChange = previousRevenue > 0 
+            ? Math.round(((totalRevenue - previousRevenue) / previousRevenue) * 100)
+            : 0;
+        
+        // Respuesta
+        res.json({
+            success: true,
+            stats: {
+                revenue: totalRevenue,
+                revenueChange: revenueChange,
+                newMembers: newMembers,
+                avgAttendance: avgAttendance,
+                renewalRate: renewalRate,
+                topClasses: topClasses,
+                topProducts: topProducts,
+                alerts: alerts
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Error en business-stats:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al cargar estadísticas',
+            error: error.message
+        });
+    }
+});
+
 // ==================== GESTIÓN DE EMPLEADOS ====================
 
 // Obtener todos los empleados
