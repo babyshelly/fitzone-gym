@@ -699,6 +699,7 @@
                 loadStatistics();
                 loadCategories(); // SI EXISTE
                 loadProducts(); // SI EXISTE
+                loadAdminAttendances();
                 
                 // Cargar categorías y productos SI EXISTEN
                 if (typeof loadCategories === 'function') loadCategories();
@@ -2147,7 +2148,139 @@
                     }
                 }
             }
+            // ==================== AGREGAR EN <script> DE admin.html ====================
 
+            let allAttendances = [];
+
+            async function loadAdminAttendances() {
+                const days = document.getElementById('attendance-days')?.value || 30;
+                const tbody = document.getElementById('attendances-table-body');
+                
+                if (!tbody) return;
+                
+                tbody.innerHTML = '<tr><td colspan="5" class="loading">Cargando asistencias...</td></tr>';
+                
+                try {
+                    const response = await fetch(`/api/employee/attendances-history?days=${days}`, {
+                        credentials: 'same-origin'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success && data.attendances.length > 0) {
+                        console.log(`✅ ${data.attendances.length} asistencias cargadas`);
+                        allAttendances = data.attendances;
+                        displayAttendances(allAttendances);
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="5" class="no-data">No hay asistencias en el período seleccionado</td></tr>';
+                        allAttendances = [];
+                    }
+                } catch (error) {
+                    console.error('❌ Error cargando asistencias:', error);
+                    tbody.innerHTML = '<tr><td colspan="5" class="error">Error cargando asistencias</td></tr>';
+                }
+            }
+
+            function displayAttendances(attendances) {
+                const tbody = document.getElementById('attendances-table-body');
+                
+                if (!tbody || attendances.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="no-data">No hay asistencias para mostrar</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = attendances.map(att => {
+                    const checkInTime = new Date(att.checkInTime);
+                    const dateStr = checkInTime.toLocaleDateString('es-ES');
+                    const timeStr = checkInTime.toLocaleTimeString('es-ES', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                    
+                    return `
+                        <tr>
+                            <td>${att.user?.fullName || 'Usuario eliminado'}</td>
+                            <td>${att.user?.email || 'N/A'}</td>
+                            <td>${dateStr}</td>
+                            <td>${timeStr}</td>
+                            <td>${att.registeredBy}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            function searchAttendances() {
+                const searchTerm = document.getElementById('attendance-search')?.value.toLowerCase() || '';
+                
+                if (!searchTerm) {
+                    displayAttendances(allAttendances);
+                    return;
+                }
+                
+                const filtered = allAttendances.filter(att => 
+                    att.user?.fullName?.toLowerCase().includes(searchTerm) ||
+                    att.user?.email?.toLowerCase().includes(searchTerm) ||
+                    att.registeredBy?.toLowerCase().includes(searchTerm)
+                );
+                
+                displayAttendances(filtered);
+            }
+
+            async function exportAttendances() {
+                if (allAttendances.length === 0) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('warning', 'Sin Datos', 'No hay asistencias para exportar');
+                    } else {
+                        alert('No hay asistencias para exportar');
+                    }
+                    return;
+                }
+                
+                try {
+                    // Preparar datos para CSV
+                    const csvContent = [
+                        ['Usuario', 'Email', 'Fecha', 'Hora', 'Registrado Por'].join(','),
+                        ...allAttendances.map(att => {
+                            const checkInTime = new Date(att.checkInTime);
+                            const dateStr = checkInTime.toLocaleDateString('es-ES');
+                            const timeStr = checkInTime.toLocaleTimeString('es-ES', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                            });
+                            
+                            return [
+                                `"${att.user?.fullName || 'Usuario eliminado'}"`,
+                                `"${att.user?.email || 'N/A'}"`,
+                                dateStr,
+                                timeStr,
+                                `"${att.registeredBy}"`
+                            ].join(',');
+                        })
+                    ].join('\n');
+                    
+                    // Crear y descargar archivo
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `asistencias_fitzone_${new Date().toISOString().split('T')[0]}.csv`;
+                    link.click();
+                    window.URL.revokeObjectURL(url);
+                    
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('success', 'Exportación Exitosa', 'Las asistencias se exportaron correctamente');
+                    } else {
+                        alert('Asistencias exportadas exitosamente');
+                    }
+                } catch (error) {
+                    console.error('❌ Error exportando asistencias:', error);
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('error', 'Error', 'No se pudo exportar las asistencias');
+                    } else {
+                        alert('Error al exportar asistencias');
+                    }
+                }
+            }
         </script>
     </body>
 </html>
