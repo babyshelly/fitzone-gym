@@ -284,6 +284,41 @@
                 flex-direction: column;
             }
         }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            color: var(--violeta-claro);
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.8rem;
+            border: 2px solid var(--violeta-medio);
+            border-radius: 8px;
+            background: var(--negro);
+            color: var(--blanco);
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--violeta-claro);
+        }
+
+        .form-group input[type="checkbox"],
+        .form-group input[type="radio"] {
+            width: auto;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -297,6 +332,8 @@
                 </a>
                 <ul class="nav-menu">
                     <li><a href="#estadisticas">Estadísticas</a></li>
+                    <li><a href="#registro-usuario">Registrar Usuario</a></li> <!-- NUEVO -->
+                    <li><a href="#asistencias-hoy">Asistencias</a></li> <!-- NUEVO -->
                     <li><a href="#clases-hoy">Clases Hoy</a></li>
                     <li><a href="#asistencia">Asistencia</a></li>
                     <li><a href="#pedidos">Pedidos</a></li>
@@ -439,6 +476,185 @@
                 </div>
             </div>
         </section>
+
+        <!-- Registro de Nuevo Usuario -->
+        <section id="registro-usuario" class="admin-section" style="padding: 4rem 0; background: var(--negro);">
+            <div class="container">
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 style="color: var(--violeta-claro); font-size: 2rem;">➕ Registrar Nuevo Usuario</h2>
+                    <button class="btn btn-secondary" onclick="toggleUserRegistrationForm()">
+                        <i class="fas fa-user-plus"></i> Nuevo Registro
+                    </button>
+                </div>
+
+                <div id="user-registration-form" style="display: none; background: var(--gris-oscuro); border-radius: 20px; padding: 2rem; border: 2px solid var(--violeta-medio);">
+                    <form id="new-user-form">
+                        <h3 style="color: var(--violeta-claro); margin-bottom: 1.5rem;">Datos del Usuario</h3>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                            <div class="form-group">
+                                <label>Nombre Completo *</label>
+                                <input type="text" id="reg-fullName" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Email *</label>
+                                <input type="email" id="reg-email" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Teléfono *</label>
+                                <input type="tel" id="reg-phone" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Domicilio</label>
+                                <input type="text" id="reg-address">
+                            </div>
+                        </div>
+
+                        <h3 style="color: var(--violeta-claro); margin: 2rem 0 1.5rem;">Membresía</h3>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                            <label style="cursor: pointer; border: 2px solid var(--violeta-medio); padding: 1rem; border-radius: 10px; text-align: center; transition: all 0.3s;">
+                                <input type="radio" name="reg-membership" value="mes-libre" onchange="updateRegistrationForm()" required>
+                                <div style="margin-top: 0.5rem;">
+                                    <strong style="color: var(--blanco);">Mes Libre</strong>
+                                    <p style="color: var(--violeta-claro); margin: 0.5rem 0;">$32.000</p>
+                                </div>
+                            </label>
+                            
+                            <label style="cursor: pointer; border: 2px solid var(--violeta-medio); padding: 1rem; border-radius: 10px; text-align: center; transition: all 0.3s;">
+                                <input type="radio" name="reg-membership" value="dos-personas" onchange="updateRegistrationForm()" required>
+                                <div style="margin-top: 0.5rem;">
+                                    <strong style="color: var(--blanco);">2 Personas</strong>
+                                    <p style="color: var(--violeta-claro); margin: 0.5rem 0;">$28.000 c/u</p>
+                                </div>
+                            </label>
+                            
+                            <label style="cursor: pointer; border: 2px solid var(--violeta-medio); padding: 1rem; border-radius: 10px; text-align: center; transition: all 0.3s;">
+                                <input type="radio" name="reg-membership" value="tres-veces" onchange="updateRegistrationForm()" required>
+                                <div style="margin-top: 0.5rem;">
+                                    <strong style="color: var(--blanco);">3 Veces/Sem</strong>
+                                    <p style="color: var(--violeta-claro); margin: 0.5rem 0;">$15.000</p>
+                                </div>
+                            </label>
+                            
+                            <label style="cursor: pointer; border: 2px solid var(--violeta-medio); padding: 1rem; border-radius: 10px; text-align: center; transition: all 0.3s;">
+                                <input type="radio" name="reg-membership" value="semanal" onchange="updateRegistrationForm()" required>
+                                <div style="margin-top: 0.5rem;">
+                                    <strong style="color: var(--blanco);">Semanal</strong>
+                                    <p style="color: var(--violeta-claro); margin: 0.5rem 0;">$20.000</p>
+                                </div>
+                            </label>
+                            
+                            <label style="cursor: pointer; border: 2px solid var(--violeta-medio); padding: 1rem; border-radius: 10px; text-align: center; transition: all 0.3s;">
+                                <input type="radio" name="reg-membership" value="dia-clase" onchange="updateRegistrationForm()" required>
+                                <div style="margin-top: 0.5rem;">
+                                    <strong style="color: var(--blanco);">Día/Clase</strong>
+                                    <p style="color: var(--violeta-claro); margin: 0.5rem 0;">$5.000</p>
+                                </div>
+                            </label>
+                            
+                            <label style="cursor: pointer; border: 2px solid var(--violeta-medio); padding: 1rem; border-radius: 10px; text-align: center; transition: all 0.3s;">
+                                <input type="radio" name="reg-membership" value="jubilados" onchange="updateRegistrationForm()" required>
+                                <div style="margin-top: 0.5rem;">
+                                    <strong style="color: var(--blanco);">Jubilados</strong>
+                                    <p style="color: var(--violeta-claro); margin: 0.5rem 0;">$20.000</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Campos adicionales según membresía -->
+                        <div id="additional-fields"></div>
+
+                        <h3 style="color: var(--violeta-claro); margin: 2rem 0 1.5rem;">Forma de Pago</h3>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                            <label style="cursor: pointer; border: 2px solid var(--violeta-medio); padding: 1rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="radio" name="reg-payment" value="efectivo" checked required>
+                                <span style="color: var(--blanco);">Efectivo</span>
+                            </label>
+                            
+                            <label style="cursor: pointer; border: 2px solid var(--violeta-medio); padding: 1rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="radio" name="reg-payment" value="transferencia" required>
+                                <span style="color: var(--blanco);">Transferencia</span>
+                            </label>
+                            
+                            <label style="cursor: pointer; border: 2px solid var(--violeta-medio); padding: 1rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="radio" name="reg-payment" value="tarjeta" required>
+                                <span style="color: var(--blanco);">Tarjeta</span>
+                            </label>
+                            
+                            <label style="cursor: pointer; border: 2px solid var(--violeta-medio); padding: 1rem; border-radius: 10px; display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="radio" name="reg-payment" value="mercadopago" required>
+                                <span style="color: var(--blanco);">Mercado Pago (+5%)</span>
+                            </label>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                            <button type="button" class="btn btn-secondary" onclick="toggleUserRegistrationForm()">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check"></i> Registrar Usuario
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Registro de Asistencias de Hoy -->
+        <section id="asistencias-hoy" class="admin-section" style="padding: 4rem 0; background: var(--gris-oscuro);">
+            <div class="container">
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 style="color: var(--violeta-claro); font-size: 2rem;">📋 Asistencias de Hoy</h2>
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn btn-secondary" onclick="showAttendanceHistory()">
+                            <i class="fas fa-history"></i> Ver Historial
+                        </button>
+                        <button class="btn btn-primary" onclick="loadTodayAttendances()">
+                            <i class="fas fa-sync"></i> Actualizar
+                        </button>
+                    </div>
+                </div>
+
+                <div id="today-attendances-list" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
+                        <i class="fas fa-clipboard-list" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <p>Cargando asistencias del día...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modal de Historial de Asistencias -->
+        <div id="attendance-history-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-box" style="max-width: 1000px; max-height: 80vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h3>📅 Historial de Asistencias</h3>
+                    <span class="close" onclick="closeAttendanceHistoryModal()" style="cursor: pointer; font-size: 2rem;">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="color: var(--violeta-claro); margin-right: 1rem;">Últimos:</label>
+                        <select id="history-days" onchange="loadAttendanceHistory()" style="padding: 0.5rem; border-radius: 8px; background: var(--negro); color: var(--blanco); border: 2px solid var(--violeta-medio);">
+                            <option value="7">7 días</option>
+                            <option value="15">15 días</option>
+                            <option value="30" selected>30 días</option>
+                            <option value="60">60 días</option>
+                        </select>
+                    </div>
+                    
+                    <div id="attendance-history-content">
+                        <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
+                            Cargando historial...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- ==================== SCRIPT ACTUALIZADO PARA EMPLEADOS ==================== -->
@@ -493,6 +709,7 @@
         }
 
         // ==================== CARGAR ESTADÍSTICAS ====================
+
         async function loadDashboardStats() {
             try {
                 const response = await fetch('/api/employee/dashboard-stats', {
@@ -1104,6 +1321,528 @@
         }
 
         console.log('✅ Panel de empleados cargado correctamente');
+
+        // ============== REGISTRO DE NUEVOS USUARIOS ==============
+
+        function toggleUserRegistrationForm() {
+            const form = document.getElementById('user-registration-form');
+            if (form.style.display === 'none') {
+                form.style.display = 'block';
+                document.getElementById('new-user-form').reset();
+                document.getElementById('additional-fields').innerHTML = '';
+            } else {
+                form.style.display = 'none';
+            }
+        }
+
+        function updateRegistrationForm() {
+            const membershipType = document.querySelector('input[name="reg-membership"]:checked')?.value;
+            const additionalFields = document.getElementById('additional-fields');
+            
+            if (!membershipType) {
+                additionalFields.innerHTML = '';
+                return;
+            }
+            
+            // Marcar visualmente la membresía seleccionada
+            document.querySelectorAll('input[name="reg-membership"]').forEach(radio => {
+                const label = radio.closest('label');
+                if (radio.checked) {
+                    label.style.borderColor = 'var(--violeta-claro)';
+                    label.style.background = 'rgba(127, 76, 165, 0.2)';
+                } else {
+                    label.style.borderColor = 'var(--violeta-medio)';
+                    label.style.background = 'transparent';
+                }
+            });
+            
+            let html = '';
+            
+            if (membershipType === 'tres-veces') {
+                html = `
+                    <div style="background: var(--negro); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
+                        <h4 style="color: var(--violeta-claro); margin-bottom: 1rem;">Selecciona 3 días de entrenamiento</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--blanco);">
+                                <input type="checkbox" name="reg-training-days" value="lunes" onchange="validateTrainingDays()">
+                                <span>Lunes</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--blanco);">
+                                <input type="checkbox" name="reg-training-days" value="martes" onchange="validateTrainingDays()">
+                                <span>Martes</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--blanco);">
+                                <input type="checkbox" name="reg-training-days" value="miercoles" onchange="validateTrainingDays()">
+                                <span>Miércoles</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--blanco);">
+                                <input type="checkbox" name="reg-training-days" value="jueves" onchange="validateTrainingDays()">
+                                <span>Jueves</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--blanco);">
+                                <input type="checkbox" name="reg-training-days" value="viernes" onchange="validateTrainingDays()">
+                                <span>Viernes</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--blanco);">
+                                <input type="checkbox" name="reg-training-days" value="sabado" onchange="validateTrainingDays()">
+                                <span>Sábado</span>
+                            </label>
+                        </div>
+                        <p id="reg-days-count" style="color: var(--violeta-claro); margin-top: 1rem;">Días seleccionados: 0/3</p>
+                    </div>
+                `;
+            } else if (membershipType === 'jubilados') {
+                html = `
+                    <div style="background: var(--negro); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
+                        <h4 style="color: var(--violeta-claro); margin-bottom: 1rem;">Datos de Verificación (Jubilados)</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <div class="form-group">
+                                <label>DNI *</label>
+                                <input type="text" id="reg-dni" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Edad *</label>
+                                <input type="number" id="reg-age" min="60" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Género *</label>
+                                <select id="reg-gender" required>
+                                    <option value="">Seleccionar</option>
+                                    <option value="femenino">Femenino (60+ años)</option>
+                                    <option value="masculino">Masculino (65+ años)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; padding: 1rem; margin-top: 1rem;">
+                            <p style="color: var(--gris-claro); margin: 0;">
+                                <i class="fas fa-info-circle"></i> Verificar DNI y edad en persona.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            } else if (membershipType === 'dos-personas') {
+                html = `
+                    <div style="background: var(--negro); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
+                        <h4 style="color: var(--violeta-claro); margin-bottom: 1rem;">Datos de la Segunda Persona</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <div class="form-group">
+                                <label>Nombre Completo *</label>
+                                <input type="text" id="reg-second-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email *</label>
+                                <input type="email" id="reg-second-email" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Teléfono *</label>
+                                <input type="tel" id="reg-second-phone" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Domicilio</label>
+                                <input type="text" id="reg-second-address">
+                            </div>
+                            <div class="form-group">
+                                <label>Edad</label>
+                                <input type="number" id="reg-second-age" min="18" value="18">
+                            </div>
+                        </div>
+                        <div style="background: rgba(34, 197, 94, 0.1); border-left: 4px solid #22c55e; padding: 1rem; margin-top: 1rem;">
+                            <p style="color: var(--gris-claro); margin: 0;">
+                                <i class="fas fa-info-circle"></i> Se generará un código para que la segunda persona active su cuenta.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            additionalFields.innerHTML = html;
+        }
+
+        function validateTrainingDays() {
+            const checked = document.querySelectorAll('input[name="reg-training-days"]:checked');
+            const counter = document.getElementById('reg-days-count');
+            
+            if (counter) {
+                counter.textContent = `Días seleccionados: ${checked.length}/3`;
+                
+                if (checked.length > 3) {
+                    counter.style.color = '#ef4444';
+                } else if (checked.length === 3) {
+                    counter.style.color = '#22c55e';
+                } else {
+                    counter.style.color = 'var(--violeta-claro)';
+                }
+            }
+            
+            // Deshabilitar checkboxes si ya hay 3 seleccionados
+            const allCheckboxes = document.querySelectorAll('input[name="reg-training-days"]');
+            allCheckboxes.forEach(cb => {
+                if (!cb.checked && checked.length >= 3) {
+                    cb.disabled = true;
+                } else {
+                    cb.disabled = false;
+                }
+            });
+        }
+
+        // Procesar formulario de registro
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('new-user-form');
+            if (form) {
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const membershipType = document.querySelector('input[name="reg-membership"]:checked')?.value;
+                    const paymentMethod = document.querySelector('input[name="reg-payment"]:checked')?.value;
+                    
+                    if (!membershipType || !paymentMethod) {
+                        showToast('warning', 'Por favor completa todos los campos requeridos');
+                        return;
+                    }
+                    
+                    // Preparar datos
+                    const registrationData = {
+                        fullName: document.getElementById('reg-fullName').value.trim(),
+                        email: document.getElementById('reg-email').value.trim(),
+                        phone: document.getElementById('reg-phone').value.trim(),
+                        address: document.getElementById('reg-address')?.value.trim() || '',
+                        membershipPlan: membershipType,
+                        paymentMethod: paymentMethod
+                    };
+                    
+                    // Validaciones específicas por tipo
+                    if (membershipType === 'tres-veces') {
+                        const checkedDays = document.querySelectorAll('input[name="reg-training-days"]:checked');
+                        if (checkedDays.length !== 3) {
+                            showToast('warning', 'Debes seleccionar exactamente 3 días de entrenamiento');
+                            return;
+                        }
+                        registrationData.trainingDays = Array.from(checkedDays).map(cb => cb.value);
+                    }
+                    
+                    if (membershipType === 'jubilados') {
+                        const dni = document.getElementById('reg-dni')?.value.trim();
+                        const age = parseInt(document.getElementById('reg-age')?.value);
+                        const gender = document.getElementById('reg-gender')?.value;
+                        
+                        if (!dni || !age || !gender) {
+                            showToast('warning', 'Completa los datos de verificación para jubilados');
+                            return;
+                        }
+                        
+                        if (gender === 'femenino' && age < 60) {
+                            showToast('error', 'Las mujeres deben tener 60 años o más');
+                            return;
+                        }
+                        
+                        if (gender === 'masculino' && age < 65) {
+                            showToast('error', 'Los hombres deben tener 65 años o más');
+                            return;
+                        }
+                        
+                        registrationData.dni = dni;
+                        registrationData.age = age;
+                        registrationData.gender = gender;
+                    }
+                    
+                    if (membershipType === 'dos-personas') {
+                        const secondName = document.getElementById('reg-second-name')?.value.trim();
+                        const secondEmail = document.getElementById('reg-second-email')?.value.trim();
+                        const secondPhone = document.getElementById('reg-second-phone')?.value.trim();
+                        
+                        if (!secondName || !secondEmail || !secondPhone) {
+                            showToast('warning', 'Completa los datos de la segunda persona');
+                            return;
+                        }
+                        
+                        registrationData.secondPerson = {
+                            fullName: secondName,
+                            email: secondEmail,
+                            phone: secondPhone,
+                            address: document.getElementById('reg-second-address')?.value.trim() || registrationData.address,
+                            age: parseInt(document.getElementById('reg-second-age')?.value) || 18
+                        };
+                    }
+                    
+                    // Validar email
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(registrationData.email)) {
+                        showToast('error', 'Email inválido');
+                        return;
+                    }
+                    
+                    // Confirmar registro
+                    const confirmed = await confirmAsync(
+                        'Confirmar Registro',
+                        `¿Confirmar registro de ${registrationData.fullName}?\n\nMembresía: ${membershipType}\nPago: ${paymentMethod}`
+                    );
+                    
+                    if (!confirmed) return;
+                    
+                    // Enviar datos
+                    try {
+                        const response = await fetch('/api/employee/register-user', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'same-origin',
+                            body: JSON.stringify(registrationData)
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            let message = `Usuario registrado exitosamente:\n\nEmail: ${result.user.email}\nContraseña temporal: ${result.user.tempPassword}`;
+                            
+                            if (result.membership.membershipCode) {
+                                message += `\n\nCódigo para segunda persona:\n${result.membership.membershipCode}`;
+                            }
+                            
+                            await alertAsync(
+                                '✅ Registro Exitoso',
+                                message,
+                                'success'
+                            );
+                            
+                            toggleUserRegistrationForm();
+                            loadDashboardStats();
+                        } else {
+                            await alertAsync('Error', result.message || 'No se pudo registrar el usuario', 'error');
+                        }
+                        
+                    } catch (error) {
+                        console.error('Error:', error);
+                        await alertAsync('Error de Conexión', 'No se pudo conectar con el servidor', 'error');
+                    }
+                });
+            }
+        });
+
+        // ============== ASISTENCIAS ==============
+
+        async function loadTodayAttendances() {
+            try {
+                const response = await fetch('/api/employee/today-attendances', {
+                    credentials: 'same-origin'
+                });
+                const data = await response.json();
+                
+                const container = document.getElementById('today-attendances-list');
+                if (!container) return;
+                
+                if (data.success && data.attendances.length > 0) {
+                    // Actualizar contador en stats
+                    const todayAttendanceEl = document.getElementById('today-attendance');
+                    if (todayAttendanceEl) {
+                        todayAttendanceEl.textContent = data.attendances.length;
+                    }
+                    
+                    container.innerHTML = data.attendances.map(att => {
+                        const checkInTime = new Date(att.checkInTime);
+                        const timeStr = checkInTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                        
+                        return `
+                            <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border-left: 4px solid #22c55e; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h4 style="color: var(--blanco); font-size: 1.1rem; margin-bottom: 0.5rem;">
+                                        <i class="fas fa-user-check" style="color: #22c55e;"></i>
+                                        ${att.user.fullName}
+                                    </h4>
+                                    <p style="color: var(--gris-claro); margin: 0.2rem 0;">
+                                        <i class="fas fa-envelope"></i> ${att.user.email}
+                                    </p>
+                                    <p style="color: var(--gris-claro); margin: 0.2rem 0;">
+                                        <i class="fas fa-phone"></i> ${att.user.phone}
+                                    </p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="background: #22c55e; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-weight: bold; margin-bottom: 0.5rem;">
+                                        <i class="fas fa-clock"></i> ${timeStr}
+                                    </div>
+                                    <p style="color: var(--gris-claro); font-size: 0.9rem; margin: 0;">
+                                        Por: ${att.registeredBy}
+                                    </p>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
+                            <i class="fas fa-clipboard-check" style="font-size: 4rem; color: var(--gris-claro); margin-bottom: 1rem;"></i>
+                            <p style="color: var(--gris-claro); font-size: 1.2rem;">No hay asistencias registradas hoy</p>
+                        </div>
+                    `;
+                    
+                    const todayAttendanceEl = document.getElementById('today-attendance');
+                    if (todayAttendanceEl) {
+                        todayAttendanceEl.textContent = '0';
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function showAttendanceHistory() {
+            document.getElementById('attendance-history-modal').style.display = 'flex';
+            loadAttendanceHistory();
+        }
+
+        function closeAttendanceHistoryModal() {
+            document.getElementById('attendance-history-modal').style.display = 'none';
+        }
+
+        async function loadAttendanceHistory() {
+            const days = document.getElementById('history-days')?.value || 30;
+            const content = document.getElementById('attendance-history-content');
+            
+            if (!content) return;
+            
+            content.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--gris-claro);">Cargando historial...</div>';
+            
+            try {
+                const response = await fetch(`/api/employee/attendances-history?days=${days}`, {
+                    credentials: 'same-origin'
+                });
+                const data = await response.json();
+                
+                if (data.success && data.attendances.length > 0) {
+                    // Agrupar por fecha
+                    const grouped = {};
+                    data.attendances.forEach(att => {
+                        const dateStr = new Date(att.date).toLocaleDateString('es-ES', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                        
+                        if (!grouped[dateStr]) {
+                            grouped[dateStr] = [];
+                        }
+                        grouped[dateStr].push(att);
+                    });
+                    
+                    content.innerHTML = Object.keys(grouped).map(dateStr => `
+                        <div style="margin-bottom: 2rem;">
+                            <h4 style="color: var(--violeta-claro); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--violeta-medio);">
+                                📅 ${dateStr} (${grouped[dateStr].length} asistencias)
+                            </h4>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                ${grouped[dateStr].map(att => {
+                                    const checkInTime = new Date(att.checkInTime);
+                                    const timeStr = checkInTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                                    
+                                    return `
+                                        <div style="background: var(--negro); padding: 1rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                            <div>
+                                                <strong style="color: var(--blanco);">${att.user.fullName}</strong>
+                                                <span style="color: var(--gris-claro); margin-left: 1rem; font-size: 0.9rem;">${att.user.email}</span>
+                                            </div>
+                                            <div style="text-align: right;">
+                                                <div style="color: #22c55e; font-weight: bold;">${timeStr}</div>
+                                                <div style="color: var(--gris-claro); font-size: 0.85rem;">Por: ${att.registeredBy}</div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    content.innerHTML = `
+                        <div style="text-align: center; padding: 3rem;">
+                            <i class="fas fa-calendar-times" style="font-size: 4rem; color: var(--gris-claro); margin-bottom: 1rem;"></i>
+                            <p style="color: var(--gris-claro); font-size: 1.2rem;">No hay asistencias en los últimos ${days} días</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 3rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: #ef4444; margin-bottom: 1rem;"></i>
+                        <p style="color: var(--gris-claro);">Error al cargar historial</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ============== ACTUALIZAR registerAttendance PARA REGISTRAR EN BD ==============
+
+        async function registerAttendance(userId, userName) {
+            // Verificar membresía primero
+            try {
+                const verifyResponse = await fetch('/api/employee/verify-membership', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ userId })
+                });
+                
+                const verification = await verifyResponse.json();
+                
+                if (!verification.success || !verification.hasMembership) {
+                    showToast('error', `No se puede registrar: ${verification.message}`);
+                    return;
+                }
+                
+                // Proceder con registro de asistencia
+                const response = await fetch('/api/employee/register-attendance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ userId })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('success', `✅ Asistencia de ${userName} registrada`);
+                    
+                    // Actualizar contadores
+                    const current = parseInt(document.getElementById('today-attendance')?.textContent || '0');
+                    const todayAttendanceEl = document.getElementById('today-attendance');
+                    if (todayAttendanceEl) {
+                        todayAttendanceEl.textContent = current + 1;
+                    }
+                    
+                    // Recargar lista de asistencias
+                    loadTodayAttendances();
+                    
+                    // Limpiar búsqueda
+                    document.getElementById('member-search').value = '';
+                    document.getElementById('members-list').innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
+                            <i class="fas fa-check-circle" style="font-size: 3rem; color: #22c55e; margin-bottom: 1rem;"></i>
+                            <p>Asistencia registrada exitosamente</p>
+                        </div>
+                    `;
+                } else {
+                    showToast('error', result.message || 'Error al registrar asistencia');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('error', 'Error de conexión al registrar asistencia');
+            }
+        }
+
+        // ============== CARGAR ASISTENCIAS AL INICIAR ==============
+
+        // Agregar en el DOMContentLoaded existente:
+        document.addEventListener('DOMContentLoaded', function() {
+            // ... código existente ...
+            
+            // Cargar asistencias de hoy
+            loadTodayAttendances();
+            
+            // Actualizar cada 30 segundos
+            setInterval(loadTodayAttendances, 30000);
+        });
+
+        console.log('✅ Sistema de registro de usuarios y asistencias cargado');
     </script>
 </body>
 </html>

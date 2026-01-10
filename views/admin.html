@@ -199,6 +199,54 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Registro de Asistencias -->
+            <section id="asistencias" class="admin-section">
+                <div class="container">
+                    <div class="section-header">
+                        <h2>📋 Registro de Asistencias</h2>
+                        <div class="section-actions">
+                            <button class="btn btn-primary" onclick="loadAdminAttendances()">
+                                <i class="fas fa-sync"></i> Actualizar
+                            </button>
+                            <button class="btn btn-secondary" onclick="exportAttendances()">
+                                <i class="fas fa-download"></i> Exportar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="search-container">
+                        <input type="text" id="attendance-search" class="search-input" 
+                            placeholder="Buscar por usuario..." onkeyup="searchAttendances()">
+                        <select id="attendance-days" class="search-input" onchange="loadAdminAttendances()" 
+                                style="max-width: 200px;">
+                            <option value="7">Últimos 7 días</option>
+                            <option value="15">Últimos 15 días</option>
+                            <option value="30" selected>Últimos 30 días</option>
+                            <option value="60">Últimos 60 días</option>
+                        </select>
+                    </div>
+
+                    <div class="users-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Email</th>
+                                    <th>Fecha</th>
+                                    <th>Hora</th>
+                                    <th>Registrado Por</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendances-table-body">
+                                <tr>
+                                    <td colspan="5" class="loading">Cargando asistencias...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
              <!-- ________________ Update para el administrador; apartado modificado de la tienda_______________________________________-->
             <!--------------------------------------------------------------------------------------------------------------------------->
             <!--------------------------------------------------------------------------------------------------------------------------->
@@ -2099,6 +2147,7 @@
                     }
                 }
             }
+
         </script>
     </body>
 </html>

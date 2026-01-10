@@ -165,7 +165,8 @@ const Order = mongoose.model('Order', orderSchema);
 
 // ==================== AGREGAR ESTOS SCHEMAS DESPUÉS DEL SCHEMA DE ORDER EN server.js ====================
 
-// Schema de Membresía
+// Busca el membershipSchema existente y REEMPLÁZALO con este:
+
 const membershipSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -173,9 +174,9 @@ const membershipSchema = new mongoose.Schema({
         required: true
     },
     planType: {
-    type: String,
-    enum: ['mes-libre', 'dos-personas', 'tres-veces', 'semanal', 'dia-clase', 'jubilados'],
-    required: true
+        type: String,
+        enum: ['mes-libre', 'dos-personas', 'tres-veces', 'semanal', 'dia-clase', 'jubilados'],
+        required: true
     },
     price: {
         type: Number,
@@ -207,7 +208,8 @@ const membershipSchema = new mongoose.Schema({
     verificationData: {
         dni: String,
         age: Number,
-        gender: String
+        gender: String,
+        verified: { type: Boolean, default: false }
     },
     // Para membresía de 2 personas
     sharedMembership: {
@@ -215,7 +217,15 @@ const membershipSchema = new mongoose.Schema({
         membershipCode: String,
         mainUserId: mongoose.Schema.Types.ObjectId,
         secondUserId: mongoose.Schema.Types.ObjectId,
-        secondUserActivated: { type: Boolean, default: false }
+        secondUserActivated: { type: Boolean, default: false },
+        // ⭐ NUEVO: Nombres para referencia
+        mainUserName: String,
+        secondUserName: String
+    },
+    // ⭐ NUEVO: Última asistencia
+    lastAttendance: {
+        type: Date,
+        default: null
     },
     createdAt: {
         type: Date,
@@ -226,9 +236,49 @@ const membershipSchema = new mongoose.Schema({
         default: false
     }
 });
+
 membershipSchema.index({ userId: 1, status: 1 });
 membershipSchema.index({ endDate: 1, status: 1 });
+membershipSchema.index({ lastAttendance: 1 }); // ⭐ NUEVO índice
+
 const Membership = mongoose.model('Membership', membershipSchema);
+
+// ==================== AGREGAR EN server.js DESPUÉS DE membershipSchema ====================
+
+const attendanceSchema = new mongoose.Schema({
+    userId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'User', 
+        required: true 
+    },
+    membershipId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Membership'
+    },
+    date: { 
+        type: Date, 
+        required: true,
+        default: Date.now
+    },
+    checkInTime: {
+        type: Date,
+        default: Date.now
+    },
+    registeredBy: {
+        type: String, // Nombre del empleado que registró
+        required: true
+    },
+    registeredByUserId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    notes: String
+});
+
+attendanceSchema.index({ userId: 1, date: 1 });
+attendanceSchema.index({ date: 1 });
+
+const Attendance = mongoose.model('Attendance', attendanceSchema);
 
 // Schema para Datos Pendientes de Usuario (para membresía de 2 personas)
 const pendingUserSchema = new mongoose.Schema({
@@ -2959,17 +3009,7 @@ async function checkExpiringMemberships() {
         console.error('Error verificando membresías:', error);
     }
 }
-// historial  de assistencias
-const attendanceSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    reservationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Reservation' },
-    classId: { type: mongoose.Schema.Types.ObjectId, ref: 'Class', required: true },
-    date: { type: Date, required: true },
-    attended: { type: Boolean, default: false },
-    checkedInAt: Date
-});
 
-const Attendance = mongoose.model('Attendance', attendanceSchema);
 
 // Función para marcar membresías expiradas
 async function updateExpiredMemberships() {
@@ -3116,22 +3156,370 @@ app.get('/api/employee/search-members', verificarEmpleado, async (req, res) => {
 app.post('/api/employee/register-attendance', verificarEmpleado, async (req, res) => {
     try {
         const { userId } = req.body;
-
+        
         if (!userId) {
-            return res.status(400).json({ success: false, message: 'Usuario requerido' });
+            return res.json({
+                success: false,
+                message: 'Usuario requerido'
+            });
         }
-
-        // Aquí puedes guardar en una colección Attendance si la creas
-        console.log(`✅ Asistencia registrada para usuario: ${userId}`);
-
-        res.json({ 
-            success: true, 
-            message: 'Asistencia registrada correctamente',
-            timestamp: new Date()
+        
+        // Verificar que el usuario existe
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
+        }
+        
+        // Verificar membresía activa
+        const membership = await Membership.findOne({
+            userId: userId,
+            status: 'active'
+        }).sort({ createdAt: -1 });
+        
+        if (!membership) {
+            return res.json({
+                success: false,
+                message: 'El usuario no tiene una membresía activa'
+            });
+        }
+        
+        // Verificar si ya registró asistencia hoy
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        const existingAttendance = await Attendance.findOne({
+            userId: userId,
+            date: { $gte: today, $lt: tomorrow }
         });
+        
+        if (existingAttendance) {
+            return res.json({
+                success: false,
+                message: 'El usuario ya registró asistencia hoy'
+            });
+        }
+        
+        // Registrar asistencia
+        const attendance = new Attendance({
+            userId: userId,
+            membershipId: membership._id,
+            date: new Date(),
+            registeredBy: req.session.fullName || 'Empleado',
+            registeredByUserId: req.session.userId
+        });
+        
+        await attendance.save();
+        
+        // Actualizar última asistencia en membresía
+        membership.lastAttendance = new Date();
+        await membership.save();
+        
+        console.log(`✅ Asistencia registrada: ${user.fullName}`);
+        
+        res.json({
+            success: true,
+            message: 'Asistencia registrada correctamente',
+            attendance: attendance
+        });
+        
     } catch (error) {
-        console.error('Error registrando asistencia:', error);
-        res.status(500).json({ success: false, message: 'Error al registrar asistencia' });
+        console.error('❌ Error registrando asistencia:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al registrar asistencia'
+        });
+    }
+});
+
+// Obtener asistencias de hoy
+app.get('/api/employee/today-attendances', verificarEmpleado, async (req, res) => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        const attendances = await Attendance.find({
+            date: { $gte: today, $lt: tomorrow }
+        })
+        .populate('userId', 'fullName email phone')
+        .sort({ checkInTime: -1 });
+        
+        res.json({
+            success: true,
+            attendances: attendances.map(att => ({
+                _id: att._id,
+                user: {
+                    fullName: att.userId?.fullName || 'Usuario',
+                    email: att.userId?.email || 'N/A',
+                    phone: att.userId?.phone || 'N/A'
+                },
+                checkInTime: att.checkInTime,
+                registeredBy: att.registeredBy
+            }))
+        });
+        
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al cargar asistencias'
+        });
+    }
+});
+
+// Obtener historial de asistencias
+app.get('/api/employee/attendances-history', verificarEmpleado, async (req, res) => {
+    try {
+        const { days = 30 } = req.query;
+        
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - parseInt(days));
+        startDate.setHours(0, 0, 0, 0);
+        
+        const attendances = await Attendance.find({
+            date: { $gte: startDate }
+        })
+        .populate('userId', 'fullName email phone')
+        .sort({ date: -1, checkInTime: -1 });
+        
+        res.json({
+            success: true,
+            attendances: attendances.map(att => ({
+                _id: att._id,
+                user: {
+                    fullName: att.userId?.fullName || 'Usuario',
+                    email: att.userId?.email || 'N/A',
+                    phone: att.userId?.phone || 'N/A'
+                },
+                date: att.date,
+                checkInTime: att.checkInTime,
+                registeredBy: att.registeredBy
+            }))
+        });
+        
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al cargar historial'
+        });
+    }
+});
+
+// ============== TAREA AUTOMATIZADA: ELIMINAR USUARIOS INACTIVOS ==============
+
+async function cleanInactiveUsers() {
+    try {
+        console.log('🧹 Verificando usuarios inactivos...');
+        
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        // Buscar membresías activas sin asistencia en 30 días
+        const inactiveMemberships = await Membership.find({
+            status: 'active',
+            $or: [
+                { lastAttendance: { $lt: thirtyDaysAgo } },
+                { lastAttendance: null, createdAt: { $lt: thirtyDaysAgo } }
+            ]
+        }).populate('userId', 'fullName email');
+        
+        console.log(`⚠️ ${inactiveMemberships.length} membresías inactivas encontradas`);
+        
+        for (const membership of inactiveMemberships) {
+            // Marcar membresía como cancelada
+            membership.status = 'cancelled';
+            await membership.save();
+            
+            // Crear notificación
+            await Notification.create({
+                userId: membership.userId._id,
+                type: 'general',
+                title: 'Membresía Cancelada por Inactividad',
+                message: 'Tu membresía ha sido cancelada debido a 30 días sin asistencia. Contacta con recepción para más información.'
+            });
+            
+            console.log(`🚫 Membresía cancelada: ${membership.userId.fullName}`);
+        }
+        
+        return inactiveMemberships.length;
+        
+    } catch (error) {
+        console.error('❌ Error limpiando usuarios inactivos:', error);
+    }
+}
+
+// Ejecutar limpieza diaria (agregar junto con las otras tareas automáticas)
+setInterval(async () => {
+    console.log('\n🔍 Ejecutando limpieza de usuarios inactivos...');
+    const cleaned = await cleanInactiveUsers();
+    if (cleaned > 0) {
+        console.log(`✅ ${cleaned} membresías inactivas procesadas`);
+    }
+}, 24 * 60 * 60 * 1000); // Cada 24 horas
+
+// Ejecutar al iniciar el servidor
+setTimeout(async () => {
+    console.log('\n🔍 Limpieza inicial de usuarios inactivos...');
+    await cleanInactiveUsers();
+}, 10000); // 10 segundos después de iniciar
+
+// Registro de usuario por empleado
+app.post('/api/employee/register-user', verificarEmpleado, async (req, res) => {
+    try {
+        const { 
+            fullName, 
+            email, 
+            phone, 
+            address,
+            membershipPlan, 
+            paymentMethod,
+            trainingDays,
+            // Para jubilados
+            dni,
+            age,
+            gender,
+            // Para 2 personas
+            secondPerson
+        } = req.body;
+        
+        // Validar datos básicos
+        if (!fullName || !email || !phone || !membershipPlan || !paymentMethod) {
+            return res.json({
+                success: false,
+                message: 'Datos incompletos'
+            });
+        }
+        
+        // Verificar que el email no exista
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
+        if (existingUser) {
+            return res.json({
+                success: false,
+                message: 'Ya existe un usuario con este email'
+            });
+        }
+        
+        // Generar contraseña temporal
+        const tempPassword = Math.random().toString(36).slice(-8);
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+        
+        // Crear usuario
+        const newUser = new User({
+            fullName,
+            email: email.toLowerCase(),
+            phone,
+            password: hashedPassword,
+            role: 'user',
+            status: 'active'
+        });
+        
+        await newUser.save();
+        
+        // Calcular precio
+        const prices = {
+            'mes-libre': 32000,
+            'dos-personas': 28000,
+            'tres-veces': 15000,
+            'semanal': 20000,
+            'dia-clase': 5000,
+            'jubilados': 20000
+        };
+        
+        let price = prices[membershipPlan];
+        if (paymentMethod === 'mercadopago') {
+            price = Math.round(price * 1.05);
+        }
+        
+        // Calcular fecha de vencimiento
+        const endDate = new Date();
+        if (membershipPlan === 'dia-clase') {
+            endDate.setDate(endDate.getDate() + 1);
+        } else if (membershipPlan === 'semanal') {
+            endDate.setDate(endDate.getDate() + 7);
+        } else {
+            endDate.setMonth(endDate.getMonth() + 1);
+        }
+        
+        // Crear membresía
+        const membershipData = {
+            userId: newUser._id,
+            planType: membershipPlan,
+            price: price,
+            endDate: endDate,
+            status: 'active',
+            paymentMethod: paymentMethod
+        };
+        
+        // Agregar datos específicos según tipo
+        if (membershipPlan === 'tres-veces' && trainingDays) {
+            membershipData.trainingDays = trainingDays;
+        }
+        
+        if (membershipPlan === 'jubilados') {
+            membershipData.verificationData = {
+                dni: dni,
+                age: age,
+                gender: gender,
+                verified: true // Empleado verifica en persona
+            };
+        }
+        
+        if (membershipPlan === 'dos-personas' && secondPerson) {
+            const membershipCode = generateMembershipCode();
+            membershipData.sharedMembership = {
+                isShared: true,
+                membershipCode: membershipCode,
+                mainUserId: newUser._id,
+                mainUserName: fullName,
+                secondUserName: secondPerson.fullName,
+                secondUserActivated: false
+            };
+            
+            // Guardar datos de segunda persona como pendiente
+            await PendingUser.create({
+                fullName: secondPerson.fullName,
+                age: secondPerson.age || 18,
+                email: secondPerson.email,
+                phone: secondPerson.phone,
+                address: secondPerson.address || address,
+                membershipCode: membershipCode,
+                mainUserId: newUser._id
+            });
+        }
+        
+        const membership = new Membership(membershipData);
+        await membership.save();
+        
+        console.log(`✅ Usuario registrado por empleado: ${fullName}`);
+        
+        res.json({
+            success: true,
+            message: 'Usuario registrado exitosamente',
+            user: {
+                fullName: newUser.fullName,
+                email: newUser.email,
+                tempPassword: tempPassword
+            },
+            membership: {
+                planType: membership.planType,
+                endDate: membership.endDate,
+                membershipCode: membershipData.sharedMembership?.membershipCode
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al registrar usuario'
+        });
     }
 });
 
