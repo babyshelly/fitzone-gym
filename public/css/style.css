@@ -6078,3 +6078,294 @@ input[type="file"]::file-selector-button:hover {
     transform: translateY(-2px);
     transition: all 0.3s ease;
 }
+
+/* ========== ESTILOS MEJORADOS PARA SECCIÓN DE ESTADÍSTICAS ========== */
+
+/* Cards de Estadísticas Principales */
+.overview-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.overview-card {
+    background: linear-gradient(135deg, #2d2d2d 0%, #252525 100%);
+    border-radius: 16px;
+    padding: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border: 2px solid var(--violeta-medio);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.overview-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, transparent 0%, rgba(127, 76, 165, 0.08) 100%);
+    pointer-events: none;
+}
+
+.overview-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(127, 76, 165, 0.3);
+    border-color: var(--violeta-claro);
+}
+
+.overview-card i {
+    font-size: 3rem;
+    color: var(--violeta-claro);
+    min-width: 60px;
+    text-align: center;
+}
+
+.overview-card .card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.overview-card .card-content h3 {
+    font-size: 2.2rem;
+    color: var(--blanco);
+    margin: 0;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.overview-card .card-content p {
+    color: var(--gris-claro);
+    font-size: 0.9rem;
+    margin: 0;
+    font-weight: 500;
+}
+
+.overview-card .card-content small {
+    color: var(--violeta-claro);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+/* Stat Cards (Clases y Productos) */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 2rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #2d2d2d 0%, #252525 100%);
+    border-radius: 16px;
+    padding: 2rem;
+    border: 2px solid var(--violeta-medio);
+}
+
+.stat-card h3 {
+    color: var(--violeta-claro);
+    margin-bottom: 1.8rem;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.stat-card h3 i {
+    font-size: 1.4rem;
+}
+
+/* Top Clases - Diseño Mejorado */
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.activity-item {
+    background: rgba(127, 76, 165, 0.1);
+    border-radius: 12px;
+    padding: 1.2rem 1.5rem;
+    border-left: 4px solid var(--violeta-claro);
+    transition: all 0.3s ease;
+}
+
+.activity-item:hover {
+    background: rgba(127, 76, 165, 0.2);
+    transform: translateX(5px);
+}
+
+/* Header del item: icono + nombre + contador */
+.activity-item .activity-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.8rem;
+}
+
+.activity-item .day {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--blanco);
+}
+
+.activity-item .day i {
+    color: var(--violeta-claro);
+    font-size: 1.3rem;
+}
+
+.activity-item .percentage {
+    background: var(--violeta-medio);
+    color: var(--blanco);
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+/* Barra de progreso mejorada */
+.activity-bar {
+    width: 100%;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.activity-bar .bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--violeta-claro), var(--violeta-medio));
+    border-radius: 10px;
+    transition: width 0.8s ease;
+    position: relative;
+}
+
+.activity-bar .bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Top Productos - Diseño Mejorado */
+.products-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.product-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(127, 76, 165, 0.1);
+    padding: 1.2rem 1.5rem;
+    border-radius: 12px;
+    border-left: 4px solid var(--violeta-claro);
+    transition: all 0.3s ease;
+    gap: 1rem;
+}
+
+.product-item:hover {
+    background: rgba(127, 76, 165, 0.2);
+    transform: translateX(5px);
+}
+
+.product-item .product-name {
+    color: var(--blanco);
+    font-weight: 600;
+    font-size: 1.05rem;
+    flex: 1;
+}
+
+.product-item .product-price {
+    color: var(--violeta-claro);
+    font-weight: 700;
+    font-size: 1.15rem;
+    white-space: nowrap;
+}
+
+/* Business Alerts (las alertas de negocio) */
+#business-alerts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+#business-alerts > div {
+    padding: 1.5rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+#business-alerts h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+#business-alerts p {
+    margin: 0;
+    opacity: 0.9;
+}
+
+#business-alerts i {
+    font-size: 2rem;
+}
+
+/* Loading states */
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: var(--gris-claro);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .overview-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        padding: 1.5rem;
+    }
+
+    .overview-card {
+        padding: 1.5rem;
+    }
+
+    .overview-card i {
+        font-size: 2.5rem;
+        min-width: 50px;
+    }
+
+    .overview-card .card-content h3 {
+        font-size: 1.8rem;
+    }
+}
