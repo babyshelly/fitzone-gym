@@ -1196,6 +1196,247 @@
                 });
             }
         }
+
+        // ==================== AGREGAR ESTAS FUNCIONES AL FINAL DEL SCRIPT ====================
+
+        function toggleUserRegistrationForm() {
+            const form = document.getElementById('user-registration-form');
+            if (form.style.display === 'none' || !form.style.display) {
+                form.style.display = 'block';
+            } else {
+                form.style.display = 'none';
+            }
+        }
+
+        function updateRegistrationForm() {
+            const selectedPlan = document.querySelector('input[name="reg-membership"]:checked')?.value;
+            const additionalFields = document.getElementById('additional-fields');
+            
+            if (!selectedPlan || !additionalFields) return;
+            
+            additionalFields.innerHTML = '';
+            
+            // Si es 3 veces por semana, mostrar selector de días
+            if (selectedPlan === 'tres-veces') {
+                additionalFields.innerHTML = `
+                    <h4 style="color: var(--violeta-claro); margin: 1rem 0;">Días de Entrenamiento</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" name="reg-days" value="lunes" onchange="validateRegDays()">
+                            <span>Lunes</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" name="reg-days" value="martes" onchange="validateRegDays()">
+                            <span>Martes</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" name="reg-days" value="miercoles" onchange="validateRegDays()">
+                            <span>Miércoles</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" name="reg-days" value="jueves" onchange="validateRegDays()">
+                            <span>Jueves</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" name="reg-days" value="viernes" onchange="validateRegDays()">
+                            <span>Viernes</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" name="reg-days" value="sabado" onchange="validateRegDays()">
+                            <span>Sábado</span>
+                        </label>
+                    </div>
+                    <p style="color: var(--gris-claro); margin-top: 0.5rem;">
+                        Días seleccionados: <span id="reg-days-count">0</span>/3
+                    </p>
+                `;
+            }
+            
+            // Si es jubilados, agregar campos de verificación
+            if (selectedPlan === 'jubilados') {
+                additionalFields.innerHTML = `
+                    <h4 style="color: var(--violeta-claro); margin: 1rem 0;">Datos de Verificación</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div class="form-group">
+                            <label>DNI *</label>
+                            <input type="text" id="reg-dni" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Edad *</label>
+                            <input type="number" id="reg-age" min="60" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Género *</label>
+                            <select id="reg-gender" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="femenino">Femenino (60+)</option>
+                                <option value="masculino">Masculino (65+)</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Si es 2 personas, mostrar campos de segunda persona
+            if (selectedPlan === 'dos-personas') {
+                additionalFields.innerHTML = `
+                    <h4 style="color: var(--violeta-claro); margin: 1rem 0;">Datos de la Segunda Persona</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div class="form-group">
+                            <label>Nombre Completo *</label>
+                            <input type="text" id="reg-fullName2" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email *</label>
+                            <input type="email" id="reg-email2" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono *</label>
+                            <input type="tel" id="reg-phone2" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Domicilio *</label>
+                            <input type="text" id="reg-address2" required>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function validateRegDays() {
+            const checked = document.querySelectorAll('input[name="reg-days"]:checked');
+            const count = checked.length;
+            const counter = document.getElementById('reg-days-count');
+            
+            if (counter) {
+                counter.textContent = count;
+            }
+            
+            // Deshabilitar checkboxes si ya hay 3
+            const allCheckboxes = document.querySelectorAll('input[name="reg-days"]');
+            allCheckboxes.forEach(cb => {
+                if (!cb.checked && count >= 3) {
+                    cb.disabled = true;
+                } else {
+                    cb.disabled = false;
+                }
+            });
+        }
+
+        function closeRegistrationModal() {
+            document.getElementById('registration-success-modal').style.display = 'none';
+        }
+
+        function copyPassword() {
+            const password = document.getElementById('modal-temp-password').textContent;
+            navigator.clipboard.writeText(password).then(() => {
+                if (typeof showToast === 'function') {
+                    showToast('success', 'Contraseña copiada al portapapeles');
+                } else {
+                    alert('Contraseña copiada');
+                }
+            });
+        }
+
+        function copySharedCode() {
+            const code = document.getElementById('modal-shared-code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                if (typeof showToast === 'function') {
+                    showToast('success', 'Código copiado al portapapeles');
+                } else {
+                    alert('Código copiado');
+                }
+            });
+        }
+
+        function loadRegisteredUsers() {
+            // Esta función ya debería estar, pero asegúrate que existe
+            console.log('Cargando usuarios registrados por empleados...');
+            // El contenido de esta función ya está en tu código
+        }
+
+        // Event listener para el formulario de registro
+        document.getElementById('new-user-form')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const selectedPlan = document.querySelector('input[name="reg-membership"]:checked')?.value;
+            const paymentMethod = document.querySelector('input[name="reg-payment"]:checked')?.value;
+            
+            if (!selectedPlan) {
+                await alertAsync('Membresía Requerida', 'Por favor selecciona un plan de membresía', 'warning');
+                return;
+            }
+            
+            const registrationData = {
+                fullName: document.getElementById('reg-fullName').value,
+                email: document.getElementById('reg-email').value,
+                phone: document.getElementById('reg-phone').value,
+                address: document.getElementById('reg-address')?.value,
+                membershipPlan: selectedPlan,
+                paymentMethod: paymentMethod
+            };
+            
+            // Validar y agregar datos según tipo de membresía
+            if (selectedPlan === 'tres-veces') {
+                const checkedDays = document.querySelectorAll('input[name="reg-days"]:checked');
+                if (checkedDays.length !== 3) {
+                    await alertAsync('Días Incompletos', 'Debes seleccionar exactamente 3 días', 'warning');
+                    return;
+                }
+                registrationData.trainingDays = Array.from(checkedDays).map(cb => cb.value);
+            }
+            
+            if (selectedPlan === 'jubilados') {
+                registrationData.dni = document.getElementById('reg-dni').value;
+                registrationData.age = document.getElementById('reg-age').value;
+                registrationData.gender = document.getElementById('reg-gender').value;
+            }
+            
+            if (selectedPlan === 'dos-personas') {
+                registrationData.secondPerson = {
+                    fullName: document.getElementById('reg-fullName2').value,
+                    email: document.getElementById('reg-email2').value,
+                    phone: document.getElementById('reg-phone2').value,
+                    address: document.getElementById('reg-address2').value
+                };
+            }
+            
+            try {
+                const response = await fetch('/api/employee/register-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(registrationData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Mostrar modal con info
+                    document.getElementById('modal-user-name').textContent = result.user.fullName;
+                    document.getElementById('modal-user-email').textContent = result.user.email;
+                    document.getElementById('modal-temp-password').textContent = result.user.tempPassword;
+                    
+                    if (result.membership.membershipCode) {
+                        document.getElementById('modal-shared-code-section').style.display = 'block';
+                        document.getElementById('modal-shared-code').textContent = result.membership.membershipCode;
+                    } else {
+                        document.getElementById('modal-shared-code-section').style.display = 'none';
+                    }
+                    
+                    document.getElementById('registration-success-modal').style.display = 'flex';
+                    document.getElementById('user-registration-form').style.display = 'none';
+                    document.getElementById('new-user-form').reset();
+                    
+                    loadRegisteredUsers();
+                } else {
+                    await alertAsync('Error', result.message || 'No se pudo registrar el usuario', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                await alertAsync('Error de Conexión', 'No se pudo conectar con el servidor', 'error');
+            }
+        });
         console.log('✅ Sistema de registro de usuarios mejorado cargado correctamente');
     </script>
 </body>
