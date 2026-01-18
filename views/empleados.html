@@ -559,14 +559,14 @@
 
     <!-- ==================== SCRIPT ACTUALIZADO PARA EMPLEADOS ==================== -->
     <script>
-        // ==================== VARIABLES GLOBALES ====================
+        // Variables globales
         let allPendingOrders = [];
         let allDeliveredOrders = [];
         let currentPendingPage = 1;
         let currentDeliveredPage = 1;
         const ordersPerPage = 5;
-        let registrationData = {}; // ⭐ NUEVA: Guardar datos del último registro
-        let registeredUsers = []; // ⭐ NUEVA: Lista de usuarios registrados por empleados
+        let registrationData = {};
+        let registeredUsers = [];
 
         // ==================== INICIALIZACIÓN ====================
         document.addEventListener('DOMContentLoaded', function() {
@@ -583,12 +583,11 @@
                 });
             }
             
-            // Cargar datos
+            // Cargar datos iniciales
             loadEmployeeData();
             loadDashboardStats();
             loadTodayClasses();
             loadPendingOrders();
-            loadRegisteredUsers(); // ⭐ NUEVO
             loadTodayAttendances();
             setupLogout();
         });
@@ -731,7 +730,11 @@
                 const verification = await verifyResponse.json();
                 
                 if (!verification.success || !verification.hasMembership) {
-                    showToast('error', `No se puede registrar: ${verification.message}`);
+                    if (typeof showToast === 'function') {
+                        showToast('error', `No se puede registrar: ${verification.message}`);
+                    } else {
+                        alert(`No se puede registrar: ${verification.message}`);
+                    }
                     return;
                 }
                 
@@ -745,7 +748,11 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    showToast('success', `✅ Asistencia de ${userName} registrada`);
+                    if (typeof showToast === 'function') {
+                        showToast('success', `✅ Asistencia de ${userName} registrada`);
+                    } else {
+                        alert(`Asistencia de ${userName} registrada`);
+                    }
                     
                     const current = parseInt(document.getElementById('today-attendance').textContent);
                     document.getElementById('today-attendance').textContent = current + 1;
@@ -760,11 +767,19 @@
                     
                     loadTodayAttendances();
                 } else {
-                    showToast('error', result.message || 'Error al registrar asistencia');
+                    if (typeof showToast === 'function') {
+                        showToast('error', result.message || 'Error al registrar asistencia');
+                    } else {
+                        alert(result.message || 'Error al registrar asistencia');
+                    }
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showToast('error', 'Error de conexión al registrar asistencia');
+                if (typeof showToast === 'function') {
+                    showToast('error', 'Error de conexión al registrar asistencia');
+                } else {
+                    alert('Error de conexión');
+                }
             }
         }
 
@@ -1149,410 +1164,6 @@
             }
         }
 
-        // ==================== REGISTRO DE USUARIOS ====================
-        function toggleUserRegistrationForm() {
-            const form = document.getElementById('user-registration-form');
-            if (form.style.display === 'none') {
-                form.style.display = 'block';
-                document.getElementById('new-user-form').reset();
-                document.getElementById('additional-fields').innerHTML = '';
-            } else {
-                form.style.display = 'none';
-            }
-        }
-
-        function updateRegistrationForm() {
-            const membershipType = document.querySelector('input[name="reg-membership"]:checked')?.value;
-            const additionalFields = document.getElementById('additional-fields');
-            
-            if (!membershipType) {
-                additionalFields.innerHTML = '';
-                return;
-            }
-            
-            // Marcar visualmente la membresía seleccionada
-            document.querySelectorAll('input[name="reg-membership"]').forEach(radio => {
-                const label = radio.closest('label');
-                if (radio.checked) {
-                    label.style.borderColor = 'var(--violeta-claro)';
-                    label.style.background = 'rgba(127, 76, 165, 0.2)';
-                } else {
-                    label.style.borderColor = 'var(--violeta-medio)';
-                    label.style.background = 'transparent';
-                }
-            });
-            
-            let html = '';
-            
-            if (membershipType === 'tres-veces') {
-                html = `
-                    <div style="background: var(--negro); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
-                        <h4 style="color: var(--violeta-claro); margin-bottom: 1rem;">Selecciona 3 días de entrenamiento</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem;">
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--blanco);">
-                                <input type="checkbox" name="reg-training-days" value="lunes" onchange="validateTrainingDays()">
-                                <span>Lunes</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--blanco);">
-                                <input type="checkbox" name="reg-training-days" value="martes" onchange="validateTrainingDays()">
-                                <span>Martes</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--blanco);">
-                                <input type="checkbox" name="reg-training-days" value="miercoles" onchange="validateTrainingDays()">
-                                <span>Miércoles</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--blanco);">
-                                <input type="checkbox" name="reg-training-days" value="jueves" onchange="validateTrainingDays()">
-                                <span>Jueves</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--blanco);">
-                                <input type="checkbox" name="reg-training-days" value="viernes" onchange="validateTrainingDays()">
-                                <span>Viernes</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--blanco);">
-                                <input type="checkbox" name="reg-training-days" value="sabado" onchange="validateTrainingDays()">
-                                <span>Sábado</span>
-                            </label>
-                        </div>
-                        <p id="reg-days-count" style="color: var(--violeta-claro); margin-top: 1rem;">Días seleccionados: 0/3</p>
-                    </div>
-                `;
-            } else if (membershipType === 'jubilados') {
-                html = `
-                    <div style="background: var(--negro); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
-                        <h4 style="color: var(--violeta-claro); margin-bottom: 1rem;">Datos de Verificación (Jubilados)</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                            <div class="form-group">
-                                <label>DNI *</label>
-                                <input type="text" id="reg-dni" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Edad *</label>
-                                <input type="number" id="reg-age" min="60" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Género *</label>
-                                <select id="reg-gender" required>
-                                    <option value="">Seleccionar</option>
-                                    <option value="femenino">Femenino (60+ años)</option>
-                                    <option value="masculino">Masculino (65+ años)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; padding: 1rem; margin-top: 1rem;">
-                            <p style="color: var(--gris-claro); margin: 0;">
-                                <i class="fas fa-info-circle"></i> Verificar DNI y edad en persona.
-                            </p>
-                        </div>
-                    </div>
-                `;
-            } else if (membershipType === 'dos-personas') {
-                html = `
-                    <div style="background: var(--negro); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
-                        <h4 style="color: var(--violeta-claro); margin-bottom: 1rem;">Datos de la Segunda Persona</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                            <div class="form-group">
-                                <label>Nombre Completo *</label>
-                                <input type="text" id="reg-second-name" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Email *</label>
-                                <input type="email" id="reg-second-email" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Teléfono *</label>
-                                <input type="tel" id="reg-second-phone" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Domicilio</label>
-                                <input type="text" id="reg-second-address">
-                            </div>
-                            <div class="form-group">
-                                <label>Edad</label>
-                                <input type="number" id="reg-second-age" min="18" value="18">
-                            </div>
-                        </div>
-                        <div style="background: rgba(34, 197, 94, 0.1); border-left: 4px solid #22c55e; padding: 1rem; margin-top: 1rem;">
-                            <p style="color: var(--gris-claro); margin: 0;">
-                                <i class="fas fa-info-circle"></i> Se generará un código para que la segunda persona active su cuenta.
-                            </p>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            additionalFields.innerHTML = html;
-        }
-
-        function validateTrainingDays() {
-            const checked = document.querySelectorAll('input[name="reg-training-days"]:checked');
-            const counter = document.getElementById('reg-days-count');
-            
-            if (counter) {
-                counter.textContent = `Días seleccionados: ${checked.length}/3`;
-                
-                if (checked.length > 3) {
-                    counter.style.color = '#ef4444';
-                } else if (checked.length === 3) {
-                    counter.style.color = '#22c55e';
-                } else {
-                    counter.style.color = 'var(--violeta-claro)';
-                }
-            }
-            
-            // Deshabilitar checkboxes si ya hay 3 seleccionados
-            const allCheckboxes = document.querySelectorAll('input[name="reg-training-days"]');
-            allCheckboxes.forEach(cb => {
-                if (!cb.checked && checked.length >= 3) {
-                    cb.disabled = true;
-                } else {
-                    cb.disabled = false;
-                }
-            });
-        }
-
-        // ⭐ NUEVA FUNCIÓN MEJORADA: Procesar formulario de registro
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('new-user-form');
-            if (form) {
-                form.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    
-                    const membershipType = document.querySelector('input[name="reg-membership"]:checked')?.value;
-                    const paymentMethod = document.querySelector('input[name="reg-payment"]:checked')?.value;
-                    
-                    if (!membershipType || !paymentMethod) {
-                        showToast('warning', 'Por favor completa todos los campos requeridos');
-                        return;
-                    }
-                    
-                    // Preparar datos
-                    const registrationData = {
-                        fullName: document.getElementById('reg-fullName').value.trim(),
-                        email: document.getElementById('reg-email').value.trim(),
-                        phone: document.getElementById('reg-phone').value.trim(),
-                        address: document.getElementById('reg-address')?.value.trim() || '',
-                        membershipPlan: membershipType,
-                        paymentMethod: paymentMethod
-                    };
-                    
-                    // Validaciones específicas por tipo
-                    if (membershipType === 'tres-veces') {
-                        const checkedDays = document.querySelectorAll('input[name="reg-training-days"]:checked');
-                        if (checkedDays.length !== 3) {
-                            showToast('warning', 'Debes seleccionar exactamente 3 días de entrenamiento');
-                            return;
-                        }
-                        registrationData.trainingDays = Array.from(checkedDays).map(cb => cb.value);
-                    }
-                    
-                    if (membershipType === 'jubilados') {
-                        const dni = document.getElementById('reg-dni')?.value.trim();
-                        const age = parseInt(document.getElementById('reg-age')?.value);
-                        const gender = document.getElementById('reg-gender')?.value;
-                        
-                        if (!dni || !age || !gender) {
-                            showToast('warning', 'Completa los datos de verificación para jubilados');
-                            return;
-                        }
-                        
-                        if (gender === 'femenino' && age < 60) {
-                            showToast('error', 'Las mujeres deben tener 60 años o más');
-                            return;
-                        }
-                        
-                        if (gender === 'masculino' && age < 65) {
-                            showToast('error', 'Los hombres deben tener 65 años o más');
-                            return;
-                        }
-                        
-                        registrationData.dni = dni;
-                        registrationData.age = age;
-                        registrationData.gender = gender;
-                    }
-                    
-                    if (membershipType === 'dos-personas') {
-                        const secondName = document.getElementById('reg-second-name')?.value.trim();
-                        const secondEmail = document.getElementById('reg-second-email')?.value.trim();
-                        const secondPhone = document.getElementById('reg-second-phone')?.value.trim();
-                        
-                        if (!secondName || !secondEmail || !secondPhone) {
-                            showToast('warning', 'Completa los datos de la segunda persona');
-                            return;
-                        }
-                        
-                        registrationData.secondPerson = {
-                            fullName: secondName,
-                            email: secondEmail,
-                            phone: secondPhone,
-                            address: document.getElementById('reg-second-address')?.value.trim() || registrationData.address,
-                            age: parseInt(document.getElementById('reg-second-age')?.value) || 18
-                        };
-                    }
-                    
-                    // Validar email
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    if (!emailRegex.test(registrationData.email)) {
-                        showToast('error', 'Email inválido');
-                        return;
-                    }
-                    
-                    // Confirmar registro
-                    const confirmed = await confirmAsync(
-                        'Confirmar Registro',
-                        `¿Confirmar registro de ${registrationData.fullName}?\n\nMembresía: ${membershipType}\nPago: ${paymentMethod}`
-                    );
-                    
-                    if (!confirmed) return;
-                    
-                    // Enviar datos
-                    try {
-                        const response = await fetch('/api/employee/register-user', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            credentials: 'same-origin',
-                            body: JSON.stringify(registrationData)
-                        });
-                        
-                        const result = await response.json();
-                        
-                        if (result.success) {
-                            // ⭐ MOSTRAR MODAL MEJORADO CON TODA LA INFORMACIÓN
-                            showRegistrationSuccessModal(result);
-                            
-                            // Limpiar formulario
-                            toggleUserRegistrationForm();
-                            loadDashboardStats();
-                            loadRegisteredUsers(); // ⭐ RECARGAR LISTA DE USUARIOS
-                        } else {
-                            await alertAsync('Error', result.message || 'No se pudo registrar el usuario', 'error');
-                        }
-                        
-                    } catch (error) {
-                        console.error('Error:', error);
-                        await alertAsync('Error de Conexión', 'No se pudo conectar con el servidor', 'error');
-                    }
-                });
-            }
-        });
-
-        // ⭐ NUEVA FUNCIÓN: Mostrar modal mejorado de registro exitoso
-        function showRegistrationSuccessModal(result) {
-            // Rellenar datos del modal
-            document.getElementById('modal-user-name').textContent = result.user.fullName;
-            document.getElementById('modal-user-email').textContent = result.user.email;
-            document.getElementById('modal-temp-password').textContent = result.user.tempPassword;
-            
-            // Mostrar código compartido si existe
-            if (result.membership.membershipCode) {
-                document.getElementById('modal-shared-code-section').style.display = 'block';
-                document.getElementById('modal-shared-code').textContent = result.membership.membershipCode;
-            } else {
-                document.getElementById('modal-shared-code-section').style.display = 'none';
-            }
-            
-            // Mostrar el modal
-            document.getElementById('registration-success-modal').style.display = 'flex';
-        }
-
-        // Función para copiar contraseña
-        function copyPassword() {
-            const password = document.getElementById('modal-temp-password').textContent;
-            navigator.clipboard.writeText(password).then(() => {
-                showToast('success', '✅ Contraseña copiada al portapapeles');
-            });
-        }
-
-        // Función para copiar código compartido
-        function copySharedCode() {
-            const code = document.getElementById('modal-shared-code').textContent;
-            navigator.clipboard.writeText(code).then(() => {
-                showToast('success', '✅ Código copiado al portapapeles');
-            });
-        }
-
-        // Cerrar modal de registro
-        function closeRegistrationModal() {
-            document.getElementById('registration-success-modal').style.display = 'none';
-        }
-
-        // ⭐ NUEVA FUNCIÓN: Cargar usuarios registrados por empleados
-        async function loadRegisteredUsers() {
-            try {
-                const response = await fetch('/api/employee/registered-users', {
-                    credentials: 'same-origin'
-                });
-                const data = await response.json();
-                
-                const tbody = document.getElementById('registered-users-tbody');
-                if (!tbody) return;
-                
-                if (data.success && data.users && data.users.length > 0) {
-                    registeredUsers = data.users;
-                    
-                    tbody.innerHTML = data.users.map(user => {
-                        // Contraseña temporal (visible u ocultada)
-                        const passwordDisplay = user.tempPassword ? `
-                            <div class="password-display">
-                                <span class="${user.passwordChanged ? 'password-pixelated' : ''}" id="pwd-${user._id}">
-                                    ${user.passwordChanged ? '••••••••' : user.tempPassword}
-                                </span>
-                                <button class="btn-toggle-password" onclick="togglePassword('${user._id}', '${user.tempPassword}', ${user.passwordChanged})">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                        ` : '<span style="color: var(--gris-claro);">N/A</span>';
-                        
-                        // Código compartido si existe
-                        const codeDisplay = user.membershipCode ? `
-                            <div class="code-display">${user.membershipCode}</div>
-                        ` : '<span style="color: var(--gris-claro);">N/A</span>';
-                        
-                        return `
-                            <tr>
-                                <td style="color: var(--blanco);">${user.fullName}</td>
-                                <td style="color: var(--gris-claro);">${user.email}</td>
-                                <td style="color: var(--violeta-claro);">${user.membershipType || 'N/A'}</td>
-                                <td>${passwordDisplay}</td>
-                                <td>${codeDisplay}</td>
-                                <td style="color: var(--gris-claro);">${user.registeredBy || 'Empleado'}</td>
-                                <td style="color: var(--gris-claro);">${new Date(user.createdAt).toLocaleDateString('es-ES')}</td>
-                            </tr>
-                        `;
-                    }).join('');
-                } else {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 2rem; color: var(--gris-claro);">
-                                <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                                <p>No hay usuarios registrados por empleados aún</p>
-                            </td>
-                        </tr>
-                    `;
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-
-        // ⭐ NUEVA FUNCIÓN: Mostrar/ocultar contraseña
-        function togglePassword(userId, realPassword, wasChanged) {
-            const pwdElement = document.getElementById(`pwd-${userId}`);
-            if (!pwdElement) return;
-            
-            if (pwdElement.classList.contains('password-pixelated')) {
-                // Mostrar contraseña real
-                pwdElement.textContent = realPassword;
-                pwdElement.classList.remove('password-pixelated');
-            } else {
-                // Ocultar contraseña
-                pwdElement.textContent = wasChanged ? '••••••••' : realPassword;
-                if (wasChanged) {
-                    pwdElement.classList.add('password-pixelated');
-                }
-            }
-        }
-
         // ==================== LOGOUT ====================
         function setupLogout() {
             const logoutBtn = document.getElementById('logout-btn');
@@ -1585,7 +1196,6 @@
                 });
             }
         }
-
         console.log('✅ Sistema de registro de usuarios mejorado cargado correctamente');
     </script>
 </body>
