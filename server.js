@@ -674,6 +674,10 @@ app.get('/dashboard', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
 });
 
+app.get('/change-password', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'change-password.html'));
+});
+
 app.get('/tienda', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'tienda.html'));
 });
@@ -775,6 +779,21 @@ app.post('/api/login', async (req, res) => {
             return res.json({
                 success: false,
                 message: 'Credenciales incorrectas'
+            });
+        }
+
+        // ⭐ AGREGAR ESTA VALIDACIÓN:
+        if (user.registeredBy === 'employee' && !user.hasChangedPassword) {
+            return res.json({
+                success: true,
+                userId: user._id,
+                user: {
+                    fullName: user.fullName,
+                    email: user.email,
+                    hasTemporaryPassword: true // ⭐ NUEVO FLAG
+                },
+                requiresPasswordChange: true,
+                message: 'Debes cambiar tu contraseña temporal'
             });
         }
         
@@ -2913,6 +2932,61 @@ app.get('/api/user/stats/improved', requireAuth, async (req, res) => {
                 memberDays: 0,
                 isNewUser: true
             }
+        });
+    }
+});
+
+// AGREGAR NUEVA API para cambiar contraseña temporal
+
+app.post('/api/change-temporary-password', async (req, res) => {
+    try {
+        const { userId, newPassword } = req.body;
+        
+        if (!userId || !newPassword) {
+            return res.json({ 
+                success: false, 
+                message: 'Datos incompletos' 
+            });
+        }
+        
+        if (newPassword.length < 6) {
+            return res.json({ 
+                success: false, 
+                message: 'La contraseña debe tener al menos 6 caracteres' 
+            });
+        }
+        
+        const user = await User.findById(userId);
+        
+        if (!user) {
+            return res.json({ 
+                success: false, 
+                message: 'Usuario no encontrado' 
+            });
+        }
+        
+        // Hashear nueva contraseña
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        
+        // Actualizar usuario
+        user.password = hashedPassword;
+        user.hasChangedPassword = true; // ⭐ MARCAR COMO CAMBIADA
+        user.temporaryPassword = null;  // ⭐ LIMPIAR TEMPORAL
+        
+        await user.save();
+        
+        console.log(`✅ Contraseña actualizada para: ${user.fullName}`);
+        
+        res.json({ 
+            success: true, 
+            message: 'Contraseña actualizada exitosamente' 
+        });
+        
+    } catch (error) {
+        console.error('❌ Error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al cambiar contraseña' 
         });
     }
 });

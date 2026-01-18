@@ -97,6 +97,18 @@
                     const result = await response.json();
                     
                     if (result.success) {
+                        // Verificar si tiene contraseña temporal
+                        if (result.user.hasTemporaryPassword === false) {
+                            // Usuario con contraseña temporal - forzar cambio
+                            localStorage.setItem('tempPasswordUser', JSON.stringify({
+                                userId: result.userId,
+                                email: result.user.email,
+                                name: result.user.fullName
+                            }));
+                            
+                            window.location.href = '/change-password'; // Crearemos esta página
+                            return;
+                        }
                         // Verificar estado de membresía
                         try {
                             const membershipCheck = await fetch('/api/check-membership-status', {

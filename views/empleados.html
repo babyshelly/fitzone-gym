@@ -1426,7 +1426,11 @@
                             <tr>
                                 <td style="color: var(--blanco);">${user.fullName}</td>
                                 <td style="color: var(--gris-claro);">${user.email}</td>
-                                <td style="color: var(--violeta-claro); font-weight: bold;">${user.membershipType}</td>
+                                <td>
+                                    ${user.membershipType !== 'Sin membresía' 
+                                        ? `<span style="color: var(--violeta-claro); font-weight: bold;">${user.membershipType}</span>` 
+                                        : `<span style="color: #ef4444; font-weight: bold;">❌ Sin Membresía</span>`}
+                                </td>
                                 <td>
                                     ${user.tempPassword ? `
                                         <div class="password-display">
@@ -1503,7 +1507,11 @@
                                 <td style="color: var(--blanco);">${user.fullName}</td>
                                 <td style="color: var(--gris-claro);">${user.email}</td>
                                 <td style="color: var(--gris-claro);">${user.phone}</td>
-                                <td style="color: var(--violeta-claro);">${user.membershipType}</td>
+                                <td>
+                                    ${user.membershipType !== 'Sin membresía' 
+                                        ? `<span style="color: var(--violeta-claro); font-weight: bold;">${user.membershipType}</span>` 
+                                        : `<span style="color: #ef4444; font-weight: bold;">❌ Sin Membresía</span>`}
+                                </td>
                                 <td>
                                     ${user.registeredBy === 'Empleado' 
                                         ? '<span style="color: #3b82f6;"><i class="fas fa-user-tie"></i> Empleado</span>' 
