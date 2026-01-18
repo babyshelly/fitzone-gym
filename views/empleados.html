@@ -333,33 +333,75 @@
         <section id="usuarios-registrados" class="admin-section" style="padding: 4rem 0; background: var(--gris-oscuro);">
             <div class="container">
                 <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <h2 style="color: var(--violeta-claro); font-size: 2rem;">👥 Usuarios Registrados por Empleados</h2>
-                    <button class="btn btn-primary" onclick="loadRegisteredUsers()">
+                    <h2 style="color: var(--violeta-claro); font-size: 2rem;">👥 Gestión de Usuarios</h2>
+                    <button class="btn btn-primary" onclick="refreshAllUsersTabs()">
                         <i class="fas fa-sync"></i> Actualizar
                     </button>
                 </div>
 
-                <div style="background: var(--negro); border-radius: 15px; padding: 2rem; overflow-x: auto;">
-                    <table class="registered-users-table">
-                        <thead>
-                            <tr>
-                                <th>Usuario</th>
-                                <th>Email</th>
-                                <th>Membresía</th>
-                                <th>Contraseña Temporal</th>
-                                <th>Código Compartido</th>
-                                <th>Registrado Por</th>
-                                <th>Fecha Registro</th>
-                            </tr>
-                        </thead>
-                        <tbody id="registered-users-tbody">
-                            <tr>
-                                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--gris-claro);">
-                                    Cargando usuarios...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- ⭐ TABS PARA SEPARAR USUARIOS -->
+                <div style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid var(--violeta-medio);">
+                    <button class="tab-btn active" onclick="switchUsersTab('employee', this)" 
+                            style="background: none; border: none; padding: 1rem 2rem; color: var(--violeta-claro); font-weight: bold; cursor: pointer; border-bottom: 3px solid var(--violeta-claro);">
+                        <i class="fas fa-user-tie"></i> Registrados por Empleados (<span id="employee-users-count">0</span>)
+                    </button>
+                    <button class="tab-btn" onclick="switchUsersTab('all', this)" 
+                            style="background: none; border: none; padding: 1rem 2rem; color: var(--gris-claro); font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent;">
+                        <i class="fas fa-users"></i> Todos los Usuarios (<span id="all-users-count">0</span>)
+                    </button>
+                </div>
+
+                <!-- TAB: Usuarios registrados por empleados -->
+                <div id="employee-users-tab" style="display: block;">
+                    <div style="background: var(--negro); border-radius: 15px; padding: 2rem; overflow-x: auto;">
+                        <table class="registered-users-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Email</th>
+                                    <th>Membresía</th>
+                                    <th>Contraseña Temporal</th>
+                                    <th>Código Compartido</th>
+                                    <th>Registrado Por</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody id="registered-users-tbody">
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 2rem; color: var(--gris-claro);">
+                                        Cargando...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB: Todos los usuarios -->
+                <div id="all-users-tab" style="display: none;">
+                    <div style="background: var(--negro); border-radius: 15px; padding: 2rem; overflow-x: auto;">
+                        <table class="registered-users-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Email</th>
+                                    <th>Teléfono</th>
+                                    <th>Membresía</th>
+                                    <th>Origen</th>
+                                    <th>Registrado Por</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="all-users-tbody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 2rem; color: var(--gris-claro);">
+                                        Cargando...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1351,27 +1393,23 @@
         }
 
         
+        // Cargar usuarios registrados por empleados
         async function loadRegisteredUsers() {
             console.log('📋 Cargando usuarios registrados por empleados...');
             
             const tbody = document.getElementById('registered-users-tbody');
             
-            if (!tbody) {
-                console.error('❌ Tabla de usuarios registrados no encontrada');
-                return;
-            }
+            if (!tbody) return;
             
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 2rem; color: var(--gris-claro);">
-                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                        <p>Cargando usuarios registrados...</p>
+                    <td colspan="7" style="text-align: center; padding: 2rem;">
+                        <i class="fas fa-spinner fa-spin"></i> Cargando...
                     </td>
                 </tr>
             `;
             
             try {
-                // IMPORTANTE: Esta ruta debe existir en tu server.js
                 const response = await fetch('/api/employee/registered-users', {
                     credentials: 'same-origin'
                 });
@@ -1379,65 +1417,153 @@
                 const data = await response.json();
                 
                 if (data.success && data.users && data.users.length > 0) {
-                    console.log(`✅ ${data.users.length} usuarios registrados encontrados`);
+                    document.getElementById('employee-users-count').textContent = data.users.length;
                     
                     tbody.innerHTML = data.users.map(user => {
-                        const registerDate = new Date(user.createdAt).toLocaleDateString('es-ES', {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit'
-                        });
+                        const registerDate = new Date(user.createdAt).toLocaleDateString('es-ES');
                         
                         return `
                             <tr>
                                 <td style="color: var(--blanco);">${user.fullName}</td>
                                 <td style="color: var(--gris-claro);">${user.email}</td>
-                                <td style="color: var(--violeta-claro); font-weight: bold;">${user.membershipType || 'N/A'}</td>
+                                <td style="color: var(--violeta-claro); font-weight: bold;">${user.membershipType}</td>
                                 <td>
-                                    <div class="password-display">
-                                        <span class="password-pixelated" id="pass-${user._id}">${user.tempPassword || '••••••'}</span>
-                                        <button class="btn-toggle-password" onclick="togglePassword('${user._id}', '${user.tempPassword || ''}')">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
+                                    ${user.tempPassword ? `
+                                        <div class="password-display">
+                                            <span class="password-pixelated" id="pass-${user._id}">••••••</span>
+                                            <button class="btn-toggle-password" onclick="togglePassword('${user._id}', '${user.tempPassword}')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    ` : '<span style="color: #22c55e;"><i class="fas fa-check"></i> Cambiada</span>'}
                                 </td>
                                 <td>
                                     ${user.sharedCode ? `
                                         <div class="code-display">${user.sharedCode}</div>
                                     ` : '<span style="color: var(--gris-claro);">N/A</span>'}
                                 </td>
-                                <td style="color: var(--gris-claro);">${user.registeredBy || 'Sistema'}</td>
+                                <td style="color: var(--gris-claro);">
+                                    ${user.registeredBy}<br>
+                                    <small>${user.registeredByEmail}</small>
+                                </td>
                                 <td style="color: var(--gris-claro);">${registerDate}</td>
                             </tr>
                         `;
                     }).join('');
                     
                 } else {
-                    console.log('⚠️ No hay usuarios registrados por empleados');
+                    document.getElementById('employee-users-count').textContent = '0';
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="7" style="text-align: center; padding: 3rem;">
-                                <i class="fas fa-user-slash" style="font-size: 3rem; color: var(--violeta-medio); margin-bottom: 1rem;"></i>
-                                <p style="color: var(--gris-claro); font-size: 1.1rem;">No hay usuarios registrados por empleados todavía</p>
+                                <i class="fas fa-user-slash" style="font-size: 3rem; color: var(--violeta-medio);"></i>
+                                <p style="color: var(--gris-claro);">No hay usuarios registrados por empleados</p>
                             </td>
                         </tr>
                     `;
                 }
                 
             } catch (error) {
-                console.error('❌ Error cargando usuarios registrados:', error);
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 2rem;">
-                            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #ef4444; margin-bottom: 1rem;"></i>
-                            <p style="color: var(--gris-claro);">Error al cargar usuarios registrados</p>
-                            <button class="btn btn-primary" onclick="loadRegisteredUsers()" style="margin-top: 1rem;">
-                                <i class="fas fa-sync"></i> Reintentar
-                            </button>
-                        </td>
-                    </tr>
-                `;
+                console.error('Error:', error);
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #ef4444;">Error al cargar</td></tr>';
             }
+        }
+
+        // Cargar TODOS los usuarios
+        async function loadAllUsers() {
+            console.log('📋 Cargando TODOS los usuarios...');
+            
+            const tbody = document.getElementById('all-users-tbody');
+            
+            if (!tbody) return;
+            
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 2rem;">
+                        <i class="fas fa-spinner fa-spin"></i> Cargando...
+                    </td>
+                </tr>
+            `;
+            
+            try {
+                const response = await fetch('/api/employee/all-users', {
+                    credentials: 'same-origin'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.users && data.users.length > 0) {
+                    document.getElementById('all-users-count').textContent = data.users.length;
+                    
+                    tbody.innerHTML = data.users.map(user => {
+                        const registerDate = new Date(user.createdAt).toLocaleDateString('es-ES');
+                        
+                        return `
+                            <tr>
+                                <td style="color: var(--blanco);">${user.fullName}</td>
+                                <td style="color: var(--gris-claro);">${user.email}</td>
+                                <td style="color: var(--gris-claro);">${user.phone}</td>
+                                <td style="color: var(--violeta-claro);">${user.membershipType}</td>
+                                <td>
+                                    ${user.registeredBy === 'Empleado' 
+                                        ? '<span style="color: #3b82f6;"><i class="fas fa-user-tie"></i> Empleado</span>' 
+                                        : '<span style="color: var(--gris-claro);"><i class="fas fa-globe"></i> Web</span>'}
+                                </td>
+                                <td style="color: var(--gris-claro);">${user.registeredByName}</td>
+                                <td style="color: var(--gris-claro);">${registerDate}</td>
+                                <td>
+                                    <span style="background: ${user.status === 'active' ? '#22c55e' : '#ef4444'}; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">
+                                        ${user.status === 'active' ? 'Activo' : 'Inactivo'}
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                    
+                } else {
+                    document.getElementById('all-users-count').textContent = '0';
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 3rem;">
+                                <p style="color: var(--gris-claro);">No hay usuarios</p>
+                            </td>
+                        </tr>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #ef4444;">Error al cargar</td></tr>';
+            }
+        }
+
+        // Cambiar entre tabs de usuarios
+        function switchUsersTab(tab, button) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.color = 'var(--gris-claro)';
+                btn.style.borderBottom = '3px solid transparent';
+            });
+            
+            button.classList.add('active');
+            button.style.color = 'var(--violeta-claro)';
+            button.style.borderBottom = '3px solid var(--violeta-claro)';
+            
+            if (tab === 'employee') {
+                document.getElementById('employee-users-tab').style.display = 'block';
+                document.getElementById('all-users-tab').style.display = 'none';
+                loadRegisteredUsers();
+            } else {
+                document.getElementById('employee-users-tab').style.display = 'none';
+                document.getElementById('all-users-tab').style.display = 'block';
+                loadAllUsers();
+            }
+        }
+
+        // Actualizar ambas tabs
+        function refreshAllUsersTabs() {
+            loadRegisteredUsers();
+            loadAllUsers();
         }
 
         // Función para mostrar/ocultar contraseña

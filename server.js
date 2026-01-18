@@ -42,8 +42,34 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
     role: { type: String, enum: ['user', 'admin', 'employee'], default: 'user' }, // ← MODIFICADO
+
+    // ⭐ NUEVOS CAMPOS PARA RASTREO
+    registeredBy: {
+        type: String,
+        enum: ['web', 'employee'],
+        default: 'web'
+    },
+    registeredByEmployeeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
+    },
+    registeredByEmployeeName: {
+        type: String,
+        default: null
+    },
+    temporaryPassword: {
+        type: String,
+        default: null
+    },
+    hasChangedPassword: {
+        type: Boolean,
+        default: false
+    },
+
     createdAt: { type: Date, default: Date.now }
 });
+
 userSchema.index({ email: 1 });
 const User = mongoose.model('User', userSchema);
 // ==================== Agrega limites de usuarios en pagina simultanea ====================
@@ -3349,54 +3375,123 @@ app.get('/api/employee/search-members', verificarEmpleado, async (req, res) => {
     }
 });
 
-// Obtener usuarios registrados por empleados
+// Obtener SOLO usuarios registrados por empleados
 app.get('/api/employee/registered-users', verificarEmpleado, async (req, res) => {
     try {
-        console.log('📋 Empleado solicitando usuarios registrados');
+        console.log('📋 Cargando usuarios registrados por empleados...');
         
-        // Buscar usuarios recientes registrados con membresías
-        const recentMemberships = await Membership.find({
-            createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } // Últimos 30 días
+        // ⭐ BUSCAR SOLO USUARIOS REGISTRADOS POR EMPLEADOS
+        const employeeRegisteredUsers = await User.find({
+            registeredBy: 'employee',
+            role: 'user'
         })
-        .populate('userId', 'fullName email phone createdAt')
+        .populate({
+            path: 'registeredByEmployeeId',
+            select: 'fullName email'
+        })
         .sort({ createdAt: -1 })
-        .limit(50);
+        .limit(100);
         
-        const usersData = recentMemberships.map(membership => {
-            const membershipTypes = {
-                'mes-libre': 'Mes Libre',
-                'dos-personas': '2 Personas',
-                'tres-veces': '3 Veces/Semana',
-                'semanal': 'Semanal',
-                'dia-clase': 'Día/Clase',
-                'jubilados': 'Jubilados'
-            };
-            
-            return {
-                _id: membership.userId._id,
-                fullName: membership.userId.fullName,
-                email: membership.userId.email,
-                phone: membership.userId.phone,
-                membershipType: membershipTypes[membership.planType] || membership.planType,
-                tempPassword: '********', // Por seguridad, no mostrar password real
-                sharedCode: membership.sharedMembership?.membershipCode || null,
-                registeredBy: 'Empleado FitZone', // Podrías mejorar esto guardando quién registró
-                createdAt: membership.userId.createdAt
-            };
-        });
+        // Obtener membresías de estos usuarios
+        const usersWithMemberships = await Promise.all(
+            employeeRegisteredUsers.map(async (user) => {
+                const membership = await Membership.findOne({ userId: user._id })
+                    .sort({ createdAt: -1 });
+                
+                const membershipTypes = {
+                    'mes-libre': 'Mes Libre',
+                    'dos-personas': '2 Personas',
+                    'tres-veces': '3 Veces/Semana',
+                    'semanal': 'Semanal',
+                    'dia-clase': 'Día/Clase',
+                    'jubilados': 'Jubilados'
+                };
+                
+                return {
+                    _id: user._id,
+                    fullName: user.fullName,
+                    email: user.email,
+                    phone: user.phone,
+                    membershipType: membership 
+                        ? membershipTypes[membership.planType] || membership.planType 
+                        : 'Sin membresía',
+                    tempPassword: user.hasChangedPassword ? null : user.temporaryPassword,
+                    hasChangedPassword: user.hasChangedPassword,
+                    sharedCode: membership?.sharedMembership?.membershipCode || null,
+                    registeredBy: user.registeredByEmployeeName || 'Empleado FitZone',
+                    registeredByEmail: user.registeredByEmployeeId?.email || 'N/A',
+                    createdAt: user.createdAt
+                };
+            })
+        );
         
-        console.log(`✅ ${usersData.length} usuarios encontrados`);
+        console.log(`✅ ${usersWithMemberships.length} usuarios registrados por empleados`);
         
         res.json({
             success: true,
-            users: usersData
+            users: usersWithMemberships
         });
         
     } catch (error) {
         console.error('❌ Error:', error);
         res.status(500).json({
             success: false,
-            message: 'Error al cargar usuarios registrados'
+            message: 'Error al cargar usuarios'
+        });
+    }
+});
+
+// ⭐ NUEVA RUTA: Obtener TODOS los usuarios (para otra pestaña)
+app.get('/api/employee/all-users', verificarEmpleado, async (req, res) => {
+    try {
+        console.log('📋 Cargando TODOS los usuarios...');
+        
+        const allUsers = await User.find({ role: 'user' })
+            .sort({ createdAt: -1 })
+            .limit(200);
+        
+        const usersWithMemberships = await Promise.all(
+            allUsers.map(async (user) => {
+                const membership = await Membership.findOne({ userId: user._id })
+                    .sort({ createdAt: -1 });
+                
+                const membershipTypes = {
+                    'mes-libre': 'Mes Libre',
+                    'dos-personas': '2 Personas',
+                    'tres-veces': '3 Veces/Semana',
+                    'semanal': 'Semanal',
+                    'dia-clase': 'Día/Clase',
+                    'jubilados': 'Jubilados'
+                };
+                
+                return {
+                    _id: user._id,
+                    fullName: user.fullName,
+                    email: user.email,
+                    phone: user.phone,
+                    membershipType: membership 
+                        ? membershipTypes[membership.planType] || membership.planType 
+                        : 'Sin membresía',
+                    registeredBy: user.registeredBy === 'employee' ? 'Empleado' : 'Web',
+                    registeredByName: user.registeredByEmployeeName || 'Auto-registro',
+                    createdAt: user.createdAt,
+                    status: user.status
+                };
+            })
+        );
+        
+        console.log(`✅ ${usersWithMemberships.length} usuarios totales`);
+        
+        res.json({
+            success: true,
+            users: usersWithMemberships
+        });
+        
+    } catch (error) {
+        console.error('❌ Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al cargar usuarios'
         });
     }
 });
@@ -3619,7 +3714,7 @@ setTimeout(async () => {
     await cleanInactiveUsers();
 }, 10000); // 10 segundos después de iniciar
 
-// Registro de usuario por empleado
+// Registro de usuario por empleado - VERSIÓN MEJORADA
 app.post('/api/employee/register-user', verificarEmpleado, async (req, res) => {
     try {
         const { 
@@ -3630,13 +3725,13 @@ app.post('/api/employee/register-user', verificarEmpleado, async (req, res) => {
             membershipPlan, 
             paymentMethod,
             trainingDays,
-            // Para jubilados
             dni,
             age,
             gender,
-            // Para 2 personas
             secondPerson
         } = req.body;
+        
+        console.log('👤 Empleado registrando usuario:', email);
         
         // Validar datos básicos
         if (!fullName || !email || !phone || !membershipPlan || !paymentMethod) {
@@ -3655,9 +3750,13 @@ app.post('/api/employee/register-user', verificarEmpleado, async (req, res) => {
             });
         }
         
-        // Generar contraseña temporal
-        const tempPassword = Math.random().toString(36).slice(-8);
+        // ⭐ GENERAR CONTRASEÑA TEMPORAL ÚNICA
+        const tempPassword = Math.random().toString(36).slice(-8).toUpperCase();
         const hashedPassword = await bcrypt.hash(tempPassword, 10);
+        
+        // ⭐ OBTENER INFO DEL EMPLEADO QUE REGISTRA
+        const employeeId = req.session.userId;
+        const employeeName = req.session.fullName || 'Empleado';
         
         // Crear usuario
         const newUser = new User({
@@ -3666,7 +3765,13 @@ app.post('/api/employee/register-user', verificarEmpleado, async (req, res) => {
             phone,
             password: hashedPassword,
             role: 'user',
-            status: 'active'
+            status: 'active',
+            // ⭐ CAMPOS NUEVOS
+            registeredBy: 'employee',
+            registeredByEmployeeId: employeeId,
+            registeredByEmployeeName: employeeName,
+            temporaryPassword: tempPassword, // Guardar en texto plano (solo para empleados)
+            hasChangedPassword: false
         });
         
         await newUser.save();
@@ -3716,7 +3821,7 @@ app.post('/api/employee/register-user', verificarEmpleado, async (req, res) => {
                 dni: dni,
                 age: age,
                 gender: gender,
-                verified: true // Empleado verifica en persona
+                verified: true
             };
         }
         
@@ -3731,7 +3836,6 @@ app.post('/api/employee/register-user', verificarEmpleado, async (req, res) => {
                 secondUserActivated: false
             };
             
-            // Guardar datos de segunda persona como pendiente
             await PendingUser.create({
                 fullName: secondPerson.fullName,
                 age: secondPerson.age || 18,
@@ -3746,7 +3850,7 @@ app.post('/api/employee/register-user', verificarEmpleado, async (req, res) => {
         const membership = new Membership(membershipData);
         await membership.save();
         
-        console.log(`✅ Usuario registrado por empleado: ${fullName}`);
+        console.log(`✅ Usuario registrado por ${employeeName}: ${fullName}`);
         
         res.json({
             success: true,
@@ -3754,7 +3858,7 @@ app.post('/api/employee/register-user', verificarEmpleado, async (req, res) => {
             user: {
                 fullName: newUser.fullName,
                 email: newUser.email,
-                tempPassword: tempPassword
+                tempPassword: tempPassword // ⭐ DEVOLVER CONTRASEÑA TEMPORAL
             },
             membership: {
                 planType: membership.planType,
