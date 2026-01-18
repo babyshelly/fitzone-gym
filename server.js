@@ -3349,6 +3349,58 @@ app.get('/api/employee/search-members', verificarEmpleado, async (req, res) => {
     }
 });
 
+// Obtener usuarios registrados por empleados
+app.get('/api/employee/registered-users', verificarEmpleado, async (req, res) => {
+    try {
+        console.log('📋 Empleado solicitando usuarios registrados');
+        
+        // Buscar usuarios recientes registrados con membresías
+        const recentMemberships = await Membership.find({
+            createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } // Últimos 30 días
+        })
+        .populate('userId', 'fullName email phone createdAt')
+        .sort({ createdAt: -1 })
+        .limit(50);
+        
+        const usersData = recentMemberships.map(membership => {
+            const membershipTypes = {
+                'mes-libre': 'Mes Libre',
+                'dos-personas': '2 Personas',
+                'tres-veces': '3 Veces/Semana',
+                'semanal': 'Semanal',
+                'dia-clase': 'Día/Clase',
+                'jubilados': 'Jubilados'
+            };
+            
+            return {
+                _id: membership.userId._id,
+                fullName: membership.userId.fullName,
+                email: membership.userId.email,
+                phone: membership.userId.phone,
+                membershipType: membershipTypes[membership.planType] || membership.planType,
+                tempPassword: '********', // Por seguridad, no mostrar password real
+                sharedCode: membership.sharedMembership?.membershipCode || null,
+                registeredBy: 'Empleado FitZone', // Podrías mejorar esto guardando quién registró
+                createdAt: membership.userId.createdAt
+            };
+        });
+        
+        console.log(`✅ ${usersData.length} usuarios encontrados`);
+        
+        res.json({
+            success: true,
+            users: usersData
+        });
+        
+    } catch (error) {
+        console.error('❌ Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al cargar usuarios registrados'
+        });
+    }
+});
+
 // Registrar asistencia
 app.post('/api/employee/register-attendance', verificarEmpleado, async (req, res) => {
     try {
