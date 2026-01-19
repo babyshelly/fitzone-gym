@@ -1770,9 +1770,9 @@
                             <td>$${product.price.toLocaleString()}</td>
                             <td>${product.stock}</td>
                             <td>
-                                <span class="status ${user.status === 'active' ? 'active' : ''}" 
-                                    style="background: ${user.status === 'active' ? '#4CAF50' : '#666'};">
-                                    ${user.status === 'active' ? 'Activo' : 'Inactivo'}
+                                <span class="status ${product.active ? 'active' : ''}" 
+                                    style="background: ${product.active ? '#4CAF50' : '#666'};">
+                                    ${product.active ? 'Activo' : 'Inactivo'}
                                 </span>
                             </td>
                             <td>

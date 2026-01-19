@@ -664,6 +664,82 @@ app.get('/login-empleado', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'login-empleado.html'));
 });
 
+// Obtener historial de asistencias (últimos X días)
+app.get('/api/employee/attendances-history', verificarEmpleado, async (req, res) => {
+    try {
+        const { days = 30 } = req.query;
+        
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - parseInt(days));
+        startDate.setHours(0, 0, 0, 0);
+        
+        const attendances = await Attendance.find({
+            date: { $gte: startDate }
+        })
+        .populate('userId', 'fullName email phone')
+        .sort({ date: -1, checkInTime: -1 });
+        
+        res.json({
+            success: true,
+            attendances: attendances.map(att => ({
+                _id: att._id,
+                user: {
+                    fullName: att.userId?.fullName || 'Usuario',
+                    email: att.userId?.email || 'N/A',
+                    phone: att.userId?.phone || 'N/A'
+                },
+                date: att.date,
+                checkInTime: att.checkInTime,
+                registeredBy: att.registeredBy
+            }))
+        });
+        
+    } catch (error) {
+        console.error('❌ Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al cargar historial'
+        });
+    }
+});
+
+// Obtener asistencias de hoy
+app.get('/api/employee/today-attendances', verificarEmpleado, async (req, res) => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        const attendances = await Attendance.find({
+            date: { $gte: today, $lt: tomorrow }
+        })
+        .populate('userId', 'fullName email phone')
+        .sort({ checkInTime: -1 });
+        
+        res.json({
+            success: true,
+            attendances: attendances.map(att => ({
+                _id: att._id,
+                user: {
+                    fullName: att.userId?.fullName || 'Usuario',
+                    email: att.userId?.email || 'N/A',
+                    phone: att.userId?.phone || 'N/A'
+                },
+                checkInTime: att.checkInTime,
+                registeredBy: att.registeredBy
+            }))
+        });
+        
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al cargar asistencias'
+        });
+    }
+});
+
 // Ruta del panel de empleados (protegida)
 app.get('/empleados', verificarEmpleado, (req, res) => {
     console.log('📊 Accediendo al dashboard de empleados');
@@ -3720,82 +3796,6 @@ app.post('/api/employee/register-attendance', verificarEmpleado, async (req, res
         res.status(500).json({
             success: false,
             message: 'Error al registrar asistencia'
-        });
-    }
-});
-
-// Obtener asistencias de hoy
-app.get('/api/employee/today-attendances', verificarEmpleado, async (req, res) => {
-    try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        
-        const attendances = await Attendance.find({
-            date: { $gte: today, $lt: tomorrow }
-        })
-        .populate('userId', 'fullName email phone')
-        .sort({ checkInTime: -1 });
-        
-        res.json({
-            success: true,
-            attendances: attendances.map(att => ({
-                _id: att._id,
-                user: {
-                    fullName: att.userId?.fullName || 'Usuario',
-                    email: att.userId?.email || 'N/A',
-                    phone: att.userId?.phone || 'N/A'
-                },
-                checkInTime: att.checkInTime,
-                registeredBy: att.registeredBy
-            }))
-        });
-        
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al cargar asistencias'
-        });
-    }
-});
-
-// Obtener historial de asistencias
-app.get('/api/employee/attendances-history', verificarEmpleado, async (req, res) => {
-    try {
-        const { days = 30 } = req.query;
-        
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - parseInt(days));
-        startDate.setHours(0, 0, 0, 0);
-        
-        const attendances = await Attendance.find({
-            date: { $gte: startDate }
-        })
-        .populate('userId', 'fullName email phone')
-        .sort({ date: -1, checkInTime: -1 });
-        
-        res.json({
-            success: true,
-            attendances: attendances.map(att => ({
-                _id: att._id,
-                user: {
-                    fullName: att.userId?.fullName || 'Usuario',
-                    email: att.userId?.email || 'N/A',
-                    phone: att.userId?.phone || 'N/A'
-                },
-                date: att.date,
-                checkInTime: att.checkInTime,
-                registeredBy: att.registeredBy
-            }))
-        });
-        
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al cargar historial'
         });
     }
 });
