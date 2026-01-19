@@ -894,6 +894,90 @@
                 `).join('');
             }
 
+            // ==================== FUNCIÓN CORREGIDA loadRegisteredUsers() ====================
+            async function loadRegisteredUsers() {
+                console.log('📋 Cargando usuarios registrados por empleados...');
+                
+                const tbody = document.getElementById('registered-users-tbody');
+                
+                if (!tbody) return;
+                
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 2rem;">
+                            <i class="fas fa-spinner fa-spin"></i> Cargando...
+                        </td>
+                    </tr>
+                `;
+                
+                try {
+                    const response = await fetch('/api/employee/registered-users', {
+                        credentials: 'same-origin'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success && data.users && data.users.length > 0) {
+                        document.getElementById('employee-users-count').textContent = data.users.length;
+                        
+                        tbody.innerHTML = data.users.map(user => {
+                            const registerDate = new Date(user.createdAt).toLocaleDateString('es-ES');
+                            
+                            // ⭐ CORREGIDO: Lógica de membresía mejorada
+                            const hasMembership = user.membershipType && user.membershipType !== 'Sin membresía';
+                            
+                            return `
+                                <tr>
+                                    <td style="color: var(--blanco);">${user.fullName}</td>
+                                    <td style="color: var(--gris-claro);">${user.email}</td>
+                                    <td>
+                                        ${hasMembership
+                                            ? `<span style="color: var(--violeta-claro); font-weight: bold;">${user.membershipType}</span>` 
+                                            : `<span style="color: #ef4444; font-weight: bold;">❌ Sin Membresía</span>`
+                                        }
+                                    </td>
+                                    <td>
+                                        ${user.tempPassword ? `
+                                            <div class="password-display">
+                                                <span class="password-pixelated" id="pass-${user._id}">••••••</span>
+                                                <button class="btn-toggle-password" onclick="togglePassword('${user._id}', '${user.tempPassword}')">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        ` : '<span style="color: #22c55e;"><i class="fas fa-check"></i> Cambiada</span>'}
+                                    </td>
+                                    <td>
+                                        ${user.sharedCode ? `
+                                            <div class="code-display">${user.sharedCode}</div>
+                                        ` : '<span style="color: var(--gris-claro);">N/A</span>'}
+                                    </td>
+                                    <td style="color: var(--gris-claro);">
+                                        ${user.registeredBy}<br>
+                                        <small>${user.registeredByEmail}</small>
+                                    </td>
+                                    <td style="color: var(--gris-claro);">${registerDate}</td>
+                                </tr>
+                            `;
+                        }).join('');
+                        
+                    } else {
+                        document.getElementById('employee-users-count').textContent = '0';
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 3rem;">
+                                    <i class="fas fa-user-slash" style="font-size: 3rem; color: var(--violeta-medio);"></i>
+                                    <p style="color: var(--gris-claro);">No hay usuarios registrados por empleados</p>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #ef4444;">Error al cargar</td></tr>';
+                }
+            }
+
             // ==================== PAGINACIÓN ====================
             function setupPagination() {
                 const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
@@ -1686,9 +1770,9 @@
                             <td>$${product.price.toLocaleString()}</td>
                             <td>${product.stock}</td>
                             <td>
-                                <span class="status ${product.active ? 'active' : ''}" 
-                                    style="background: ${product.active ? '#4CAF50' : '#666'};">
-                                    ${product.active ? 'Activo' : 'Inactivo'}
+                                <span class="status ${user.status === 'active' ? 'active' : ''}" 
+                                    style="background: ${user.status === 'active' ? '#4CAF50' : '#666'};">
+                                    ${user.status === 'active' ? 'Activo' : 'Inactivo'}
                                 </span>
                             </td>
                             <td>

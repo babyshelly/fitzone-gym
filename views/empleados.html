@@ -1427,7 +1427,7 @@
                                 <td style="color: var(--blanco);">${user.fullName}</td>
                                 <td style="color: var(--gris-claro);">${user.email}</td>
                                 <td>
-                                    ${user.membershipType !== 'Sin membresía' 
+                                    ${user.membershipType && user.membershipType !== 'Sin membresía' 
                                         ? `<span style="color: var(--violeta-claro); font-weight: bold;">${user.membershipType}</span>` 
                                         : `<span style="color: #ef4444; font-weight: bold;">❌ Sin Membresía</span>`}
                                 </td>
