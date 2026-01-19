@@ -1422,14 +1422,26 @@
                     tbody.innerHTML = data.users.map(user => {
                         const registerDate = new Date(user.createdAt).toLocaleDateString('es-ES');
                         
+                        // ⭐ DETERMINAR COLOR Y ESTADO
+                        const isExpired = user.membershipType.includes('EXPIRADA') || 
+                                        user.membershipRealStatus === 'expired';
+                        
+                        const statusColor = isExpired ? '#ef4444' : 
+                                        user.membershipRealStatus === 'active' ? '#22c55e' : 
+                                        '#f59e0b';
+                        
+                        const statusIcon = isExpired ? '❌' : 
+                                        user.membershipRealStatus === 'active' ? '✅' : 
+                                        '⚠️';
+                        
                         return `
                             <tr>
                                 <td style="color: var(--blanco);">${user.fullName}</td>
                                 <td style="color: var(--gris-claro);">${user.email}</td>
                                 <td>
-                                    ${user.membershipType && user.membershipType !== 'Sin membresía' 
-                                        ? `<span style="color: var(--violeta-claro); font-weight: bold;">${user.membershipType}</span>` 
-                                        : `<span style="color: #ef4444; font-weight: bold;">❌ Sin Membresía</span>`}
+                                    <span style="color: ${statusColor}; font-weight: bold; display: flex; align-items: center; gap: 0.5rem;">
+                                        ${statusIcon} ${user.membershipType}
+                                    </span>
                                 </td>
                                 <td>
                                     ${user.tempPassword ? `

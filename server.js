@@ -1040,7 +1040,7 @@ app.get('/api/admin/dashboard-stats', requireAuth, requireAdmin, async (req, res
 // GET: Obtener todos los usuarios
 app.get('/api/admin/users', requireAuth, requireAdmin, async (req, res) => {
     try {
-        console.log('👥 Cargando lista de usuarios...');
+        console.log('👥 Cargando usuarios...');
         
         const users = await User.find(
             { role: 'user' }, 
@@ -1048,6 +1048,18 @@ app.get('/api/admin/users', requireAuth, requireAdmin, async (req, res) => {
         ).sort({ createdAt: -1 });
         
         console.log(`✅ ${users.length} usuarios encontrados`);
+        
+        // ⭐ NUEVO: Actualizar membresías expiradas ANTES de enviar la respuesta
+        const today = new Date();
+        await Membership.updateMany(
+            {
+                status: 'active',
+                endDate: { $lt: today }
+            },
+            {
+                status: 'expired'
+            }
+        );
         
         res.json({ 
             success: true, 
@@ -3454,7 +3466,19 @@ app.get('/api/employee/registered-users', verificarEmpleado, async (req, res) =>
     try {
         console.log('📋 Cargando usuarios registrados por empleados...');
         
-        // ⭐ BUSCAR SOLO USUARIOS REGISTRADOS POR EMPLEADOS
+        // ⭐ PRIMERO: Actualizar membresías expiradas
+        const today = new Date();
+        await Membership.updateMany(
+            {
+                status: 'active',
+                endDate: { $lt: today }
+            },
+            {
+                status: 'expired'
+            }
+        );
+        
+        // Buscar usuarios registrados por empleados
         const employeeRegisteredUsers = await User.find({
             registeredBy: 'employee',
             role: 'user'
@@ -3466,9 +3490,10 @@ app.get('/api/employee/registered-users', verificarEmpleado, async (req, res) =>
         .sort({ createdAt: -1 })
         .limit(100);
         
-        // Obtener membresías de estos usuarios
+        // Obtener membresías actualizadas
         const usersWithMemberships = await Promise.all(
             employeeRegisteredUsers.map(async (user) => {
+                // ⭐ BUSCAR MEMBRESÍA MÁS RECIENTE (puede estar expirada o activa)
                 const membership = await Membership.findOne({ userId: user._id })
                     .sort({ createdAt: -1 });
                 
@@ -3481,14 +3506,34 @@ app.get('/api/employee/registered-users', verificarEmpleado, async (req, res) =>
                     'jubilados': 'Jubilados'
                 };
                 
+                // ⭐ DETERMINAR ESTADO REAL
+                let membershipStatus = 'Sin membresía';
+                let membershipColor = '#ef4444'; // Rojo por defecto
+                
+                if (membership) {
+                    const endDate = new Date(membership.endDate);
+                    const isExpired = endDate < today;
+                    
+                    if (membership.status === 'active' && !isExpired) {
+                        membershipStatus = membershipTypes[membership.planType] || membership.planType;
+                        membershipColor = '#22c55e'; // Verde
+                    } else if (membership.status === 'expired' || isExpired) {
+                        membershipStatus = `${membershipTypes[membership.planType] || membership.planType} (EXPIRADA)`;
+                        membershipColor = '#ef4444'; // Rojo
+                    } else {
+                        membershipStatus = membershipTypes[membership.planType] || membership.planType;
+                        membershipColor = '#f59e0b'; // Amarillo (pendiente u otro estado)
+                    }
+                }
+                
                 return {
                     _id: user._id,
                     fullName: user.fullName,
                     email: user.email,
                     phone: user.phone,
-                    membershipType: membership 
-                        ? membershipTypes[membership.planType] || membership.planType 
-                        : 'Sin membresía',
+                    membershipType: membershipStatus,
+                    membershipColor: membershipColor, // ⭐ NUEVO: Color para el frontend
+                    membershipRealStatus: membership?.status || 'none', // ⭐ NUEVO: Estado real
                     tempPassword: user.hasChangedPassword ? null : user.temporaryPassword,
                     hasChangedPassword: user.hasChangedPassword,
                     sharedCode: membership?.sharedMembership?.membershipCode || null,
@@ -3520,6 +3565,18 @@ app.get('/api/employee/all-users', verificarEmpleado, async (req, res) => {
     try {
         console.log('📋 Cargando TODOS los usuarios...');
         
+        // ⭐ PRIMERO: Actualizar membresías expiradas
+        const today = new Date();
+        await Membership.updateMany(
+            {
+                status: 'active',
+                endDate: { $lt: today }
+            },
+            {
+                status: 'expired'
+            }
+        );
+        
         const allUsers = await User.find({ role: 'user' })
             .sort({ createdAt: -1 })
             .limit(200);
@@ -3538,14 +3595,27 @@ app.get('/api/employee/all-users', verificarEmpleado, async (req, res) => {
                     'jubilados': 'Jubilados'
                 };
                 
+                // ⭐ DETERMINAR ESTADO REAL
+                let membershipStatus = 'Sin membresía';
+                
+                if (membership) {
+                    const endDate = new Date(membership.endDate);
+                    const isExpired = endDate < today;
+                    
+                    if (membership.status === 'active' && !isExpired) {
+                        membershipStatus = membershipTypes[membership.planType] || membership.planType;
+                    } else {
+                        membershipStatus = `${membershipTypes[membership.planType] || membership.planType} (EXPIRADA)`;
+                    }
+                }
+                
                 return {
                     _id: user._id,
                     fullName: user.fullName,
                     email: user.email,
                     phone: user.phone,
-                    membershipType: membership 
-                        ? membershipTypes[membership.planType] || membership.planType 
-                        : 'Sin membresía',
+                    membershipType: membershipStatus,
+                    membershipRealStatus: membership?.status || 'none',
                     registeredBy: user.registeredBy === 'employee' ? 'Empleado' : 'Web',
                     registeredByName: user.registeredByEmployeeName || 'Auto-registro',
                     createdAt: user.createdAt,
