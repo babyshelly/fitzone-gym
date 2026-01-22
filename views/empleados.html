@@ -360,7 +360,7 @@
                                     <th>Usuario</th>
                                     <th>Email</th>
                                     <th>Membresía</th>
-                                    <th>Estado</th> <!-- ⭐ NUEVA COLUMNA -->
+                                    <th>Estado</th> <!-- ⭐ COLUMNA ESTADO -->
                                     <th>Contraseña Temporal</th>
                                     <th>Código Compartido</th>
                                     <th>Registrado Por</th>
@@ -369,7 +369,7 @@
                             </thead>
                             <tbody id="registered-users-tbody">
                                 <tr>
-                                    <td colspan="7" style="text-align: center; padding: 2rem; color: var(--gris-claro);">
+                                    <td colspan="8" style="text-align: center; padding: 2rem; color: var(--gris-claro);">
                                         Cargando...
                                     </td>
                                 </tr>
@@ -1405,7 +1405,7 @@
             
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 2rem;">
+                    <td colspan="8" style="text-align: center; padding: 2rem;">
                         <i class="fas fa-spinner fa-spin"></i> Cargando...
                     </td>
                 </tr>
@@ -1418,35 +1418,27 @@
                 
                 const data = await response.json();
                 
+                console.log('Datos recibidos:', data); // ⭐ PARA DEBUG
+                
                 if (data.success && data.users && data.users.length > 0) {
                     document.getElementById('employee-users-count').textContent = data.users.length;
                     
                     tbody.innerHTML = data.users.map(user => {
                         const registerDate = new Date(user.createdAt).toLocaleDateString('es-ES');
                         
-                        // ⭐ DETERMINAR ESTADO REAL
-                        const hasMembership = user.membershipType && user.membershipType !== 'Sin membresía';
-                        const membershipExpired = user.membershipType.includes('EXPIRADA') || 
-                                                user.membershipRealStatus === 'expired';
+                        // ⭐ DETERMINAR ESTADO BASADO EN membershipRealStatus
+                        let accountStatus;
                         
-                        // ⭐ COLORES Y ESTADOS CORREGIDOS
-                        let membershipColor, membershipIcon, accountStatus;
+                        console.log(`Usuario: ${user.fullName}, Status: ${user.membershipRealStatus}, Tipo: ${user.membershipType}`); // DEBUG
                         
-                        if (!hasMembership) {
-                            // Sin membresía
-                            membershipColor = '#ef4444';
-                            membershipIcon = '❌';
+                        if (user.membershipRealStatus === 'none' || !user.membershipRealStatus) {
                             accountStatus = '<span style="background: #f59e0b; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">⚠️ Sin Membresía</span>';
-                        } else if (membershipExpired) {
-                            // Membresía expirada → INACTIVO
-                            membershipColor = '#ef4444';
-                            membershipIcon = '❌';
+                        } else if (user.membershipRealStatus === 'expired') {
                             accountStatus = '<span style="background: #ef4444; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">❌ Inactivo</span>';
-                        } else {
-                            // Membresía activa
-                            membershipColor = '#22c55e';
-                            membershipIcon = '✅';
+                        } else if (user.membershipRealStatus === 'active') {
                             accountStatus = '<span style="background: #22c55e; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">✅ Activo</span>';
+                        } else {
+                            accountStatus = '<span style="background: #6b7280; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">❓ Desconocido</span>';
                         }
                         
                         return `
@@ -1454,11 +1446,11 @@
                                 <td style="color: var(--blanco);">${user.fullName}</td>
                                 <td style="color: var(--gris-claro);">${user.email}</td>
                                 <td>
-                                    <span style="color: ${membershipColor}; font-weight: bold; display: flex; align-items: center; gap: 0.5rem;">
-                                        ${membershipIcon} ${user.membershipType}
+                                    <span style="color: ${user.membershipColor}; font-weight: bold;">
+                                        ${user.membershipType}
                                     </span>
                                 </td>
-                                <td>${accountStatus}</td> <!-- ⭐ NUEVA COLUMNA DE ESTADO -->
+                                <td>${accountStatus}</td>
                                 <td>
                                     ${user.tempPassword ? `
                                         <div class="password-display">
@@ -1487,7 +1479,7 @@
                     document.getElementById('employee-users-count').textContent = '0';
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="7" style="text-align: center; padding: 3rem;">
+                            <td colspan="8" style="text-align: center; padding: 3rem;">
                                 <i class="fas fa-user-slash" style="font-size: 3rem; color: var(--violeta-medio);"></i>
                                 <p style="color: var(--gris-claro);">No hay usuarios registrados por empleados</p>
                             </td>
@@ -1496,8 +1488,8 @@
                 }
                 
             } catch (error) {
-                console.error('Error:', error);
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #ef4444;">Error al cargar</td></tr>';
+                console.error('❌ Error:', error);
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #ef4444;">Error al cargar</td></tr>';
             }
         }
 
