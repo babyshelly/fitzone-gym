@@ -1433,15 +1433,15 @@
                         if (!hasMembership) {
                             membershipColor = '#ef4444'; // Rojo
                             membershipIcon = '❌';
-                            accountStatus = '<span style="background: #f59e0b; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">Sin Membresía</span>';
+                            accountStatus = '<span style="background: #f59e0b; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">⚠️ Sin Membresía</span>';
                         } else if (membershipExpired) {
                             membershipColor = '#ef4444'; // Rojo
                             membershipIcon = '❌';
-                            accountStatus = '<span style="background: #ef4444; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">Membresía Expirada</span>';
+                            accountStatus = '<span style="background: #ef4444; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">❌ Expirada</span>';
                         } else {
                             membershipColor = '#22c55e'; // Verde
                             membershipIcon = '✅';
-                            accountStatus = '<span style="background: #22c55e; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">Activo</span>';
+                            accountStatus = '<span style="background: #22c55e; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">✅ Activa</span>';
                         }
                         
                         return `

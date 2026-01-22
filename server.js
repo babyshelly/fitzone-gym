@@ -103,6 +103,7 @@ app.get('/api/admin/user-membership/:userId', requireAuth, requireAdmin, async (
     try {
         const { userId } = req.params;
         
+        // Buscar membresía más reciente
         const membership = await Membership.findOne({ userId: userId })
             .sort({ createdAt: -1 });
         
@@ -116,12 +117,20 @@ app.get('/api/admin/user-membership/:userId', requireAuth, requireAdmin, async (
         const today = new Date();
         const endDate = new Date(membership.endDate);
         
+        // Determinar estado real
+        let realStatus = membership.status;
+        if (endDate < today && membership.status === 'active') {
+            realStatus = 'expired';
+            // Actualizar en BD
+            await Membership.findByIdAndUpdate(membership._id, { status: 'expired' });
+        }
+        
         res.json({
             success: true,
             hasMembership: true,
             membership: {
                 planType: membership.planType,
-                status: endDate < today ? 'expired' : membership.status,
+                status: realStatus,
                 endDate: membership.endDate
             }
         });

@@ -96,8 +96,8 @@
                         <input type="text" id="user-search" class="search-input" placeholder="Buscar usuarios por nombre o email..." onkeyup="searchUsers()">
                         <select id="user-filter" class="search-input" onchange="filterUsers()" style="max-width: 200px;">
                             <option value="">Todos los usuarios</option>
-                            <option value="active">Activos</option>
-                            <option value="inactive">Inactivos</option>
+                            <option value="active">Con Membresía Activa</option>
+                            <option value="inactive">Expirados/Sin Membresía</option>
                         </select>
                     </div>
                     
@@ -824,7 +824,7 @@
                 }
             }
 
-            // ==================== CARGAR USUARIOS (CORREGIDO) ====================
+            // ==================== CARGAR USUARIOS (MOSTRAR TODOS CON COLORES) ====================
             async function loadUsers() {
                 console.log('👥 Cargando usuarios...');
                 
@@ -845,47 +845,66 @@
                     if (data.success) {
                         console.log(`✅ ${data.users.length} usuarios encontrados`);
                         
-                        // ⭐ FILTRAR: Solo usuarios con membresía activa o que nunca tuvieron membresía
-                        const usersToShow = await Promise.all(
+                        // ⭐ OBTENER ESTADO DE MEMBRESÍA PARA CADA USUARIO
+                        const usersWithMembership = await Promise.all(
                             data.users.map(async (user) => {
                                 try {
-                                    // Verificar si tiene membresía
+                                    // Buscar membresía más reciente
                                     const membershipResponse = await fetch(`/api/admin/user-membership/${user._id}`, {
                                         credentials: 'same-origin'
                                     });
                                     
                                     if (!membershipResponse.ok) {
-                                        // Si falla la verificación, incluir el usuario de todos modos
-                                        return { ...user, membershipStatus: 'unknown' };
+                                        return { ...user, membershipStatus: 'none', statusColor: '#f59e0b' };
                                     }
                                     
                                     const membershipData = await membershipResponse.json();
                                     
                                     if (!membershipData.hasMembership) {
-                                        // Usuario sin membresía - INCLUIR
-                                        return { ...user, membershipStatus: 'none' };
+                                        // Sin membresía → Naranja
+                                        return { 
+                                            ...user, 
+                                            membershipStatus: 'none',
+                                            statusColor: '#f59e0b',
+                                            statusText: 'Sin Membresía'
+                                        };
                                     }
                                     
-                                    if (membershipData.membership?.status === 'active') {
-                                        // Membresía activa - INCLUIR
-                                        return { ...user, membershipStatus: 'active' };
+                                    if (membershipData.membership?.status === 'expired') {
+                                        // Expirada → Rojo
+                                        return { 
+                                            ...user, 
+                                            membershipStatus: 'expired',
+                                            statusColor: '#ef4444',
+                                            statusText: 'Membresía Expirada'
+                                        };
                                     }
                                     
-                                    // Membresía expirada - EXCLUIR
-                                    return null;
+                                    // Activa → Verde
+                                    return { 
+                                        ...user, 
+                                        membershipStatus: 'active',
+                                        statusColor: '#22c55e',
+                                        statusText: 'Activo'
+                                    };
                                     
                                 } catch (error) {
                                     console.error('Error verificando membresía:', error);
-                                    return { ...user, membershipStatus: 'error' };
+                                    return { 
+                                        ...user, 
+                                        membershipStatus: 'error',
+                                        statusColor: '#6b7280',
+                                        statusText: 'Error'
+                                    };
                                 }
                             })
                         );
                         
-                        // Filtrar nulls (usuarios con membresía expirada)
-                        allUsers = usersToShow.filter(u => u !== null);
+                        // ⭐ MOSTRAR TODOS (no filtrar)
+                        allUsers = usersWithMembership;
                         filteredUsers = [...allUsers];
                         
-                        console.log(`📊 Mostrando ${allUsers.length} usuarios (${data.users.length - allUsers.length} ocultos por membresía expirada)`);
+                        console.log(`📊 Mostrando ${allUsers.length} usuarios (${allUsers.filter(u => u.membershipStatus === 'expired').length} expirados)`);
                         
                         displayUsers();
                         setupPagination();
@@ -902,7 +921,7 @@
                 }
             }
 
-            // ==================== MOSTRAR USUARIOS ====================
+            // ==================== MOSTRAR USUARIOS CON COLORES ====================
             function displayUsers() {
                 const tbody = document.getElementById('users-table-body');
                 
@@ -922,7 +941,11 @@
                         <td>${user.email}</td>
                         <td>${user.phone}</td>
                         <td>${new Date(user.createdAt).toLocaleDateString('es-ES')}</td>
-                        <td><span class="status active">Activo</span></td>
+                        <td>
+                            <span class="status" style="background: ${user.statusColor || '#22c55e'}; color: white; padding: 0.4rem 0.8rem; border-radius: 15px; font-weight: bold; font-size: 0.85rem;">
+                                ${user.statusText || 'Activo'}
+                            </span>
+                        </td>
                         <td>
                             <button class="btn-table-action" onclick="editUser('${user._id}')" title="Editar">
                                 <i class="fas fa-edit"></i>
@@ -1060,9 +1083,21 @@
                 setupPagination();
             }
 
+            // ==================== FILTRAR USUARIOS POR ESTADO ====================
             function filterUsers() {
                 const filter = document.getElementById('user-filter').value;
-                filteredUsers = [...allUsers];
+                
+                if (filter === '') {
+                    // Mostrar todos
+                    filteredUsers = [...allUsers];
+                } else if (filter === 'active') {
+                    // Solo activos (con membresía activa)
+                    filteredUsers = allUsers.filter(u => u.membershipStatus === 'active');
+                } else if (filter === 'inactive') {
+                    // Solo inactivos (expirados o sin membresía)
+                    filteredUsers = allUsers.filter(u => u.membershipStatus === 'expired' || u.membershipStatus === 'none');
+                }
+                
                 currentPage = 1;
                 displayUsers();
                 setupPagination();
