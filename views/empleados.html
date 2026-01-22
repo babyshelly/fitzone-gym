@@ -1393,7 +1393,8 @@
         }
 
         
-        // Cargar usuarios registrados por empleados
+        // ==================== CORREGIR loadRegisteredUsers EN empleados.html ====================
+
         async function loadRegisteredUsers() {
             console.log('📋 Cargando usuarios registrados por empleados...');
             
@@ -1422,26 +1423,29 @@
                     tbody.innerHTML = data.users.map(user => {
                         const registerDate = new Date(user.createdAt).toLocaleDateString('es-ES');
                         
-                        // ⭐ DETERMINAR ESTADO REAL (membresía vs cuenta)
+                        // ⭐ DETERMINAR ESTADO REAL
                         const hasMembership = user.membershipType && user.membershipType !== 'Sin membresía';
                         const membershipExpired = user.membershipType.includes('EXPIRADA') || 
                                                 user.membershipRealStatus === 'expired';
                         
-                        // ⭐ COLORES Y ESTADOS
+                        // ⭐ COLORES Y ESTADOS CORREGIDOS
                         let membershipColor, membershipIcon, accountStatus;
                         
                         if (!hasMembership) {
-                            membershipColor = '#ef4444'; // Rojo
+                            // Sin membresía
+                            membershipColor = '#ef4444';
                             membershipIcon = '❌';
-                            accountStatus = '<span style="background: #f59e0b; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">⚠️ Sin Membresía</span>';
+                            accountStatus = '<span style="background: #f59e0b; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">⚠️ Sin Membresía</span>';
                         } else if (membershipExpired) {
-                            membershipColor = '#ef4444'; // Rojo
+                            // Membresía expirada → INACTIVO
+                            membershipColor = '#ef4444';
                             membershipIcon = '❌';
-                            accountStatus = '<span style="background: #ef4444; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">❌ Expirada</span>';
+                            accountStatus = '<span style="background: #ef4444; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">❌ Inactivo</span>';
                         } else {
-                            membershipColor = '#22c55e'; // Verde
+                            // Membresía activa
+                            membershipColor = '#22c55e';
                             membershipIcon = '✅';
-                            accountStatus = '<span style="background: #22c55e; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">✅ Activa</span>';
+                            accountStatus = '<span style="background: #22c55e; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">✅ Activo</span>';
                         }
                         
                         return `
