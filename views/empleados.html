@@ -360,6 +360,7 @@
                                     <th>Usuario</th>
                                     <th>Email</th>
                                     <th>Membresía</th>
+                                    <th>Estado</th> <!-- ⭐ NUEVA COLUMNA -->
                                     <th>Contraseña Temporal</th>
                                     <th>Código Compartido</th>
                                     <th>Registrado Por</th>
@@ -1457,6 +1458,7 @@
                                         ${membershipIcon} ${user.membershipType}
                                     </span>
                                 </td>
+                                <td>${accountStatus}</td> <!-- ⭐ NUEVA COLUMNA DE ESTADO -->
                                 <td>
                                     ${user.tempPassword ? `
                                         <div class="password-display">
