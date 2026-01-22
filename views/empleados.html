@@ -1422,25 +1422,35 @@
                     tbody.innerHTML = data.users.map(user => {
                         const registerDate = new Date(user.createdAt).toLocaleDateString('es-ES');
                         
-                        // ⭐ DETERMINAR COLOR Y ESTADO
-                        const isExpired = user.membershipType.includes('EXPIRADA') || 
-                                        user.membershipRealStatus === 'expired';
+                        // ⭐ DETERMINAR ESTADO REAL (membresía vs cuenta)
+                        const hasMembership = user.membershipType && user.membershipType !== 'Sin membresía';
+                        const membershipExpired = user.membershipType.includes('EXPIRADA') || 
+                                                user.membershipRealStatus === 'expired';
                         
-                        const statusColor = isExpired ? '#ef4444' : 
-                                        user.membershipRealStatus === 'active' ? '#22c55e' : 
-                                        '#f59e0b';
+                        // ⭐ COLORES Y ESTADOS
+                        let membershipColor, membershipIcon, accountStatus;
                         
-                        const statusIcon = isExpired ? '❌' : 
-                                        user.membershipRealStatus === 'active' ? '✅' : 
-                                        '⚠️';
+                        if (!hasMembership) {
+                            membershipColor = '#ef4444'; // Rojo
+                            membershipIcon = '❌';
+                            accountStatus = '<span style="background: #f59e0b; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">Sin Membresía</span>';
+                        } else if (membershipExpired) {
+                            membershipColor = '#ef4444'; // Rojo
+                            membershipIcon = '❌';
+                            accountStatus = '<span style="background: #ef4444; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">Membresía Expirada</span>';
+                        } else {
+                            membershipColor = '#22c55e'; // Verde
+                            membershipIcon = '✅';
+                            accountStatus = '<span style="background: #22c55e; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">Activo</span>';
+                        }
                         
                         return `
                             <tr>
                                 <td style="color: var(--blanco);">${user.fullName}</td>
                                 <td style="color: var(--gris-claro);">${user.email}</td>
                                 <td>
-                                    <span style="color: ${statusColor}; font-weight: bold; display: flex; align-items: center; gap: 0.5rem;">
-                                        ${statusIcon} ${user.membershipType}
+                                    <span style="color: ${membershipColor}; font-weight: bold; display: flex; align-items: center; gap: 0.5rem;">
+                                        ${membershipIcon} ${user.membershipType}
                                     </span>
                                 </td>
                                 <td>

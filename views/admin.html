@@ -824,7 +824,7 @@
                 }
             }
 
-            // ==================== CARGAR USUARIOS ====================
+            // ==================== CARGAR USUARIOS (CORREGIDO) ====================
             async function loadUsers() {
                 console.log('👥 Cargando usuarios...');
                 
@@ -843,9 +843,50 @@
                     const data = await response.json();
                     
                     if (data.success) {
-                        console.log(`✅ ${data.users.length} usuarios cargados`);
-                        allUsers = data.users;
+                        console.log(`✅ ${data.users.length} usuarios encontrados`);
+                        
+                        // ⭐ FILTRAR: Solo usuarios con membresía activa o que nunca tuvieron membresía
+                        const usersToShow = await Promise.all(
+                            data.users.map(async (user) => {
+                                try {
+                                    // Verificar si tiene membresía
+                                    const membershipResponse = await fetch(`/api/admin/user-membership/${user._id}`, {
+                                        credentials: 'same-origin'
+                                    });
+                                    
+                                    if (!membershipResponse.ok) {
+                                        // Si falla la verificación, incluir el usuario de todos modos
+                                        return { ...user, membershipStatus: 'unknown' };
+                                    }
+                                    
+                                    const membershipData = await membershipResponse.json();
+                                    
+                                    if (!membershipData.hasMembership) {
+                                        // Usuario sin membresía - INCLUIR
+                                        return { ...user, membershipStatus: 'none' };
+                                    }
+                                    
+                                    if (membershipData.membership?.status === 'active') {
+                                        // Membresía activa - INCLUIR
+                                        return { ...user, membershipStatus: 'active' };
+                                    }
+                                    
+                                    // Membresía expirada - EXCLUIR
+                                    return null;
+                                    
+                                } catch (error) {
+                                    console.error('Error verificando membresía:', error);
+                                    return { ...user, membershipStatus: 'error' };
+                                }
+                            })
+                        );
+                        
+                        // Filtrar nulls (usuarios con membresía expirada)
+                        allUsers = usersToShow.filter(u => u !== null);
                         filteredUsers = [...allUsers];
+                        
+                        console.log(`📊 Mostrando ${allUsers.length} usuarios (${data.users.length - allUsers.length} ocultos por membresía expirada)`);
+                        
                         displayUsers();
                         setupPagination();
                     } else {

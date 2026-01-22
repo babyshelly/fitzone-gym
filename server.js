@@ -98,6 +98,43 @@ app.get('/api/admin/users', requireAuth, requireAdmin, async (req, res) => {
     });
 });
 
+// ==================== API: Verificar membresía de un usuario (ADMIN) ====================
+app.get('/api/admin/user-membership/:userId', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        const membership = await Membership.findOne({ userId: userId })
+            .sort({ createdAt: -1 });
+        
+        if (!membership) {
+            return res.json({
+                success: true,
+                hasMembership: false
+            });
+        }
+        
+        const today = new Date();
+        const endDate = new Date(membership.endDate);
+        
+        res.json({
+            success: true,
+            hasMembership: true,
+            membership: {
+                planType: membership.planType,
+                status: endDate < today ? 'expired' : membership.status,
+                endDate: membership.endDate
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al verificar membresía'
+        });
+    }
+});
+
 // Schema de Clases
 // ==================== TAMBIÉN ACTUALIZAR EL classSchema ====================
 // Busca el classSchema existente y REEMPLÁZALO con este:
