@@ -508,19 +508,16 @@
             // ==================== SCRIPT COMPLETAMENTE CORREGIDO ====================
             let selectedMembership = null;
             let selectedDays = [];
-            const membershipPrices = {
-                'mes-libre': 32000,
-                'dos-personas': 28000,
-                'tres-veces': 24000,
-                'semanal': 20000,
-                'dia-clase': 5000,
-                'jubilados': 20000
-            };
+            let membershipPricesData = {}; // ⭐ NUEVO
 
             // IMPORTANTE: Limpiar localStorage al cargar
-            window.addEventListener('DOMContentLoaded', function() {
+           window.addEventListener('DOMContentLoaded', async function() {
+                // Limpiar localStorage
                 localStorage.removeItem('selectedPlan');
                 selectedMembership = null;
+                
+                // ⭐ NUEVO: Cargar precios dinámicos
+                await loadMembershipPricesForRegister();
                 
                 // Limpiar selecciones visuales
                 document.querySelectorAll('.membership-option').forEach(opt => {
@@ -530,7 +527,7 @@
                 // Siempre empezar en el paso 1
                 goToStep(1);
                 
-                // Agregar eventos click a TODAS las tarjetas de membresía
+                // Agregar eventos click
                 document.querySelectorAll('.membership-option').forEach(card => {
                     card.addEventListener('click', function() {
                         const plan = this.getAttribute('data-plan');
@@ -541,7 +538,68 @@
                 });
                 
                 console.log('✅ Eventos de membresía configurados correctamente');
-            });
+            }, { once: true });
+
+            // ==================== NUEVA FUNCIÓN: CARGAR PRECIOS ====================
+            async function loadMembershipPricesForRegister() {
+                try {
+                    const response = await fetch('/api/membership-prices');
+                    const data = await response.json();
+                    
+                    if (data.success && data.prices) {
+                        // Convertir array a objeto para fácil acceso
+                        data.prices.forEach(price => {
+                            membershipPricesData[price.planType] = price;
+                        });
+                        
+                        // Actualizar precios en las tarjetas
+                        updateMembershipCardPrices();
+                        
+                        console.log('✅ Precios de membresías cargados:', membershipPricesData);
+                    }
+                } catch (error) {
+                    console.error('❌ Error cargando precios:', error);
+                    // Usar precios por defecto si falla
+                    membershipPricesData = {
+                        'mes-libre': { price: 32000, displayName: 'Mes Libre' },
+                        'dos-personas': { price: 28000, displayName: '2 Personas' },
+                        'tres-veces': { price: 15000, displayName: '3 Veces/Semana' },
+                        'semanal': { price: 20000, displayName: 'Semanal' },
+                        'dia-clase': { price: 5000, displayName: 'Día o Clase' },
+                        'jubilados': { price: 20000, displayName: 'Jubilados' }
+                    };
+                    updateMembershipCardPrices();
+                }
+            }
+
+            // ==================== NUEVA FUNCIÓN: ACTUALIZAR PRECIOS EN TARJETAS ====================
+            function updateMembershipCardPrices() {
+                // Actualizar cada tarjeta de membresía con el precio desde la BD
+                Object.keys(membershipPricesData).forEach(planType => {
+                    const card = document.querySelector(`[data-plan="${planType}"]`);
+                    if (card) {
+                        const priceElement = card.querySelector('.price');
+                        if (priceElement && membershipPricesData[planType]) {
+                            const price = membershipPricesData[planType].price;
+                            const period = getPeriodText(planType);
+                            priceElement.textContent = `$${price.toLocaleString()}${period}`;
+                        }
+                    }
+                });
+            }
+
+            // Función auxiliar para obtener texto del período
+            function getPeriodText(planType) {
+                const periods = {
+                    'mes-libre': '/mes',
+                    'dos-personas': ' c/u',
+                    'tres-veces': '/mes',
+                    'semanal': '/semana',
+                    'dia-clase': '/día',
+                    'jubilados': '/mes'
+                };
+                return periods[planType] || '/mes';
+            }
 
             // Seleccionar membresía - VERSIÓN MEJORADA
             function selectMembership(plan) {
@@ -949,7 +1007,9 @@
                     'jubilados': 'Jubilados'
                 };
                 
-                let price = membershipPrices[selectedMembership];
+                // ⭐ CAMBIO: Usar precio desde membershipPricesData
+                let price = membershipPricesData[selectedMembership]?.price || 0;
+                
                 const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
                 
                 if (paymentMethod === 'mercadopago') {

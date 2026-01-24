@@ -406,14 +406,320 @@ const notificationSchema = new mongoose.Schema({
 
 const Notification = mongoose.model('Notification', notificationSchema);
 
-// ==================== EXPORTAR LOS MODELOS ====================
-// Agregar al final de donde están los otros modelos
-// module.exports = { User, Class, Reservation, Cart, Order, Membership, PendingUser, Notification };
+// Schema de Precios de Membresías
+const membershipPriceSchema = new mongoose.Schema({
+    planType: {
+        type: String,
+        enum: ['mes-libre', 'dos-personas', 'tres-veces', 'semanal', 'dia-clase', 'jubilados'],
+        required: true,
+        unique: true
+    },
+    price: {
+        type: Number,
+        required: true,
+        min: 0
+    },
+    displayName: {
+        type: String,
+        required: true
+    },
+    description: {
+        type: String,
+        default: ''
+    },
+    features: [{
+        type: String
+    }],
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }
+});
 
-// Inicializar datos predefinidos
+membershipPriceSchema.index({ planType: 1 });
+
+const MembershipPrice = mongoose.model('MembershipPrice', membershipPriceSchema);
+
+// ==================== FUNCIÓN PARA INICIALIZAR PRECIOS POR DEFECTO ====================
+async function initializeMembershipPrices() {
+    try {
+        const count = await MembershipPrice.countDocuments();
+        
+        if (count === 0) {
+            const defaultPrices = [
+                {
+                    planType: 'mes-libre',
+                    price: 32000,
+                    displayName: 'Mes Libre',
+                    description: 'Acceso ilimitado todos los días del mes',
+                    features: [
+                        'Acceso ilimitado',
+                        'Todas las clases grupales',
+                        'Uso de instalaciones',
+                        'Horario completo'
+                    ]
+                },
+                {
+                    planType: 'dos-personas',
+                    price: 28000,
+                    displayName: '2 Personas',
+                    description: 'Membresía compartida para 2 personas',
+                    features: [
+                        'Para 2 personas',
+                        'Acceso ilimitado',
+                        'Código compartido',
+                        'Ahorro del 12.5%'
+                    ]
+                },
+                {
+                    planType: 'tres-veces',
+                    price: 15000,
+                    displayName: '3 Veces por Semana',
+                    description: '3 días de entrenamiento por semana',
+                    features: [
+                        '3 días por semana',
+                        'Eliges tus días',
+                        'Horario flexible',
+                        'Ideal para comenzar'
+                    ]
+                },
+                {
+                    planType: 'semanal',
+                    price: 20000,
+                    displayName: 'Semanal',
+                    description: 'Acceso completo por 1 semana',
+                    features: [
+                        'Acceso por 1 semana',
+                        'Todas las clases',
+                        'Horario flexible',
+                        'Sin compromiso mensual'
+                    ]
+                },
+                {
+                    planType: 'dia-clase',
+                    price: 5000,
+                    displayName: 'Día o Clase',
+                    description: 'Pago por día individual',
+                    features: [
+                        'Pago por día',
+                        'Sin compromiso',
+                        'Flexibilidad total',
+                        'Ideal para probar'
+                    ]
+                },
+                {
+                    planType: 'jubilados',
+                    price: 20000,
+                    displayName: 'Jubilados',
+                    description: 'Descuento especial para mayores',
+                    features: [
+                        'Mayores de 60/65',
+                        'Acceso ilimitado',
+                        'Descuento 37.5%',
+                        'Requiere verificación'
+                    ]
+                }
+            ];
+            
+            await MembershipPrice.insertMany(defaultPrices);
+            console.log('✅ Precios de membresías inicializados');
+        }
+    } catch (error) {
+        console.error('❌ Error inicializando precios:', error);
+    }
+}
+
+// ==================== APIs DE GESTIÓN DE PRECIOS ====================
+
+// GET: Obtener todos los precios (PÚBLICO)
+app.get('/api/membership-prices', async (req, res) => {
+    try {
+        const prices = await MembershipPrice.find({ isActive: true })
+            .select('-__v')
+            .sort({ price: 1 });
+        
+        res.json({
+            success: true,
+            prices: prices
+        });
+    } catch (error) {
+        console.error('Error obteniendo precios:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener precios'
+        });
+    }
+});
+
+// GET: Obtener un precio específico (PÚBLICO)
+app.get('/api/membership-prices/:planType', async (req, res) => {
+    try {
+        const { planType } = req.params;
+        
+        const price = await MembershipPrice.findOne({ 
+            planType: planType,
+            isActive: true 
+        });
+        
+        if (!price) {
+            return res.status(404).json({
+                success: false,
+                message: 'Plan no encontrado'
+            });
+        }
+        
+        res.json({
+            success: true,
+            price: price
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener precio'
+        });
+    }
+});
+
+// GET: Obtener todos los precios (ADMIN - con más detalles)
+app.get('/api/admin/membership-prices', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const prices = await MembershipPrice.find()
+            .populate('updatedBy', 'fullName email')
+            .sort({ planType: 1 });
+        
+        res.json({
+            success: true,
+            prices: prices
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener precios'
+        });
+    }
+});
+
+// PUT: Actualizar precio (ADMIN)
+app.put('/api/admin/membership-prices/:planType', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const { planType } = req.params;
+        const { price, displayName, description, features, isActive } = req.body;
+        
+        // Validaciones
+        if (price !== undefined && (price < 0 || isNaN(price))) {
+            return res.json({
+                success: false,
+                message: 'El precio debe ser un número positivo'
+            });
+        }
+        
+        const updateData = {
+            updatedAt: new Date(),
+            updatedBy: req.session.user.id
+        };
+        
+        if (price !== undefined) updateData.price = parseFloat(price);
+        if (displayName) updateData.displayName = displayName;
+        if (description !== undefined) updateData.description = description;
+        if (features) updateData.features = features;
+        if (isActive !== undefined) updateData.isActive = isActive;
+        
+        const updatedPrice = await MembershipPrice.findOneAndUpdate(
+            { planType: planType },
+            updateData,
+            { new: true, runValidators: true }
+        );
+        
+        if (!updatedPrice) {
+            return res.status(404).json({
+                success: false,
+                message: 'Plan no encontrado'
+            });
+        }
+        
+        console.log(`✅ Precio actualizado: ${planType} -> $${updatedPrice.price}`);
+        
+        res.json({
+            success: true,
+            message: 'Precio actualizado correctamente',
+            price: updatedPrice
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al actualizar precio'
+        });
+    }
+});
+
+// PUT: Actualizar múltiples precios a la vez (ADMIN)
+app.put('/api/admin/membership-prices-bulk', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const { prices } = req.body;
+        
+        if (!Array.isArray(prices) || prices.length === 0) {
+            return res.json({
+                success: false,
+                message: 'Datos inválidos'
+            });
+        }
+        
+        const results = [];
+        
+        for (const priceData of prices) {
+            const { planType, price } = priceData;
+            
+            if (!planType || price === undefined || price < 0) {
+                continue;
+            }
+            
+            const updated = await MembershipPrice.findOneAndUpdate(
+                { planType: planType },
+                {
+                    price: parseFloat(price),
+                    updatedAt: new Date(),
+                    updatedBy: req.session.user.id
+                },
+                { new: true }
+            );
+            
+            if (updated) {
+                results.push(updated);
+            }
+        }
+        
+        console.log(`✅ ${results.length} precios actualizados en lote`);
+        
+        res.json({
+            success: true,
+            message: `${results.length} precios actualizados correctamente`,
+            prices: results
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al actualizar precios'
+        });
+    }
+});
 // ==================== REEMPLAZAR LA FUNCIÓN initializeData() EN server.js ====================
 
 async function initializeData() {
+    await initializeMembershipPrices();
+
+    console.log('✅ Sistema de precios dinámicos configurado correctamente');
     try {
         // Crear usuario admin por defecto
         const adminExists = await User.findOne({ role: 'admin' });

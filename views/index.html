@@ -54,7 +54,6 @@
     </section>
 
     <!-- Sección de Membresías y Precios -->
-    <!-- Agregar después de la sección Hero en index.html -->
 
     <section id="membresias" class="memberships-section">
         <div class="container">
@@ -63,131 +62,16 @@
                 <p>Elige el plan que mejor se adapte a tu estilo de vida</p>
             </div>
             
-            <div class="memberships-grid">
-                <!-- Membresía Mes Libre -->
-                <div class="membership-card popular">
-                    <div class="card-badge">MÁS POPULAR</div>
-                    <div class="card-icon">
-                        <i class="fas fa-infinity"></i>
-                    </div>
-                    <h3>Mes Libre</h3>
-                    <div class="price">
-                        <span class="currency">$</span>
-                        <span class="amount">32.000</span>
-                        <span class="period">/mes</span>
-                    </div>
-                    <ul class="features">
-                        <li><i class="fas fa-check"></i> Acceso ilimitado todos los días</li>
-                        <li><i class="fas fa-check"></i> Todas las clases grupales</li>
-                        <li><i class="fas fa-check"></i> Uso de todas las instalaciones</li>
-                        <li><i class="fas fa-check"></i> Horario completo</li>
-                    </ul>
-                    <a href="/register?plan=mes-libre" class="btn-membership">Seleccionar Plan</a>
-                </div>
-
-                <!-- Membresía 2 Personas -->
-                <div class="membership-card">
-                    <div class="card-icon">
-                        <i class="fas fa-user-friends"></i>
-                    </div>
-                    <h3>2 Personas</h3>
-                    <div class="price">
-                        <span class="currency">$</span>
-                        <span class="amount">28.000</span>
-                        <span class="period">c/u por mes</span>
-                    </div>
-                    <ul class="features">
-                        <li><i class="fas fa-check"></i> Para 2 personas</li>
-                        <li><i class="fas fa-check"></i> Acceso ilimitado</li>
-                        <li><i class="fas fa-check"></i> Código compartido</li>
-                        <li><i class="fas fa-check"></i> Ahorro del 12.5%</li>
-                    </ul>
-                    <a href="/register?plan=dos-personas" class="btn-membership">Seleccionar Plan</a>
-                </div>
-
-                <!-- Membresía 3 Veces por Semana -->
-                <div class="membership-card">
-                    <div class="card-icon">
-                        <i class="fas fa-calendar-week"></i>
-                    </div>
-                    <h3>3 Veces por Semana</h3>
-                    <div class="price">
-                        <span class="currency">$</span>
-                        <span class="amount">15.000</span>
-                        <span class="period">/mes</span>
-                    </div>
-                    <ul class="features">
-                        <li><i class="fas fa-check"></i> 3 días por semana</li>
-                        <li><i class="fas fa-check"></i> Eliges tus días</li>
-                        <li><i class="fas fa-check"></i> Horario flexible</li>
-                        <li><i class="fas fa-check"></i> Ideal para comenzar</li>
-                    </ul>
-                    <a href="/register?plan=tres-veces" class="btn-membership">Seleccionar Plan</a>
-                </div>
-
-                <!-- Membresía Día o Clase -->
-                <div class="membership-card">
-                    <div class="card-icon">
-                        <i class="fas fa-ticket-alt"></i>
-                    </div>
-                    <h3>Día o Clase</h3>
-                    <div class="price">
-                        <span class="currency">$</span>
-                        <span class="amount">5.000</span>
-                        <span class="period">/día</span>
-                    </div>
-                    <ul class="features">
-                        <li><i class="fas fa-check"></i> Pago por día o clase</li>
-                        <li><i class="fas fa-check"></i> Sin compromiso mensual</li>
-                        <li><i class="fas fa-check"></i> Flexibilidad total</li>
-                        <li><i class="fas fa-check"></i> Ideal para probar</li>
-                    </ul>
-                    <a href="/register?plan=dia-clase" class="btn-membership">Seleccionar Plan</a>
-                </div>
-                
-                <!-- Membresía Semanal -->
-                <div class="membership-card">
-                    <div class="card-icon">
-                        <i class="fas fa-calendar-alt"></i>
-                    </div>
-                    <h3>Semanal</h3>
-                    <div class="price">
-                        <span class="currency">$</span>
-                        <span class="amount">20.000</span>
-                        <span class="period">/semana</span>
-                    </div>
-                    <ul class="features">
-                        <li><i class="fas fa-check"></i> Acceso por 1 semana completa</li>
-                        <li><i class="fas fa-check"></i> Todas las clases incluidas</li>
-                        <li><i class="fas fa-check"></i> Horario flexible</li>
-                        <li><i class="fas fa-check"></i> Sin compromiso mensual</li>
-                    </ul>
-                    <a href="/register?plan=semanal" class="btn-membership">Seleccionar Plan</a>
-                </div>
-            
-                <!-- Membresía Jubilados -->
-                <div class="membership-card special">
-                    <div class="card-badge special-badge">ESPECIAL</div>
-                    <div class="card-icon">
-                        <i class="fas fa-heart"></i>
-                    </div>
-                    <h3>Jubilados</h3>
-                    <div class="price">
-                        <span class="currency">$</span>
-                        <span class="amount">20.000</span>
-                        <span class="period">/mes</span>
-                    </div>
-                    <ul class="features">
-                        <li><i class="fas fa-check"></i> Mayores de 60/65 años</li>
-                        <li><i class="fas fa-check"></i> Acceso ilimitado</li>
-                        <li><i class="fas fa-check"></i> Descuento especial 37.5%</li>
-                        <li><i class="fas fa-check"></i> Requiere verificación</li>
-                    </ul>
-                    <a href="/register?plan=jubilados" class="btn-membership">Seleccionar Plan</a>
+            <!-- Grid de Membresías - SE CARGARÁ DINÁMICAMENTE -->
+            <div class="memberships-grid" id="memberships-grid">
+                <!-- Loading state -->
+                <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+                    <div class="loading-spinner" style="width: 50px; height: 50px; margin: 0 auto 1rem;"></div>
+                    <p style="color: var(--gris-claro);">Cargando membresías...</p>
                 </div>
             </div>
 
-            <!-- Información Adicional -->
+            <!-- Información Adicional (mantener igual) -->
             <div class="membership-info">
                 <div class="info-card">
                     <i class="fas fa-credit-card"></i>
@@ -206,99 +90,262 @@
                 </div>
             </div>
 
-            <!-- Comparativa de Planes -->
+            <!-- Comparativa de Planes - SE CARGARÁ DINÁMICAMENTE -->
             <div class="plans-comparison">
                 <h3>Comparativa de Planes</h3>
                 <div class="comparison-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Características</th>
-                                <th>Mes Libre</th>
-                                <th>2 Personas</th>
-                                <th>3 Veces</th>
-                                <th>Semanal</th>
-                                <th>Día/Clase</th>
-                                <th>Jubilados</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Acceso al gimnasio</td>
-                                <td><i class="fas fa-check text-success"></i></td>
-                                <td><i class="fas fa-check text-success"></i></td>
-                                <td><i class="fas fa-check text-success"></i></td>
-                                <td><i class="fas fa-check text-success"></i></td>
-                                <td><i class="fas fa-check text-success"></i></td>
-                                <td><i class="fas fa-check text-success"></i></td>
-                            </tr>
-                            <tr>
-                                <td>Clases grupales</td>
-                                <td><i class="fas fa-check text-success"></i></td>
-                                <td><i class="fas fa-check text-success"></i></td>
-                                <td><i class="fas fa-check text-success"></i></td>
-                                <td><i class="fas fa-check text-success"></i></td>
-                                <td><i class="fas fa-check text-success"></i></td>
-                                <td><i class="fas fa-check text-success"></i></td>
-                            </tr>
-                            <tr>
-                                <td>Duración</td>
-                                <td>1 mes</td>
-                                <td>1 mes</td>
-                                <td>1 mes</td>
-                                <td>7 días</td>
-                                <td>1 día</td>
-                                <td>1 mes</td>
-                            </tr>
-                            <tr>
-                                <td>Días por semana</td>
-                                <td>Ilimitado</td>
-                                <td>Ilimitado</td>
-                                <td>3 días</td>
-                                <td>Ilimitado</td>
-                                <td>1 día</td>
-                                <td>Ilimitado</td>
-                            </tr>
-                            <tr>
-                                <td>Usuarios</td>
-                                <td>1</td>
-                                <td>2</td>
-                                <td>1</td>
-                                <td>1</td>
-                                <td>1</td>
-                                <td>1</td>
-                            </tr>
-                            <tr>
-                                <td>Precio</td>
-                                <td>$32.000</td>
-                                <td>$28.000 c/u</td>
-                                <td>$15.000</td>
-                                <td>$20.000</td>
-                                <td>$5.000</td>
-                                <td>$20.000</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div id="comparison-table-content">
+                        <div style="text-align: center; padding: 2rem;">
+                            <p style="color: var(--gris-claro);">Cargando comparativa...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </section>
+</section>
 
     <script>
-    // Smooth scroll para los enlaces de membresías
-    document.querySelectorAll('.btn-membership').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const url = this.getAttribute('href');
-            
-            // Guardar el plan seleccionado en localStorage
-            const plan = new URL(url, window.location.href).searchParams.get('plan');
-            localStorage.setItem('selectedPlan', plan);
-            
-            // Redirigir a registro
-            window.location.href = url;
+        // ==================== CARGAR PRECIOS DINÁMICAMENTE ====================
+        let membershipPricesData = [];
+
+        // Cargar al iniciar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMembershipPrices();
         });
-    });
+
+        // Función para cargar precios desde la API
+        async function loadMembershipPrices() {
+            try {
+                const response = await fetch('/api/membership-prices');
+                const data = await response.json();
+                
+                if (data.success && data.prices) {
+                    membershipPricesData = data.prices;
+                    displayMemberships();
+                    displayComparisonTable();
+                } else {
+                    showLoadingError();
+                }
+            } catch (error) {
+                console.error('Error cargando precios:', error);
+                showLoadingError();
+            }
+        }
+
+        // Mostrar membresías en el grid
+        function displayMemberships() {
+            const grid = document.getElementById('memberships-grid');
+            
+            if (!grid || membershipPricesData.length === 0) {
+                showLoadingError();
+                return;
+            }
+            
+            // Orden de visualización
+            const order = ['mes-libre', 'dos-personas', 'tres-veces', 'semanal', 'dia-clase', 'jubilados'];
+            const sortedPrices = membershipPricesData.sort((a, b) => {
+                return order.indexOf(a.planType) - order.indexOf(b.planType);
+            });
+            
+            // Iconos por tipo de plan
+            const icons = {
+                'mes-libre': 'fa-infinity',
+                'dos-personas': 'fa-user-friends',
+                'tres-veces': 'fa-calendar-week',
+                'semanal': 'fa-calendar-alt',
+                'dia-clase': 'fa-ticket-alt',
+                'jubilados': 'fa-heart'
+            };
+            
+            // Determinar cuál es popular (por defecto mes-libre)
+            const popularPlan = 'mes-libre';
+            const specialPlan = 'jubilados';
+            
+            grid.innerHTML = sortedPrices.map(price => {
+                const isPopular = price.planType === popularPlan;
+                const isSpecial = price.planType === specialPlan;
+                
+                return `
+                    <div class="membership-card ${isPopular ? 'popular' : ''} ${isSpecial ? 'special' : ''}">
+                        ${isPopular ? '<div class="card-badge">MÁS POPULAR</div>' : ''}
+                        ${isSpecial ? '<div class="card-badge special-badge">ESPECIAL</div>' : ''}
+                        
+                        <div class="card-icon">
+                            <i class="fas ${icons[price.planType] || 'fa-box'}"></i>
+                        </div>
+                        
+                        <h3>${price.displayName}</h3>
+                        
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">${price.price.toLocaleString()}</span>
+                            <span class="period">${getPeriodText(price.planType)}</span>
+                        </div>
+                        
+                        <ul class="features">
+                            ${price.features && price.features.length > 0 
+                                ? price.features.map(feature => `<li><i class="fas fa-check"></i> ${feature}</li>`).join('')
+                                : '<li><i class="fas fa-check"></i> Acceso al gimnasio</li>'}
+                        </ul>
+                        
+                        <a href="/register?plan=${price.planType}" class="btn-membership">Seleccionar Plan</a>
+                    </div>
+                `;
+            }).join('');
+            
+            // Agregar animación de entrada
+            animateCards();
+        }
+
+        // Obtener texto del período
+        function getPeriodText(planType) {
+            const periods = {
+                'mes-libre': '/mes',
+                'dos-personas': 'c/u por mes',
+                'tres-veces': '/mes',
+                'semanal': '/semana',
+                'dia-clase': '/día',
+                'jubilados': '/mes'
+            };
+            return periods[planType] || '/mes';
+        }
+
+        // Mostrar tabla comparativa
+        function displayComparisonTable() {
+            const container = document.getElementById('comparison-table-content');
+            
+            if (!container || membershipPricesData.length === 0) return;
+            
+            const order = ['mes-libre', 'dos-personas', 'tres-veces', 'semanal', 'dia-clase', 'jubilados'];
+            const sortedPrices = membershipPricesData.sort((a, b) => {
+                return order.indexOf(a.planType) - order.indexOf(b.planType);
+            });
+            
+            const shortNames = {
+                'mes-libre': 'Mes Libre',
+                'dos-personas': '2 Personas',
+                'tres-veces': '3 Veces',
+                'semanal': 'Semanal',
+                'dia-clase': 'Día/Clase',
+                'jubilados': 'Jubilados'
+            };
+            
+            const durations = {
+                'mes-libre': '1 mes',
+                'dos-personas': '1 mes',
+                'tres-veces': '1 mes',
+                'semanal': '7 días',
+                'dia-clase': '1 día',
+                'jubilados': '1 mes'
+            };
+            
+            const daysPerWeek = {
+                'mes-libre': 'Ilimitado',
+                'dos-personas': 'Ilimitado',
+                'tres-veces': '3 días',
+                'semanal': 'Ilimitado',
+                'dia-clase': '1 día',
+                'jubilados': 'Ilimitado'
+            };
+            
+            const users = {
+                'mes-libre': '1',
+                'dos-personas': '2',
+                'tres-veces': '1',
+                'semanal': '1',
+                'dia-clase': '1',
+                'jubilados': '1'
+            };
+            
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Características</th>
+                            ${sortedPrices.map(p => `<th>${shortNames[p.planType]}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Acceso al gimnasio</td>
+                            ${sortedPrices.map(() => '<td><i class="fas fa-check text-success"></i></td>').join('')}
+                        </tr>
+                        <tr>
+                            <td>Clases grupales</td>
+                            ${sortedPrices.map(() => '<td><i class="fas fa-check text-success"></i></td>').join('')}
+                        </tr>
+                        <tr>
+                            <td>Duración</td>
+                            ${sortedPrices.map(p => `<td>${durations[p.planType]}</td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td>Días por semana</td>
+                            ${sortedPrices.map(p => `<td>${daysPerWeek[p.planType]}</td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td>Usuarios</td>
+                            ${sortedPrices.map(p => `<td>${users[p.planType]}</td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td>Precio</td>
+                            ${sortedPrices.map(p => `<td>$${p.price.toLocaleString()}</td>`).join('')}
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Animación de entrada para las tarjetas
+        function animateCards() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry, index) => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => {
+                            entry.target.style.opacity = '1';
+                            entry.target.style.transform = 'translateY(0)';
+                        }, index * 100);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.membership-card').forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                card.style.transition = 'all 0.6s ease';
+                observer.observe(card);
+            });
+        }
+
+        // Mostrar error de carga
+        function showLoadingError() {
+            const grid = document.getElementById('memberships-grid');
+            if (grid) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem;"></i>
+                        <p style="color: var(--gris-claro); font-size: 1.1rem; margin-bottom: 1rem;">
+                            Error al cargar las membresías
+                        </p>
+                        <button onclick="loadMembershipPrices()" style="padding: 0.8rem 1.5rem; background: var(--violeta-medio); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem;">
+                            <i class="fas fa-sync"></i> Reintentar
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Smooth scroll para los enlaces de membresías (mantener)
+        document.querySelectorAll('.btn-membership').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const url = this.getAttribute('href');
+                const plan = new URL(url, window.location.href).searchParams.get('plan');
+                if (plan) {
+                    localStorage.setItem('selectedPlan', plan);
+                }
+            });
+        });
+
+        console.log('✅ Sistema de precios dinámicos cargado en index.html');
 
     // Animación de entrada para las tarjetas
     const observer = new IntersectionObserver((entries) => {

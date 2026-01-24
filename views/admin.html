@@ -170,6 +170,55 @@
                 </div>
             </section>
 
+            <!-- Gestión de Precios de Membresías -->
+            <section id="precios" class="admin-section" style="padding: 4rem 0; background: var(--negro);">
+                <div class="container">
+                    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h2 style="color: var(--violeta-claro); font-size: 2rem;">💰 Gestión de Precios</h2>
+                        <div class="section-actions" style="display: flex; gap: 1rem;">
+                            <button class="btn btn-secondary" onclick="loadMembershipPrices()">
+                                <i class="fas fa-sync"></i> Actualizar
+                            </button>
+                            <button class="btn btn-primary" onclick="saveAllPrices()">
+                                <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Info Banner -->
+                    <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem; border-left: 5px solid #60a5fa;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <i class="fas fa-info-circle" style="font-size: 2rem; color: white;"></i>
+                            <div>
+                                <h4 style="color: white; margin-bottom: 0.5rem;">Precios Dinámicos</h4>
+                                <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 0.95rem;">
+                                    Los cambios se aplicarán inmediatamente en toda la plataforma: página de inicio, registro, panel de empleados y renovaciones.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grid de Precios -->
+                    <div id="prices-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem;">
+                        <!-- Los precios se cargarán dinámicamente -->
+                        <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+                            <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: var(--violeta-claro); margin-bottom: 1rem;"></i>
+                            <p style="color: var(--gris-claro);">Cargando precios...</p>
+                        </div>
+                    </div>
+
+                    <!-- Historial de Cambios -->
+                    <div style="margin-top: 3rem; background: var(--gris-oscuro); border-radius: 15px; padding: 2rem;">
+                        <h3 style="color: var(--violeta-claro); margin-bottom: 1.5rem;">
+                            <i class="fas fa-history"></i> Últimas Actualizaciones
+                        </h3>
+                        <div id="price-history">
+                            <p style="color: var(--gris-claro); text-align: center;">No hay cambios recientes</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Gestión de Órdenes -->
             <section id="ordenes" class="admin-section">
                 <div class="container">
@@ -2390,6 +2439,264 @@
                     }
                 }
             }
+
+            // Variables globales para precios
+            let membershipPrices = [];
+            let pricesModified = false;
+
+            // Cargar precios al iniciar (agregar a DOMContentLoaded existente)
+            document.addEventListener('DOMContentLoaded', function() {
+                // ... código existente ...
+                loadMembershipPrices();
+            });
+
+            // Cargar precios de membresías
+            async function loadMembershipPrices() {
+                try {
+                    const response = await fetch('/api/admin/membership-prices', {
+                        credentials: 'same-origin'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        membershipPrices = data.prices;
+                        displayPricesGrid();
+                    }
+                } catch (error) {
+                    console.error('Error cargando precios:', error);
+                }
+            }
+
+            // Mostrar grid de precios
+            function displayPricesGrid() {
+                const grid = document.getElementById('prices-grid');
+                
+                if (!grid || membershipPrices.length === 0) {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
+                            <p style="color: var(--gris-claro);">No hay precios configurados</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const icons = {
+                    'mes-libre': 'fa-infinity',
+                    'dos-personas': 'fa-user-friends',
+                    'tres-veces': 'fa-calendar-week',
+                    'semanal': 'fa-calendar-alt',
+                    'dia-clase': 'fa-ticket-alt',
+                    'jubilados': 'fa-heart'
+                };
+                
+                const colors = {
+                    'mes-libre': '#7f4ca5',
+                    'dos-personas': '#3b82f6',
+                    'tres-veces': '#22c55e',
+                    'semanal': '#f59e0b',
+                    'dia-clase': '#ef4444',
+                    'jubilados': '#ec4899'
+                };
+                
+                grid.innerHTML = membershipPrices.map(price => `
+                    <div class="price-card" data-plan="${price.planType}" style="background: var(--gris-oscuro); border-radius: 15px; padding: 2rem; border: 2px solid ${colors[price.planType] || 'var(--violeta-medio)'}; transition: all 0.3s;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem;">
+                            <div>
+                                <i class="fas ${icons[price.planType] || 'fa-box'}" style="font-size: 2.5rem; color: ${colors[price.planType]}; margin-bottom: 0.5rem;"></i>
+                                <h3 style="color: var(--blanco); margin: 0.5rem 0;">${price.displayName}</h3>
+                                <p style="color: var(--gris-claro); font-size: 0.9rem; margin: 0;">${price.description}</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="display: inline-block; padding: 0.3rem 0.8rem; background: ${price.isActive ? '#22c55e' : '#6b7280'}; color: white; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">
+                                    ${price.isActive ? 'ACTIVO' : 'INACTIVO'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div style="background: var(--negro); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
+                            <label style="color: var(--violeta-claro); font-weight: 600; margin-bottom: 0.5rem; display: block;">Precio Actual:</label>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span style="font-size: 0.9rem; color: var(--gris-claro);">$</span>
+                                <input type="number" id="price-${price.planType}" value="${price.price}" min="0" step="1000" 
+                                    onchange="markPriceModified()"
+                                    style="flex: 1; padding: 0.8rem; border: 2px solid var(--violeta-medio); border-radius: 8px; background: var(--gris-oscuro); color: var(--blanco); font-size: 1.2rem; font-weight: bold;">
+                            </div>
+                            ${price.updatedAt ? `
+                                <p style="color: var(--gris-claro); font-size: 0.8rem; margin: 0.5rem 0 0 0;">
+                                    <i class="fas fa-clock"></i> Última actualización: ${new Date(price.updatedAt).toLocaleDateString('es-ES')}
+                                </p>
+                            ` : ''}
+                        </div>
+
+                        <div style="margin-bottom: 1rem;">
+                            <h4 style="color: var(--violeta-claro); font-size: 0.95rem; margin-bottom: 0.8rem;">Características:</h4>
+                            ${price.features && price.features.length > 0 ? `
+                                <ul style="list-style: none; padding: 0; margin: 0;">
+                                    ${price.features.map(feature => `
+                                        <li style="color: var(--gris-claro); padding: 0.3rem 0; font-size: 0.9rem;">
+                                            <i class="fas fa-check" style="color: ${colors[price.planType]}; margin-right: 0.5rem;"></i>
+                                            ${feature}
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            ` : '<p style="color: var(--gris-claro); font-size: 0.9rem; margin: 0;">Sin características definidas</p>'}
+                        </div>
+
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-secondary" onclick="editPriceDetails('${price.planType}')" style="flex: 1; font-size: 0.9rem;">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn ${price.isActive ? 'btn-danger' : 'btn-primary'}" onclick="togglePriceStatus('${price.planType}')" style="flex: 1; font-size: 0.9rem;">
+                                <i class="fas fa-${price.isActive ? 'eye-slash' : 'eye'}"></i> ${price.isActive ? 'Desactivar' : 'Activar'}
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Marcar como modificado
+            function markPriceModified() {
+                pricesModified = true;
+                
+                const saveBtn = document.querySelector('.section-actions .btn-primary');
+                if (saveBtn) {
+                    saveBtn.style.animation = 'pulse 1s infinite';
+                    saveBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Guardar Cambios';
+                }
+            }
+
+            // Guardar todos los precios
+            async function saveAllPrices() {
+                if (!pricesModified) {
+                    if (typeof showToast === 'function') {
+                        showToast('info', 'No hay cambios para guardar');
+                    }
+                    return;
+                }
+                
+                const pricesData = [];
+                
+                membershipPrices.forEach(price => {
+                    const input = document.getElementById(`price-${price.planType}`);
+                    if (input) {
+                        const newPrice = parseFloat(input.value);
+                        if (newPrice !== price.price) {
+                            pricesData.push({
+                                planType: price.planType,
+                                price: newPrice
+                            });
+                        }
+                    }
+                });
+                
+                if (pricesData.length === 0) {
+                    if (typeof showToast === 'function') {
+                        showToast('info', 'No hay cambios para guardar');
+                    }
+                    return;
+                }
+                
+                const confirmed = await confirmAsync(
+                    'Guardar Cambios',
+                    `¿Confirmar actualización de ${pricesData.length} precio(s)? Los cambios se aplicarán en toda la plataforma.`
+                );
+                
+                if (!confirmed) return;
+                
+                try {
+                    const response = await fetch('/api/admin/membership-prices-bulk', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ prices: pricesData })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        await alertAsync(
+                            'Precios Actualizados',
+                            `${result.prices.length} precio(s) actualizados correctamente. Los cambios ya están vigentes en toda la plataforma.`,
+                            'success'
+                        );
+                        
+                        pricesModified = false;
+                        loadMembershipPrices();
+                        
+                        const saveBtn = document.querySelector('.section-actions .btn-primary');
+                        if (saveBtn) {
+                            saveBtn.style.animation = '';
+                            saveBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
+                        }
+                    } else {
+                        await alertAsync('Error', result.message || 'No se pudieron actualizar los precios', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    await alertAsync('Error de Conexión', 'No se pudo conectar con el servidor', 'error');
+                }
+            }
+
+            // Editar detalles de precio
+            function editPriceDetails(planType) {
+                const price = membershipPrices.find(p => p.planType === planType);
+                if (!price) return;
+                
+                // Implementar modal de edición detallada (opcional)
+                if (typeof showToast === 'function') {
+                    showToast('info', `Función de edición detallada para ${price.displayName} (en desarrollo)`);
+                }
+            }
+
+            // Alternar estado activo/inactivo
+            async function togglePriceStatus(planType) {
+                const price = membershipPrices.find(p => p.planType === planType);
+                if (!price) return;
+                
+                const newStatus = !price.isActive;
+                const action = newStatus ? 'activar' : 'desactivar';
+                
+                const confirmed = await confirmAsync(
+                    'Cambiar Estado',
+                    `¿Confirmar ${action} el plan "${price.displayName}"?`
+                );
+                
+                if (!confirmed) return;
+                
+                try {
+                    const response = await fetch(`/api/admin/membership-prices/${planType}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ isActive: newStatus })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        await alertAsync('Estado Actualizado', `El plan ha sido ${action}do correctamente`, 'success');
+                        loadMembershipPrices();
+                    } else {
+                        await alertAsync('Error', result.message, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    await alertAsync('Error de Conexión', 'No se pudo actualizar el estado', 'error');
+                }
+            }
+
+            // Animación de pulso para el botón guardar
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes pulse {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.05); }
+                }
+            `;
+            document.head.appendChild(style);
+
+            console.log('✅ Panel de gestión de precios cargado correctamente');
             // ==================== AGREGAR EN <script> DE admin.html ====================
 
             let allAttendances = [];
