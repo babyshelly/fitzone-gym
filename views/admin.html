@@ -731,54 +731,48 @@
         </div>
 
         <script>
-            // ==================== SCRIPT COMPLETAMENTE CORREGIDO PARA admin.html ====================
-            
+            // ==================== VARIABLES GLOBALES ====================
             let allUsers = [];
             let filteredUsers = [];
             let currentPage = 1;
             const usersPerPage = 10;
+            let allEmployees = [];
+            let filteredEmployees = [];
+            let currentEmployeePage = 1;
+            const employeesPerPage = 10;
+            let allOrders = [];
+            let currentOrdersPage = 1;
+            const ordersPerPage = 10;
+            let allProducts = [];
+            let allCategories = [];
+            let currentProductsPage = 1;
+            const productsPerPage = 10;
+            let filteredProducts = [];
+            let membershipPrices = [];
+            let pricesModified = false;
 
-            // ==================== CARGAR AL INICIAR ====================
+            // ==================== INICIALIZACIÓN ÚNICA ====================
             document.addEventListener('DOMContentLoaded', function() {
-                console.log('🚀 Panel Admin: Iniciando carga de datos...');
+                console.log('🚀 Panel Admin: Iniciando carga completa...');
                 
-                // Cargar todos los datos
-                loadDashboardStats();
-                loadUsers();
-                loadEmployees(); // SI ESTA FUNCIÓN EXISTE
-                loadOrders();
-                loadStatistics();
-                loadCategories(); // SI EXISTE
-                loadProducts(); // SI EXISTE
-                loadAdminAttendances();
-                loadMembershipPrices();
-                
-                // Cargar productos y categorías SI LAS FUNCIONES EXISTEN
-                if (typeof loadCategories === 'function') {
-                    loadCategories();
-                } else {
-                    console.warn('⚠️ loadCategories() no está definida');
-                }
-                
-                if (typeof loadProducts === 'function') {
-                    loadProducts();
-                } else {
-                    console.warn('⚠️ loadProducts() no está definida');
-                }
-                
-                // ⭐ CARGAR EMPLEADOS SOLO SI LA FUNCIÓN EXISTE
-                if (typeof loadEmployees === 'function') {
-                    loadEmployees();
-                } else {
-                    console.warn('⚠️ loadEmployees() no está definida, saltando...');
-                }
-                
-                // IMPORTANTE: Configurar logout AL FINAL y SOLO UNA VEZ
-                setTimeout(() => {
+                // Cargar TODO en orden
+                Promise.all([
+                    loadDashboardStats(),
+                    loadUsers(),
+                    loadEmployees(),
+                    loadOrders(),
+                    loadMembershipPrices(),
+                    loadCategories(),
+                    loadProducts(),
+                    loadAdminAttendances(),
+                    loadBusinessStats()
+                ]).then(() => {
+                    console.log('✅ Todos los datos cargados correctamente');
                     setupLogoutButton();
-                }, 500);
-                
-            }, { once: true }); // Ejecutar SOLO UNA 
+                }).catch(error => {
+                    console.error('❌ Error en carga inicial:', error);
+                });
+            });
 
             // ==================== CONFIGURAR BOTÓN DE LOGOUT ====================
             function setupLogoutButton() {
@@ -791,22 +785,19 @@
                 
                 console.log('✅ Configurando botón de logout...');
                 
-                // CRÍTICO: Clonar botón para eliminar TODOS los event listeners anteriores
                 const newLogoutBtn = logoutBtn.cloneNode(true);
                 logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
                 
-                // Agregar UN SOLO event listener
                 newLogoutBtn.addEventListener('click', handleLogout);
             }
 
             // Función separada para manejar logout (evita recursión)
             async function handleLogout(e) {
                 e.preventDefault();
-                e.stopImmediatePropagation(); // CRÍTICO: detener propagación inmediatamente
+                e.stopImmediatePropagation();
                 
                 console.log('🚪 Click en logout detectado');
                 
-                // Usar la función asíncrona
                 const confirmed = await confirmAsync(
                     'Cerrar Sesión',
                     '¿Estás seguro de que quieres cerrar sesión?'
@@ -831,26 +822,22 @@
                     const result = await response.json();
                     console.log('📤 Respuesta del servidor:', result);
                     
-                    // Limpiar todo el storage
                     localStorage.clear();
                     sessionStorage.clear();
                     
-                    // Mostrar mensaje y redirigir
                     await alertAsync('Sesión Cerrada', '¡Hasta pronto!', 'success');
                     
-                    // Forzar redirección
                     window.location.replace('/');
                     
                 } catch (error) {
                     console.error('❌ Error en logout:', error);
-                    // Forzar redirección de todos modos
                     localStorage.clear();
                     sessionStorage.clear();
                     window.location.replace('/');
                 }
             }
 
-            // ==================== CARGAR ESTADÍSTICAS ====================
+            // ==================== CARGAR ESTADÍSTICAS DEL DASHBOARD ====================
             async function loadDashboardStats() {
                 console.log('📊 Cargando estadísticas del dashboard...');
                 
@@ -878,19 +865,14 @@
                 } catch (error) {
                     console.error('❌ Error cargando estadísticas:', error);
                     
-                    // Mostrar 0 en lugar de error
                     document.getElementById('total-users').textContent = '0';
                     document.getElementById('total-reservas').textContent = '0';
                     document.getElementById('total-ordenes').textContent = '0';
                     document.getElementById('total-ingresos').textContent = '$0';
-                    
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('error', 'Error', 'No se pudieron cargar las estadísticas. Verifica tu conexión.');
-                    }
                 }
             }
 
-            // ==================== CARGAR USUARIOS (MOSTRAR TODOS CON COLORES) ====================
+            // ==================== CARGAR USUARIOS ====================
             async function loadUsers() {
                 console.log('👥 Cargando usuarios...');
                 
@@ -911,23 +893,27 @@
                     if (data.success) {
                         console.log(`✅ ${data.users.length} usuarios encontrados`);
                         
-                        // ⭐ OBTENER ESTADO DE MEMBRESÍA PARA CADA USUARIO
+                        // Actualizar membresías expiradas
+                        const today = new Date();
+                        await fetch('/api/admin/users', {
+                            credentials: 'same-origin'
+                        });
+                        
+                        // Obtener estado de membresía para cada usuario
                         const usersWithMembership = await Promise.all(
                             data.users.map(async (user) => {
                                 try {
-                                    // Buscar membresía más reciente
                                     const membershipResponse = await fetch(`/api/admin/user-membership/${user._id}`, {
                                         credentials: 'same-origin'
                                     });
                                     
                                     if (!membershipResponse.ok) {
-                                        return { ...user, membershipStatus: 'none', statusColor: '#f59e0b' };
+                                        return { ...user, membershipStatus: 'none', statusColor: '#f59e0b', statusText: 'Sin Membresía' };
                                     }
                                     
                                     const membershipData = await membershipResponse.json();
                                     
                                     if (!membershipData.hasMembership) {
-                                        // Sin membresía → Naranja
                                         return { 
                                             ...user, 
                                             membershipStatus: 'none',
@@ -937,7 +923,6 @@
                                     }
                                     
                                     if (membershipData.membership?.status === 'expired') {
-                                        // Expirada → Rojo
                                         return { 
                                             ...user, 
                                             membershipStatus: 'expired',
@@ -946,7 +931,6 @@
                                         };
                                     }
                                     
-                                    // Activa → Verde
                                     return { 
                                         ...user, 
                                         membershipStatus: 'active',
@@ -966,11 +950,10 @@
                             })
                         );
                         
-                        // ⭐ MOSTRAR TODOS (no filtrar)
                         allUsers = usersWithMembership;
                         filteredUsers = [...allUsers];
                         
-                        console.log(`📊 Mostrando ${allUsers.length} usuarios (${allUsers.filter(u => u.membershipStatus === 'expired').length} expirados)`);
+                        console.log(`📊 Mostrando ${allUsers.length} usuarios`);
                         
                         displayUsers();
                         setupPagination();
@@ -980,10 +963,6 @@
                 } catch (error) {
                     console.error('❌ Error cargando usuarios:', error);
                     tbody.innerHTML = '<tr><td colspan="7" class="error">Error cargando usuarios. Por favor recarga la página.</td></tr>';
-                    
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('error', 'Error', 'No se pudieron cargar los usuarios.');
-                    }
                 }
             }
 
@@ -1154,13 +1133,10 @@
                 const filter = document.getElementById('user-filter').value;
                 
                 if (filter === '') {
-                    // Mostrar todos
                     filteredUsers = [...allUsers];
                 } else if (filter === 'active') {
-                    // Solo activos (con membresía activa)
                     filteredUsers = allUsers.filter(u => u.membershipStatus === 'active');
                 } else if (filter === 'inactive') {
-                    // Solo inactivos (expirados o sin membresía)
                     filteredUsers = allUsers.filter(u => u.membershipStatus === 'expired' || u.membershipStatus === 'none');
                 }
                 
@@ -1225,26 +1201,13 @@
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('error', 'Error', error.message || 'No se pudo actualizar el usuario');
-                    } else {
-                        alert('Error al actualizar usuario');
-                    }
+                    alert('Error al actualizar usuario');
                 }
             });
 
             // ==================== ELIMINAR USUARIO ====================
             async function deleteUser(userId) {
-                const confirmDelete = typeof showConfirmAlert === 'function'
-                    ? await new Promise(resolve => {
-                        showConfirmAlert(
-                            'Eliminar Usuario',
-                            '¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.',
-                            () => resolve(true),
-                            () => resolve(false)
-                        );
-                    })
-                    : confirm('¿Estás seguro de eliminar este usuario?');
+                const confirmDelete = confirm('¿Estás seguro de eliminar este usuario?');
 
                 if (!confirmDelete) return;
 
@@ -1257,63 +1220,17 @@
                     const result = await response.json();
                     
                     if (result.success) {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('success', 'Usuario Eliminado', 'El usuario fue eliminado correctamente', () => {
-                                loadUsers();
-                                loadDashboardStats();
-                            });
-                        } else {
-                            alert('Usuario eliminado correctamente');
-                            loadUsers();
-                            loadDashboardStats();
-                        }
+                        alert('Usuario eliminado correctamente');
+                        loadUsers();
+                        loadDashboardStats();
                     } else {
                         throw new Error(result.message);
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('error', 'Error', error.message || 'No se pudo eliminar el usuario');
-                    } else {
-                        alert('Error al eliminar usuario');
-                    }
+                    alert('Error al eliminar usuario');
                 }
             }
-
-            // ==================== CARGAR ÓRDENES ====================
-            async function loadOrders() {
-                console.log('🛒 Cargando órdenes...');
-                
-                const tbody = document.getElementById('orders-table-body');
-                tbody.innerHTML = '<tr><td colspan="7" class="loading">Cargando órdenes...</td></tr>';
-                
-                try {
-                    const response = await fetch('/api/admin/orders', {
-                        credentials: 'same-origin'
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        console.log(`✅ ${data.orders.length} órdenes cargadas`);
-                        displayOrders(data.orders);
-                    } else {
-                        throw new Error(data.message || 'Error en respuesta');
-                    }
-                } catch (error) {
-                    console.error('❌ Error cargando órdenes:', error);
-                    tbody.innerHTML = '<tr><td colspan="7" class="error">Error cargando órdenes</td></tr>';
-                }
-            }
-
-            // ==================== VARIABLES PARA PAGINACIÓN DE ÓRDENES ====================
-            let allOrders = [];
-            let currentOrdersPage = 1;
-            const ordersPerPage = 10;
 
             // ==================== CARGAR ÓRDENES ====================
             async function loadOrders() {
@@ -1407,7 +1324,6 @@
                 setupOrdersPagination();
             }
 
-            // ==================== VER DETALLES ORDEN ====================
             async function viewOrderDetails(orderId) {
                 try {
                     const response = await fetch(`/api/admin/orders/${orderId}`, {
@@ -1454,9 +1370,6 @@
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('error', 'Error', 'No se pudieron cargar los detalles');
-                    }
                 }
             }
 
@@ -1519,11 +1432,7 @@
 
             function exportUsers() {
                 if (allUsers.length === 0) {
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('warning', 'Sin Datos', 'No hay usuarios para exportar');
-                    } else {
-                        alert('No hay usuarios para exportar');
-                    }
+                    alert('No hay usuarios para exportar');
                     return;
                 }
 
@@ -1545,10 +1454,6 @@
                 a.download = `usuarios_fitzone_${new Date().toISOString().split('T')[0]}.csv`;
                 a.click();
                 window.URL.revokeObjectURL(url);
-                
-                if (typeof showCustomAlert === 'function') {
-                    showCustomAlert('success', 'Exportación Exitosa', 'Los usuarios se exportaron correctamente');
-                }
             }
 
             // ==================== CERRAR MODALES AL HACER CLIC FUERA ====================
@@ -1561,7 +1466,6 @@
                 });
             });
 
-            // ==================== KEYBOARD SHORTCUTS ====================
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     const openModal = document.querySelector('.modal-overlay[style*="flex"]');
@@ -1572,13 +1476,7 @@
             });
 
             console.log('✅ Panel de administración cargado correctamente');
-        </script>
-
-        <!-- SCRIPT UNIFICADO PARA GESTIÓN DE PRODUCTOS Y CATEGORÍAS -->
-        <script>
-            // Variables globales para productos y categorías
-            let allProducts = [];
-            let allCategories = [];
+        
 
             // Agregar al DOMContentLoaded existente
             const originalDOMLoad = document.addEventListener;
@@ -1625,10 +1523,6 @@
 
             function closeCategoriesModal() {
                 document.getElementById('categories-modal').style.display = 'none';
-            }
-
-            function loadCategoriesInSelect() {
-                updateCategorySelectors();
             }
 
             function loadCategoriesList() {
@@ -1679,20 +1573,12 @@
                     const result = await response.json();
 
                     if (result.success) {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('success', '¡Éxito!', result.message);
-                        } else {
-                            alert(result.message);
-                        }
+                        alert(result.message);
                         document.getElementById('category-form').reset();
                         await loadCategories();
                         loadCategoriesList();
                     } else {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('error', 'Error', result.message);
-                        } else {
-                            alert(result.message);
-                        }
+                        alert(result.message);
                     }
                 } catch (error) {
                     console.error('Error:', error);
@@ -1700,16 +1586,7 @@
             }
 
             async function deleteCategory(categoryId) {
-                const confirmDelete = typeof showConfirmAlert === 'function'
-                    ? await new Promise(resolve => {
-                        showConfirmAlert(
-                            'Eliminar Categoría',
-                            '¿Estás seguro? No se puede eliminar si tiene productos asociados.',
-                            () => resolve(true),
-                            () => resolve(false)
-                        );
-                    })
-                    : confirm('¿Estás seguro de eliminar esta categoría?');
+                const confirmDelete = confirm('¿Estás seguro? No se puede eliminar si tiene productos asociados.');
 
                 if (!confirmDelete) return;
 
@@ -1722,19 +1599,11 @@
                     const result = await response.json();
 
                     if (result.success) {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('success', '¡Éxito!', result.message);
-                        } else {
-                            alert(result.message);
-                        }
+                        alert(result.message);
                         await loadCategories();
                         loadCategoriesList();
                     } else {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('error', 'Error', result.message);
-                        } else {
-                            alert(result.message);
-                        }
+                        alert(result.message);
                     }
                 } catch (error) {
                     console.error('Error:', error);
@@ -1779,6 +1648,8 @@
             function displayBusinessAlerts(alerts) {
                 const container = document.getElementById('business-alerts');
                 
+                if (!container) return;
+                
                 if (!alerts || alerts.length === 0) {
                     container.innerHTML = '';
                     return;
@@ -1796,6 +1667,8 @@
 
             function displayTopClasses(classes) {
                 const container = document.getElementById('top-classes');
+                
+                if (!container) return;
                 
                 if (!classes || classes.length === 0) {
                     container.innerHTML = '<p style="color: var(--gris-claro);">No hay datos</p>';
@@ -1827,6 +1700,8 @@
             function displayTopProducts(products) {
                 const container = document.getElementById('top-products');
                 
+                if (!container) return;
+                
                 if (!products || products.length === 0) {
                     container.innerHTML = '<p style="color: var(--gris-claro);">No hay ventas</p>';
                     return;
@@ -1847,12 +1722,7 @@
                 `).join('');
             }
 
-            // ==================== GESTIÓN DE PRODUCTOS ====================
-            // ==================== VARIABLES GLOBALES PARA PAGINACIÓN DE PRODUCTOS ====================
-            let currentProductsPage = 1;
-            const productsPerPage = 10;
-            let filteredProducts = [];
-
+            // ==================== GESTIÓN DE PRODUCTOS =================== //
 
             async function loadProducts() {
                 try {
@@ -1863,7 +1733,7 @@
 
                     if (data.success) {
                         allProducts = data.products;
-                        filteredProducts = [...allProducts]; // Inicializar filteredProducts
+                        filteredProducts = [...allProducts];
                         displayProductsPage();
                     } else {
                         document.getElementById('products-table-body').innerHTML = 
@@ -1940,7 +1810,6 @@
             function setupProductsPagination() {
                 const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
                 
-                // Buscar o crear contenedor de paginación
                 let pagination = document.getElementById('products-pagination');
                 if (!pagination) {
                     const tableContainer = document.querySelector('#productos .users-table-container');
@@ -1981,7 +1850,6 @@
                 currentProductsPage = page;
                 displayProductsPage();
                 
-                // Scroll suave a la tabla
                 document.getElementById('productos').scrollIntoView({ behavior: 'smooth' });
             }
 
@@ -1997,15 +1865,12 @@
                     return matchesSearch && matchesCategory;
                 });
                 
-                currentProductsPage = 1; // Resetear a página 1
+                currentProductsPage = 1;
                 displayProductsPage();
             }
 
 
             function filterProductsByCategory() {
-                const category = document.getElementById('product-category-filter').value;
-                const filtered = category ? allProducts.filter(p => p.category === category) : allProducts;
-                displayProducts(filtered);
                 searchProducts();
             }
 
@@ -2014,7 +1879,7 @@
                 document.getElementById('product-form').reset();
                 document.getElementById('product-id').value = '';
                 document.getElementById('product-modal').style.display = 'flex';
-                loadCategoriesInSelect();
+                updateCategorySelectors();
             }
 
             function closeProductModal() {
@@ -2082,7 +1947,7 @@
                 reader.readAsDataURL(file);
             }
 
-            document.getElementById('product-form').addEventListener('submit', async function(e) {
+            document.getElementById('product-form')?.addEventListener('submit', async function(e) {
                 e.preventDefault();
 
                 const productId = document.getElementById('product-id').value;
@@ -2126,27 +1991,15 @@
                     const result = await response.json();
 
                     if (result.success) {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('success', '¡Éxito!', result.message);
-                        } else {
-                            alert(result.message);
-                        }
+                        alert(result.message);
                         closeProductModal();
                         loadProducts();
                     } else {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('error', 'Error', result.message);
-                        } else {
-                            alert(result.message);
-                        }
+                        alert(result.message);
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('error', 'Error de Conexión', 'No se pudo guardar el producto');
-                    } else {
-                        alert('Error de conexión');
-                    }
+                    alert('Error de conexión');
                 }
             });
 
@@ -2160,9 +2013,6 @@
                     const result = await response.json();
 
                     if (result.success) {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('success', '¡Éxito!', result.message);
-                        }
                         loadProducts();
                     }
                 } catch (error) {
@@ -2171,16 +2021,7 @@
             }
 
             async function deleteProduct(productId) {
-                const confirmDelete = typeof showConfirmAlert === 'function'
-                    ? await new Promise(resolve => {
-                        showConfirmAlert(
-                            'Eliminar Producto',
-                            '¿Estás seguro de eliminar este producto? Esta acción no se puede deshacer.',
-                            () => resolve(true),
-                            () => resolve(false)
-                        );
-                    })
-                    : confirm('¿Estás seguro de eliminar este producto?');
+                const confirmDelete = confirm('¿Estás seguro de eliminar este producto?');
 
                 if (!confirmDelete) return;
 
@@ -2193,34 +2034,17 @@
                     const result = await response.json();
 
                     if (result.success) {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('success', '¡Éxito!', result.message);
-                        } else {
-                            alert(result.message);
-                        }
+                        alert(result.message);
                         loadProducts();
                     } else {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('error', 'Error', result.message);
-                        } else {
-                            alert(result.message);
-                        }
+                        alert(result.message);
                     }
                 } catch (error) {
                     console.error('Error:', error);
                 }
             }
 
-            // ==================== GESTIÓN DE EMPLEADOS ====================
-
-            let allEmployees = [];
-            let filteredEmployees = [];
-            let currentEmployeePage = 1;
-            const employeesPerPage = 10;
-
-            // Cargar empleados al iniciar (agregar a DOMContentLoaded existente)
-            // BUSCAR: document.addEventListener('DOMContentLoaded', function() {
-            // Y AGREGAR dentro: loadEmployees();
+            // ==================== GESTIÓN DE EMPLEADOS ==================== //
 
             async function loadEmployees() {
                 console.log('👔 Cargando empleados...');
@@ -2390,40 +2214,20 @@
                     const result = await response.json();
                     
                     if (result.success) {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('success', '✅ Empleado Guardado', result.message, () => {
-                                closeEmployeeModal();
-                                loadEmployees();
-                            });
-                        } else {
-                            alert(result.message);
-                            closeEmployeeModal();
-                            loadEmployees();
-                        }
+                        alert(result.message);
+                        closeEmployeeModal();
+                        loadEmployees();
                     } else {
                         throw new Error(result.message);
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('error', 'Error', error.message || 'No se pudo guardar el empleado');
-                    } else {
-                        alert('Error al guardar empleado');
-                    }
+                    alert('Error al guardar empleado');
                 }
             });
 
             async function deleteEmployee(employeeId) {
-                const confirmDelete = typeof showConfirmAlert === 'function'
-                    ? await new Promise(resolve => {
-                        showConfirmAlert(
-                            'Eliminar Empleado',
-                            '¿Estás seguro de eliminar este empleado? Esta acción no se puede deshacer.',
-                            () => resolve(true),
-                            () => resolve(false)
-                        );
-                    })
-                    : confirm('¿Estás seguro de eliminar este empleado?');
+                const confirmDelete = confirm('¿Estás seguro de eliminar este empleado?');
 
                 if (!confirmDelete) return;
 
@@ -2436,30 +2240,18 @@
                     const result = await response.json();
                     
                     if (result.success) {
-                        if (typeof showCustomAlert === 'function') {
-                            showCustomAlert('success', '✅ Empleado Eliminado', 'El empleado fue eliminado correctamente', () => {
-                                loadEmployees();
-                            });
-                        } else {
-                            alert('Empleado eliminado correctamente');
-                            loadEmployees();
-                        }
+                        alert('Empleado eliminado correctamente');
+                        loadEmployees();
                     } else {
                         throw new Error(result.message);
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('error', 'Error', error.message || 'No se pudo eliminar el empleado');
-                    } else {
-                        alert('Error al eliminar empleado');
-                    }
+                    alert('Error al eliminar empleado');
                 }
             }
 
-            // Variables globales para precios
-            let membershipPrices = [];
-            let pricesModified = false;
+            // PRECIOS //
 
             // Cargar precios al iniciar (agregar a DOMContentLoaded existente)
             document.addEventListener('DOMContentLoaded', function() {
@@ -2467,7 +2259,7 @@
                 loadMembershipPrices();
             });
 
-            // Cargar precios de membresías
+            // ==================== CARGAR PRECIOS DE MEMBRESÍAS ====================
             async function loadMembershipPrices() {
                 try {
                     console.log('💰 Cargando precios de membresías...');
@@ -2728,7 +2520,6 @@
             document.head.appendChild(style);
 
             console.log('✅ Panel de gestión de precios cargado correctamente');
-            // ==================== AGREGAR EN <script> DE admin.html ====================
 
             let allAttendances = [];
 
@@ -2808,16 +2599,11 @@
 
             async function exportAttendances() {
                 if (allAttendances.length === 0) {
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('warning', 'Sin Datos', 'No hay asistencias para exportar');
-                    } else {
-                        alert('No hay asistencias para exportar');
-                    }
+                    alert('No hay asistencias para exportar');
                     return;
                 }
                 
                 try {
-                    // Preparar datos para CSV
                     const csvContent = [
                         ['Usuario', 'Email', 'Fecha', 'Hora', 'Registrado Por'].join(','),
                         ...allAttendances.map(att => {
@@ -2838,7 +2624,6 @@
                         })
                     ].join('\n');
                     
-                    // Crear y descargar archivo
                     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                     const url = window.URL.createObjectURL(blob);
                     const link = document.createElement('a');
@@ -2847,18 +2632,10 @@
                     link.click();
                     window.URL.revokeObjectURL(url);
                     
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('success', 'Exportación Exitosa', 'Las asistencias se exportaron correctamente');
-                    } else {
-                        alert('Asistencias exportadas exitosamente');
-                    }
+                    alert('Asistencias exportadas exitosamente');
                 } catch (error) {
                     console.error('❌ Error exportando asistencias:', error);
-                    if (typeof showCustomAlert === 'function') {
-                        showCustomAlert('error', 'Error', 'No se pudo exportar las asistencias');
-                    } else {
-                        alert('Error al exportar asistencias');
-                    }
+                    alert('Error al exportar asistencias');
                 }
             }
         </script>
