@@ -24,6 +24,7 @@
                         <li><a href="#asistencias">Asistencias</a></li>
                         <li><a href="#productos">Productos</a></li>
                         <li><a href="#ordenes">Órdenes</a></li>
+                        <li><a href="#precios">Precios</a></li>
                         <li><a href="/" class="btn-logout">Salir</a></li>
                     </ul>
                 </div>
@@ -750,16 +751,32 @@
                 loadCategories(); // SI EXISTE
                 loadProducts(); // SI EXISTE
                 loadAdminAttendances();
+                loadMembershipPrices();
                 
-                // Cargar categorías y productos SI EXISTEN
-                if (typeof loadCategories === 'function') loadCategories();
-                if (typeof loadProducts === 'function') loadProducts();
-                if (typeof loadEmployees === 'function') loadEmployees();
+                // Cargar productos y categorías SI LAS FUNCIONES EXISTEN
+                if (typeof loadCategories === 'function') {
+                    loadCategories();
+                } else {
+                    console.warn('⚠️ loadCategories() no está definida');
+                }
+                
+                if (typeof loadProducts === 'function') {
+                    loadProducts();
+                } else {
+                    console.warn('⚠️ loadProducts() no está definida');
+                }
+                
+                // ⭐ CARGAR EMPLEADOS SOLO SI LA FUNCIÓN EXISTE
+                if (typeof loadEmployees === 'function') {
+                    loadEmployees();
+                } else {
+                    console.warn('⚠️ loadEmployees() no está definida, saltando...');
+                }
                 
                 // IMPORTANTE: Configurar logout AL FINAL y SOLO UNA VEZ
                 setTimeout(() => {
                     setupLogoutButton();
-                }, 500); // Pequeño delay para asegurar que el DOM está listo
+                }, 500);
                 
             }, { once: true }); // Ejecutar SOLO UNA 
 
@@ -2453,6 +2470,8 @@
             // Cargar precios de membresías
             async function loadMembershipPrices() {
                 try {
+                    console.log('💰 Cargando precios de membresías...');
+                    
                     const response = await fetch('/api/admin/membership-prices', {
                         credentials: 'same-origin'
                     });
@@ -2462,19 +2481,41 @@
                     if (data.success) {
                         membershipPrices = data.prices;
                         displayPricesGrid();
+                        console.log('✅ Precios cargados correctamente:', membershipPrices);
+                    } else {
+                        throw new Error(data.message || 'Error en respuesta');
                     }
                 } catch (error) {
-                    console.error('Error cargando precios:', error);
+                    console.error('❌ Error cargando precios:', error);
+                    const grid = document.getElementById('prices-grid');
+                    if (grid) {
+                        grid.innerHTML = `
+                            <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem;"></i>
+                                <p style="color: var(--gris-claro); font-size: 1.1rem; margin-bottom: 1rem;">
+                                    Error al cargar precios
+                                </p>
+                                <button onclick="loadMembershipPrices()" class="btn btn-primary">
+                                    <i class="fas fa-sync"></i> Reintentar
+                                </button>
+                            </div>
+                        `;
+                    }
                 }
             }
 
-            // Mostrar grid de precios
+            // Función para mostrar el grid de precios
             function displayPricesGrid() {
                 const grid = document.getElementById('prices-grid');
                 
-                if (!grid || membershipPrices.length === 0) {
+                if (!grid) {
+                    console.error('❌ Elemento prices-grid no encontrado');
+                    return;
+                }
+                
+                if (!membershipPrices || membershipPrices.length === 0) {
                     grid.innerHTML = `
-                        <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
+                        <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
                             <p style="color: var(--gris-claro);">No hay precios configurados</p>
                         </div>
                     `;
@@ -2500,18 +2541,16 @@
                 };
                 
                 grid.innerHTML = membershipPrices.map(price => `
-                    <div class="price-card" data-plan="${price.planType}" style="background: var(--gris-oscuro); border-radius: 15px; padding: 2rem; border: 2px solid ${colors[price.planType] || 'var(--violeta-medio)'}; transition: all 0.3s;">
+                    <div class="price-card" data-plan="${price.planType}" style="background: var(--gris-oscuro); border-radius: 15px; padding: 2rem; border: 2px solid ${colors[price.planType] || 'var(--violeta-medio)'};">
                         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem;">
                             <div>
                                 <i class="fas ${icons[price.planType] || 'fa-box'}" style="font-size: 2.5rem; color: ${colors[price.planType]}; margin-bottom: 0.5rem;"></i>
                                 <h3 style="color: var(--blanco); margin: 0.5rem 0;">${price.displayName}</h3>
-                                <p style="color: var(--gris-claro); font-size: 0.9rem; margin: 0;">${price.description}</p>
+                                <p style="color: var(--gris-claro); font-size: 0.9rem; margin: 0;">${price.description || ''}</p>
                             </div>
-                            <div style="text-align: right;">
-                                <span style="display: inline-block; padding: 0.3rem 0.8rem; background: ${price.isActive ? '#22c55e' : '#6b7280'}; color: white; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">
-                                    ${price.isActive ? 'ACTIVO' : 'INACTIVO'}
-                                </span>
-                            </div>
+                            <span style="padding: 0.3rem 0.8rem; background: ${price.isActive ? '#22c55e' : '#6b7280'}; color: white; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">
+                                ${price.isActive ? 'ACTIVO' : 'INACTIVO'}
+                            </span>
                         </div>
 
                         <div style="background: var(--negro); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
@@ -2542,23 +2581,15 @@
                                 </ul>
                             ` : '<p style="color: var(--gris-claro); font-size: 0.9rem; margin: 0;">Sin características definidas</p>'}
                         </div>
-
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button class="btn btn-secondary" onclick="editPriceDetails('${price.planType}')" style="flex: 1; font-size: 0.9rem;">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
-                            <button class="btn ${price.isActive ? 'btn-danger' : 'btn-primary'}" onclick="togglePriceStatus('${price.planType}')" style="flex: 1; font-size: 0.9rem;">
-                                <i class="fas fa-${price.isActive ? 'eye-slash' : 'eye'}"></i> ${price.isActive ? 'Desactivar' : 'Activar'}
-                            </button>
-                        </div>
                     </div>
                 `).join('');
+                
+                console.log('✅ Grid de precios renderizado correctamente');
             }
 
-            // Marcar como modificado
+            // Función para marcar como modificado
             function markPriceModified() {
                 pricesModified = true;
-                
                 const saveBtn = document.querySelector('.section-actions .btn-primary');
                 if (saveBtn) {
                     saveBtn.style.animation = 'pulse 1s infinite';
