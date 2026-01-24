@@ -200,15 +200,74 @@
             // ==================== VARIABLES PARA RENOVACIÓN ====================
             let selectedRenewalPlan = null;
             let selectedRenewalDays = [];
-            const renewalPrices = {
-                'mes-libre': 32000,
-                'tres-veces': 15000,
-                'semanal': 20000
-            };
+            let renewalPricesData = {}; // ⭐ NUEVO: Objeto para guardar precios desde BD
 
-            // ==================== FUNCIONES DE RENOVACIÓN ====================
+            // ⭐ NUEVA FUNCIÓN: Cargar precios dinámicos para renovación
+            async function loadRenewalPrices() {
+                try {
+                    console.log('💰 Cargando precios para renovación...');
+                    
+                    const response = await fetch('/api/membership-prices');
+                    const data = await response.json();
+                    
+                    if (data.success && data.prices) {
+                        // Guardar precios en objeto
+                        data.prices.forEach(price => {
+                            renewalPricesData[price.planType] = price;
+                        });
+                        
+                        // Actualizar precios en las tarjetas del modal
+                        updateRenewalCardPrices();
+                        
+                        console.log('✅ Precios de renovación cargados:', renewalPricesData);
+                    } else {
+                        console.warn('⚠️ No se pudieron cargar precios, usando valores por defecto');
+                        // Fallback a valores hardcodeados
+                        renewalPricesData = {
+                            'mes-libre': { price: 32000, displayName: 'Mes Libre' },
+                            'tres-veces': { price: 15000, displayName: '3 Veces/Semana' },
+                            'semanal': { price: 20000, displayName: 'Semanal' }
+                        };
+                        updateRenewalCardPrices();
+                    }
+                } catch (error) {
+                    console.error('❌ Error cargando precios:', error);
+                    // Fallback
+                    renewalPricesData = {
+                        'mes-libre': { price: 32000, displayName: 'Mes Libre' },
+                        'tres-veces': { price: 15000, displayName: '3 Veces/Semana' },
+                        'semanal': { price: 20000, displayName: 'Semanal' }
+                    };
+                    updateRenewalCardPrices();
+                }
+            }
+
+            // ⭐ NUEVA FUNCIÓN: Actualizar precios en tarjetas del modal
+            function updateRenewalCardPrices() {
+                // Solo actualizar los 3 planes disponibles para renovación
+                const plansToUpdate = ['mes-libre', 'tres-veces', 'semanal'];
+                
+                plansToUpdate.forEach(planType => {
+                    const card = document.querySelector(`[data-plan="${planType}"]`);
+                    if (card && renewalPricesData[planType]) {
+                        const priceElement = card.querySelector('p');
+                        if (priceElement) {
+                            const price = renewalPricesData[planType].price;
+                            priceElement.textContent = `$${price.toLocaleString()}`;
+                        }
+                    }
+                });
+                
+                console.log('✅ Precios actualizados en modal de renovación');
+            }
+
+            
+            // ==================== FUNCIONES DE RENOVACIÓN (ACTUALIZADAS) ====================
 
             function showRenewalModal() {
+                // ⭐ CARGAR PRECIOS ANTES DE MOSTRAR EL MODAL
+                loadRenewalPrices();
+                
                 // Resetear selección
                 selectedRenewalPlan = null;
                 selectedRenewalDays = [];
@@ -263,12 +322,8 @@
                 
                 // Mostrar alerta de éxito
                 if (typeof showToast === 'function') {
-                    const planNames = {
-                        'mes-libre': 'Mes Libre',
-                        'tres-veces': '3 Veces por Semana',
-                        'semanal': 'Semanal'
-                    };
-                    showToast('success', `Plan seleccionado: ${planNames[plan]}`);
+                    const planName = renewalPricesData[plan]?.displayName || plan;
+                    showToast('success', `Plan seleccionado: ${planName}`);
                 }
             }
 
@@ -300,23 +355,26 @@
 
             function goToRenewalPayment() {
                 if (!selectedRenewalPlan) {
-                    showToast('warning', 'Por favor selecciona un plan');
+                    if (typeof showToast === 'function') {
+                        showToast('warning', 'Por favor selecciona un plan');
+                    } else {
+                        alert('Por favor selecciona un plan');
+                    }
                     return;
                 }
                 
                 if (selectedRenewalPlan === 'tres-veces' && selectedRenewalDays.length !== 3) {
-                    showToast('warning', 'Debes seleccionar exactamente 3 días');
+                    if (typeof showToast === 'function') {
+                        showToast('warning', 'Debes seleccionar exactamente 3 días');
+                    } else {
+                        alert('Debes seleccionar exactamente 3 días');
+                    }
                     return;
                 }
                 
-                // Actualizar resumen
-                const planNames = {
-                    'mes-libre': 'Mes Libre',
-                    'tres-veces': '3 Veces por Semana',
-                    'semanal': 'Semanal'
-                };
-                
-                document.getElementById('renewal-summary-plan').textContent = planNames[selectedRenewalPlan];
+                // ⭐ ACTUALIZAR RESUMEN CON PRECIOS DINÁMICOS
+                const planName = renewalPricesData[selectedRenewalPlan]?.displayName || selectedRenewalPlan;
+                document.getElementById('renewal-summary-plan').textContent = planName;
                 updateRenewalTotal();
                 
                 // Cambiar a paso 2
@@ -330,9 +388,13 @@
             }
 
             function updateRenewalTotal() {
-                if (!selectedRenewalPlan) return;
+                if (!selectedRenewalPlan || !renewalPricesData[selectedRenewalPlan]) {
+                    console.warn('⚠️ No hay plan seleccionado o precio no disponible');
+                    return;
+                }
                 
-                let price = renewalPrices[selectedRenewalPlan];
+                // ⭐ USAR PRECIO DINÁMICO
+                let price = renewalPricesData[selectedRenewalPlan].price;
                 const paymentMethod = document.querySelector('input[name="renewal-payment"]:checked')?.value;
                 
                 // Aplicar recargo de Mercado Pago
@@ -346,21 +408,32 @@
 
             async function confirmRenewalPurchase() {
                 if (!selectedRenewalPlan) {
-                    showToast('error', 'Error: No se seleccionó un plan');
+                    if (typeof showToast === 'function') {
+                        showToast('error', 'Error: No se seleccionó un plan');
+                    } else {
+                        alert('Error: No se seleccionó un plan');
+                    }
                     return;
                 }
                 
                 const paymentMethod = document.querySelector('input[name="renewal-payment"]:checked')?.value;
                 
                 if (!paymentMethod) {
-                    showToast('warning', 'Por favor selecciona un método de pago');
+                    if (typeof showToast === 'function') {
+                        showToast('warning', 'Por favor selecciona un método de pago');
+                    } else {
+                        alert('Por favor selecciona un método de pago');
+                    }
                     return;
                 }
                 
                 // Confirmar con el usuario
+                const planName = renewalPricesData[selectedRenewalPlan]?.displayName || selectedRenewalPlan;
+                const price = renewalPricesData[selectedRenewalPlan]?.price || 0;
+                
                 const confirmed = await confirmAsync(
                     'Confirmar Renovación',
-                    `¿Confirmas la renovación de tu membresía?\n\nPlan: ${selectedRenewalPlan}\nMétodo de pago: ${paymentMethod}`
+                    `¿Confirmas la renovación de tu membresía?\n\nPlan: ${planName}\nPrecio: $${price.toLocaleString()}\nMétodo de pago: ${paymentMethod}`
                 );
                 
                 if (!confirmed) return;
@@ -407,10 +480,12 @@
                 }
             }
 
-            // Modificar función existente
+            // ⭐ MODIFICAR LA FUNCIÓN EXISTENTE renewMembership()
             function renewMembership() {
                 showRenewalModal();
             }
+
+            console.log('✅ Sistema de renovación con precios dinámicos cargado');
         </script>
         <!-- Dashboard Principal -->
         <main class="dashboard-main">

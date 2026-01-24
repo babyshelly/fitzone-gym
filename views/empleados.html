@@ -634,6 +634,7 @@
             loadTodayAttendances();
             loadRegisteredUsers();
             setupLogout();
+            loadMembershipPricesForEmployees(); // ⭐ AGREGAR ESTO
         });
 
         // ==================== CARGAR DATOS DEL EMPLEADO ====================
@@ -1241,7 +1242,57 @@
             }
         }
 
-        // ==================== AGREGAR ESTAS FUNCIONES AL FINAL DEL SCRIPT ====================
+        // Cargar precios dinámicos para el formulario de registro
+        async function loadMembershipPricesForEmployees() {
+            try {
+                console.log('💰 Cargando precios de membresías...');
+                
+                const response = await fetch('/api/membership-prices');
+                const data = await response.json();
+                
+                if (data.success && data.prices) {
+                    // Guardar en objeto para fácil acceso
+                    data.prices.forEach(price => {
+                        membershipPricesForEmployee[price.planType] = price;
+                    });
+                    
+                    // Actualizar precios en las tarjetas del formulario de registro
+                    updateEmployeeFormPrices();
+                    
+                    console.log('✅ Precios cargados:', membershipPricesForEmployee);
+                }
+            } catch (error) {
+                console.error('❌ Error cargando precios:', error);
+            }
+        }
+
+        // Actualizar precios en las tarjetas de membresía
+        function updateEmployeeFormPrices() {
+            const periods = {
+                'mes-libre': '/mes',
+                'dos-personas': ' c/u',
+                'tres-veces': '/mes',
+                'semanal': '/semana',
+                'dia-clase': '/día',
+                'jubilados': '/mes'
+            };
+            
+            Object.keys(membershipPricesForEmployee).forEach(planType => {
+                const card = document.querySelector(`[data-plan="${planType}"]`);
+                if (card) {
+                    const priceElement = card.querySelector('.price');
+                    if (priceElement && membershipPricesForEmployee[planType]) {
+                        const price = membershipPricesForEmployee[planType].price;
+                        const period = periods[planType] || '/mes';
+                        priceElement.textContent = `$${price.toLocaleString()}${period}`;
+                    }
+                }
+            });
+            
+            console.log('✅ Precios actualizados en formulario de empleados');
+        }
+
+
 
         function toggleUserRegistrationForm() {
             const form = document.getElementById('user-registration-form');
@@ -1252,6 +1303,7 @@
             }
         }
 
+        // MODIFICAR updateRegistrationForm() para usar precios dinámicos
         function updateRegistrationForm() {
             const selectedPlan = document.querySelector('input[name="reg-membership"]:checked')?.value;
             const additionalFields = document.getElementById('additional-fields');
@@ -1260,7 +1312,10 @@
             
             additionalFields.innerHTML = '';
             
-            // Si es 3 veces por semana, mostrar selector de días
+            // ⭐ OBTENER PRECIO DINÁMICO
+            const planPrice = membershipPricesForEmployee[selectedPlan]?.price || 0;
+            
+            // Si es 3 veces por semana
             if (selectedPlan === 'tres-veces') {
                 additionalFields.innerHTML = `
                     <h4 style="color: var(--violeta-claro); margin: 1rem 0;">Días de Entrenamiento</h4>
@@ -1296,7 +1351,7 @@
                 `;
             }
             
-            // Si es jubilados, agregar campos de verificación
+            // Si es jubilados
             if (selectedPlan === 'jubilados') {
                 additionalFields.innerHTML = `
                     <h4 style="color: var(--violeta-claro); margin: 1rem 0;">Datos de Verificación</h4>
@@ -1321,7 +1376,7 @@
                 `;
             }
             
-            // Si es 2 personas, mostrar campos de segunda persona
+            // Si es 2 personas
             if (selectedPlan === 'dos-personas') {
                 additionalFields.innerHTML = `
                     <h4 style="color: var(--violeta-claro); margin: 1rem 0;">Datos de la Segunda Persona</h4>
@@ -1346,6 +1401,8 @@
                 `;
             }
         }
+
+        console.log('✅ Sistema de precios dinámicos para empleados cargado');
 
         function validateRegDays() {
             const checked = document.querySelectorAll('input[name="reg-days"]:checked');
