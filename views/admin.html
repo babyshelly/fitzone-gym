@@ -750,28 +750,31 @@
             let filteredProducts = [];
             let membershipPrices = [];
             let pricesModified = false;
+            let allAttendances = [];
 
-            // ==================== INICIALIZACIÓN ÚNICA ====================
-            document.addEventListener('DOMContentLoaded', function() {
+            // ==================== FUNCIÓN DE INICIALIZACIÓN ÚNICA ====================
+            document.addEventListener('DOMContentLoaded', async function() {
                 console.log('🚀 Panel Admin: Iniciando carga completa...');
                 
-                // Cargar TODO en orden
-                Promise.all([
-                    loadDashboardStats(),
-                    loadUsers(),
-                    loadEmployees(),
-                    loadOrders(),
-                    loadMembershipPrices(),
-                    loadCategories(),
-                    loadProducts(),
-                    loadAdminAttendances(),
-                    loadBusinessStats()
-                ]).then(() => {
+                try {
+                    // Cargar TODO en paralelo para mayor velocidad
+                    await Promise.all([
+                        loadDashboardStats(),
+                        loadUsers(),
+                        loadEmployees(),
+                        loadOrders(),
+                        loadMembershipPrices(),
+                        loadCategories(),
+                        loadProducts(),
+                        loadAdminAttendances(),
+                        loadBusinessStats()
+                    ]);
+                    
                     console.log('✅ Todos los datos cargados correctamente');
                     setupLogoutButton();
-                }).catch(error => {
+                } catch (error) {
                     console.error('❌ Error en carga inicial:', error);
-                });
+                }
             });
 
             // ==================== CONFIGURAR BOTÓN DE LOGOUT ====================
@@ -791,7 +794,6 @@
                 newLogoutBtn.addEventListener('click', handleLogout);
             }
 
-            // Función separada para manejar logout (evita recursión)
             async function handleLogout(e) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
@@ -893,13 +895,11 @@
                     if (data.success) {
                         console.log(`✅ ${data.users.length} usuarios encontrados`);
                         
-                        // Actualizar membresías expiradas
                         const today = new Date();
                         await fetch('/api/admin/users', {
                             credentials: 'same-origin'
                         });
                         
-                        // Obtener estado de membresía para cada usuario
                         const usersWithMembership = await Promise.all(
                             data.users.map(async (user) => {
                                 try {
@@ -966,7 +966,6 @@
                 }
             }
 
-            // ==================== MOSTRAR USUARIOS CON COLORES ====================
             function displayUsers() {
                 const tbody = document.getElementById('users-table-body');
                 
@@ -1003,91 +1002,6 @@
                 `).join('');
             }
 
-            // ==================== FUNCIÓN CORREGIDA loadRegisteredUsers() ====================
-            async function loadRegisteredUsers() {
-                console.log('📋 Cargando usuarios registrados por empleados...');
-                
-                const tbody = document.getElementById('registered-users-tbody');
-                
-                if (!tbody) return;
-                
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 2rem;">
-                            <i class="fas fa-spinner fa-spin"></i> Cargando...
-                        </td>
-                    </tr>
-                `;
-                
-                try {
-                    const response = await fetch('/api/employee/registered-users', {
-                        credentials: 'same-origin'
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.success && data.users && data.users.length > 0) {
-                        document.getElementById('employee-users-count').textContent = data.users.length;
-                        
-                        tbody.innerHTML = data.users.map(user => {
-                            const registerDate = new Date(user.createdAt).toLocaleDateString('es-ES');
-                            
-                            // ⭐ CORREGIDO: Lógica de membresía mejorada
-                            const hasMembership = user.membershipType && user.membershipType !== 'Sin membresía';
-                            
-                            return `
-                                <tr>
-                                    <td style="color: var(--blanco);">${user.fullName}</td>
-                                    <td style="color: var(--gris-claro);">${user.email}</td>
-                                    <td>
-                                        ${hasMembership
-                                            ? `<span style="color: var(--violeta-claro); font-weight: bold;">${user.membershipType}</span>` 
-                                            : `<span style="color: #ef4444; font-weight: bold;">❌ Sin Membresía</span>`
-                                        }
-                                    </td>
-                                    <td>
-                                        ${user.tempPassword ? `
-                                            <div class="password-display">
-                                                <span class="password-pixelated" id="pass-${user._id}">••••••</span>
-                                                <button class="btn-toggle-password" onclick="togglePassword('${user._id}', '${user.tempPassword}')">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                            </div>
-                                        ` : '<span style="color: #22c55e;"><i class="fas fa-check"></i> Cambiada</span>'}
-                                    </td>
-                                    <td>
-                                        ${user.sharedCode ? `
-                                            <div class="code-display">${user.sharedCode}</div>
-                                        ` : '<span style="color: var(--gris-claro);">N/A</span>'}
-                                    </td>
-                                    <td style="color: var(--gris-claro);">
-                                        ${user.registeredBy}<br>
-                                        <small>${user.registeredByEmail}</small>
-                                    </td>
-                                    <td style="color: var(--gris-claro);">${registerDate}</td>
-                                </tr>
-                            `;
-                        }).join('');
-                        
-                    } else {
-                        document.getElementById('employee-users-count').textContent = '0';
-                        tbody.innerHTML = `
-                            <tr>
-                                <td colspan="7" style="text-align: center; padding: 3rem;">
-                                    <i class="fas fa-user-slash" style="font-size: 3rem; color: var(--violeta-medio);"></i>
-                                    <p style="color: var(--gris-claro);">No hay usuarios registrados por empleados</p>
-                                </td>
-                            </tr>
-                        `;
-                    }
-                    
-                } catch (error) {
-                    console.error('Error:', error);
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #ef4444;">Error al cargar</td></tr>';
-                }
-            }
-
-            // ==================== PAGINACIÓN ====================
             function setupPagination() {
                 const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
                 const pagination = document.getElementById('users-pagination');
@@ -1116,7 +1030,6 @@
                 setupPagination();
             }
 
-            // ==================== BÚSQUEDA ====================
             function searchUsers() {
                 const searchTerm = document.getElementById('user-search').value.toLowerCase();
                 filteredUsers = allUsers.filter(user => 
@@ -1128,7 +1041,6 @@
                 setupPagination();
             }
 
-            // ==================== FILTRAR USUARIOS POR ESTADO ====================
             function filterUsers() {
                 const filter = document.getElementById('user-filter').value;
                 
@@ -1145,7 +1057,6 @@
                 setupPagination();
             }
 
-            // ==================== EDITAR USUARIO ====================
             function editUser(userId) {
                 const user = allUsers.find(u => u._id === userId);
                 if (!user) return;
@@ -1163,7 +1074,6 @@
                 document.getElementById('edit-user-modal').style.display = 'none';
             }
 
-            // ==================== GUARDAR CAMBIOS USUARIO ====================
             document.getElementById('edit-user-form').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
@@ -1205,7 +1115,6 @@
                 }
             });
 
-            // ==================== ELIMINAR USUARIO ====================
             async function deleteUser(userId) {
                 const confirmDelete = confirm('¿Estás seguro de eliminar este usuario?');
 
@@ -1476,14 +1385,6 @@
             });
 
             console.log('✅ Panel de administración cargado correctamente');
-        
-
-            // Agregar al DOMContentLoaded existente
-            const originalDOMLoad = document.addEventListener;
-            document.addEventListener('DOMContentLoaded', function() {
-                loadProducts();
-                loadCategories();
-            });
 
             // ==================== GESTIÓN DE CATEGORÍAS ====================
 
@@ -2253,12 +2154,6 @@
 
             // PRECIOS //
 
-            // Cargar precios al iniciar (agregar a DOMContentLoaded existente)
-            document.addEventListener('DOMContentLoaded', function() {
-                // ... código existente ...
-                loadMembershipPrices();
-            });
-
             // ==================== CARGAR PRECIOS DE MEMBRESÍAS ====================
             async function loadMembershipPrices() {
                 try {
@@ -2520,8 +2415,6 @@
             document.head.appendChild(style);
 
             console.log('✅ Panel de gestión de precios cargado correctamente');
-
-            let allAttendances = [];
 
             async function loadAdminAttendances() {
                 const days = document.getElementById('attendance-days')?.value || 30;
