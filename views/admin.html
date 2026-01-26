@@ -7,6 +7,12 @@
         <link rel="stylesheet" href="/css/style.css">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
         <script src="/js/alerts.js"></script>
+        <style>
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+            }
+        </style>
     </head>
     <body>
         <!-- Header del Admin -->
@@ -752,6 +758,143 @@
             let pricesModified = false;
             let allAttendances = [];
 
+            // ==================== FUNCIONES GLOBALES (deben estar FUERA del DOMContentLoaded) ====================
+
+            function refreshUsers() {
+                const btn = event.target.closest('button');
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = '<div class="loading-spinner"></div> Actualizando...';
+                btn.disabled = true;
+                
+                loadUsers().finally(() => {
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+                });
+            }
+
+            function showAddEmployeeModal() {
+                document.getElementById('employee-modal-title').textContent = 'Agregar Empleado';
+                document.getElementById('employee-form').reset();
+                document.getElementById('employee-id').value = '';
+                document.getElementById('employee-password').required = true;
+                document.getElementById('employee-modal').style.display = 'flex';
+            }
+
+            function showAddProductModal() {
+                document.getElementById('product-modal-title').textContent = 'Agregar Producto';
+                document.getElementById('product-form').reset();
+                document.getElementById('product-id').value = '';
+                document.getElementById('product-modal').style.display = 'flex';
+                updateCategorySelectors();
+            }
+
+            // Guardar todos los precios
+            async function saveAllPrices() {
+                if (!pricesModified) {
+                    if (typeof showToast === 'function') {
+                        showToast('info', 'No hay cambios para guardar');
+                    }
+                    return;
+                }
+                
+                const pricesData = [];
+                
+                membershipPrices.forEach(price => {
+                    const input = document.getElementById(`price-${price.planType}`);
+                    if (input) {
+                        const newPrice = parseFloat(input.value);
+                        if (newPrice !== price.price) {
+                            pricesData.push({
+                                planType: price.planType,
+                                price: newPrice
+                            });
+                        }
+                    }
+                });
+                
+                if (pricesData.length === 0) {
+                    if (typeof showToast === 'function') {
+                        showToast('info', 'No hay cambios para guardar');
+                    }
+                    return;
+                }
+                
+                const confirmed = await confirmAsync(
+                    'Guardar Cambios',
+                    `¿Confirmar actualización de ${pricesData.length} precio(s)? Los cambios se aplicarán en toda la plataforma.`
+                );
+                
+                if (!confirmed) return;
+                
+                try {
+                    const response = await fetch('/api/admin/membership-prices-bulk', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ prices: pricesData })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        await alertAsync(
+                            'Precios Actualizados',
+                            `${result.prices.length} precio(s) actualizados correctamente. Los cambios ya están vigentes en toda la plataforma.`,
+                            'success'
+                        );
+                        
+                        pricesModified = false;
+                        loadMembershipPrices();
+                        
+                        const saveBtn = document.querySelector('.section-actions .btn-primary');
+                        if (saveBtn) {
+                            saveBtn.style.animation = '';
+                            saveBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
+                        }
+                    } else {
+                        await alertAsync('Error', result.message || 'No se pudieron actualizar los precios', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    await alertAsync('Error de Conexión', 'No se pudo conectar con el servidor', 'error');
+                }
+            }
+
+            // ==================== CARGAR ESTADÍSTICAS DEL NEGOCIO ====================
+            async function loadBusinessStats() {
+                const period = document.getElementById('stats-period')?.value || 'month';
+                
+                try {
+                    const response = await fetch(`/api/admin/business-stats?period=${period}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const stats = data.stats;
+                        
+                        // Actualizar cards
+                        document.getElementById('stat-revenue').textContent = `$${stats.revenue.toLocaleString()}`;
+                        document.getElementById('stat-new-members').textContent = stats.newMembers;
+                        document.getElementById('stat-attendance').textContent = Math.round(stats.avgAttendance);
+                        document.getElementById('stat-renewal-rate').textContent = `${stats.renewalRate}%`;
+                        
+                        // Cambios respecto período anterior
+                        document.getElementById('stat-revenue-change').textContent = 
+                            stats.revenueChange >= 0 ? `↑ +${stats.revenueChange}%` : `↓ ${stats.revenueChange}%`;
+                        
+                        // Top clases
+                        displayTopClasses(stats.topClasses);
+                        
+                        // Top productos
+                        displayTopProducts(stats.topProducts);
+                        
+                        // Alertas de negocio
+                        displayBusinessAlerts(stats.alerts);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+
             // ==================== FUNCIÓN DE INICIALIZACIÓN ÚNICA ====================
             document.addEventListener('DOMContentLoaded', async function() {
                 console.log('🚀 Panel Admin: Iniciando carga completa...');
@@ -1327,18 +1470,6 @@
             }
 
             // ==================== FUNCIONES AUXILIARES ====================
-            function refreshUsers() {
-                const btn = event.target.closest('button');
-                const originalContent = btn.innerHTML;
-                btn.innerHTML = '<div class="loading-spinner"></div> Actualizando...';
-                btn.disabled = true;
-                
-                loadUsers().finally(() => {
-                    btn.innerHTML = originalContent;
-                    btn.disabled = false;
-                });
-            }
-
             function exportUsers() {
                 if (allUsers.length === 0) {
                     alert('No hay usuarios para exportar');
@@ -1505,41 +1636,6 @@
                         loadCategoriesList();
                     } else {
                         alert(result.message);
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                }
-            }
-
-            // ==================== CARGAR ESTADÍSTICAS DEL NEGOCIO ====================
-            async function loadBusinessStats() {
-                const period = document.getElementById('stats-period')?.value || 'month';
-                
-                try {
-                    const response = await fetch(`/api/admin/business-stats?period=${period}`);
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        const stats = data.stats;
-                        
-                        // Actualizar cards
-                        document.getElementById('stat-revenue').textContent = `$${stats.revenue.toLocaleString()}`;
-                        document.getElementById('stat-new-members').textContent = stats.newMembers;
-                        document.getElementById('stat-attendance').textContent = Math.round(stats.avgAttendance);
-                        document.getElementById('stat-renewal-rate').textContent = `${stats.renewalRate}%`;
-                        
-                        // Cambios respecto período anterior
-                        document.getElementById('stat-revenue-change').textContent = 
-                            stats.revenueChange >= 0 ? `↑ +${stats.revenueChange}%` : `↓ ${stats.revenueChange}%`;
-                        
-                        // Top clases
-                        displayTopClasses(stats.topClasses);
-                        
-                        // Top productos
-                        displayTopProducts(stats.topProducts);
-                        
-                        // Alertas de negocio
-                        displayBusinessAlerts(stats.alerts);
                     }
                 } catch (error) {
                     console.error('Error:', error);
@@ -1773,14 +1869,6 @@
 
             function filterProductsByCategory() {
                 searchProducts();
-            }
-
-            function showAddProductModal() {
-                document.getElementById('product-modal-title').textContent = 'Agregar Producto';
-                document.getElementById('product-form').reset();
-                document.getElementById('product-id').value = '';
-                document.getElementById('product-modal').style.display = 'flex';
-                updateCategorySelectors();
             }
 
             function closeProductModal() {
@@ -2057,14 +2145,6 @@
                 setupEmployeesPagination();
             }
 
-            function showAddEmployeeModal() {
-                document.getElementById('employee-modal-title').textContent = 'Agregar Empleado';
-                document.getElementById('employee-form').reset();
-                document.getElementById('employee-id').value = '';
-                document.getElementById('employee-password').required = true;
-                document.getElementById('employee-modal').style.display = 'flex';
-            }
-
             function closeEmployeeModal() {
                 document.getElementById('employee-modal').style.display = 'none';
             }
@@ -2284,77 +2364,7 @@
                 }
             }
 
-            // Guardar todos los precios
-            async function saveAllPrices() {
-                if (!pricesModified) {
-                    if (typeof showToast === 'function') {
-                        showToast('info', 'No hay cambios para guardar');
-                    }
-                    return;
-                }
-                
-                const pricesData = [];
-                
-                membershipPrices.forEach(price => {
-                    const input = document.getElementById(`price-${price.planType}`);
-                    if (input) {
-                        const newPrice = parseFloat(input.value);
-                        if (newPrice !== price.price) {
-                            pricesData.push({
-                                planType: price.planType,
-                                price: newPrice
-                            });
-                        }
-                    }
-                });
-                
-                if (pricesData.length === 0) {
-                    if (typeof showToast === 'function') {
-                        showToast('info', 'No hay cambios para guardar');
-                    }
-                    return;
-                }
-                
-                const confirmed = await confirmAsync(
-                    'Guardar Cambios',
-                    `¿Confirmar actualización de ${pricesData.length} precio(s)? Los cambios se aplicarán en toda la plataforma.`
-                );
-                
-                if (!confirmed) return;
-                
-                try {
-                    const response = await fetch('/api/admin/membership-prices-bulk', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'same-origin',
-                        body: JSON.stringify({ prices: pricesData })
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        await alertAsync(
-                            'Precios Actualizados',
-                            `${result.prices.length} precio(s) actualizados correctamente. Los cambios ya están vigentes en toda la plataforma.`,
-                            'success'
-                        );
-                        
-                        pricesModified = false;
-                        loadMembershipPrices();
-                        
-                        const saveBtn = document.querySelector('.section-actions .btn-primary');
-                        if (saveBtn) {
-                            saveBtn.style.animation = '';
-                            saveBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
-                        }
-                    } else {
-                        await alertAsync('Error', result.message || 'No se pudieron actualizar los precios', 'error');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    await alertAsync('Error de Conexión', 'No se pudo conectar con el servidor', 'error');
-                }
-            }
+            
 
             // Editar detalles de precio
             function editPriceDetails(planType) {
@@ -2403,16 +2413,6 @@
                     await alertAsync('Error de Conexión', 'No se pudo actualizar el estado', 'error');
                 }
             }
-
-            // Animación de pulso para el botón guardar
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes pulse {
-                    0%, 100% { transform: scale(1); }
-                    50% { transform: scale(1.05); }
-                }
-            `;
-            document.head.appendChild(style);
 
             console.log('✅ Panel de gestión de precios cargado correctamente');
 
