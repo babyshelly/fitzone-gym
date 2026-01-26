@@ -205,8 +205,8 @@
                         </div>
                     </div>
 
-                    <!-- Grid de Precios -->
-                    <div id="prices-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem;">
+                    <!-- Grid de Precios CORREGIDO -->
+                    <div id="prices-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
                         <!-- Los precios se cargarán dinámicamente -->
                         <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
                             <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: var(--violeta-claro); margin-bottom: 1rem;"></i>
@@ -789,10 +789,13 @@
             }
 
             // Guardar todos los precios
+            // ⭐ ESTA FUNCIÓN DEBE ESTAR FUERA DEL DOMContentLoaded
             async function saveAllPrices() {
                 if (!pricesModified) {
                     if (typeof showToast === 'function') {
                         showToast('info', 'No hay cambios para guardar');
+                    } else {
+                        alert('No hay cambios para guardar');
                     }
                     return;
                 }
@@ -815,6 +818,8 @@
                 if (pricesData.length === 0) {
                     if (typeof showToast === 'function') {
                         showToast('info', 'No hay cambios para guardar');
+                    } else {
+                        alert('No hay cambios para guardar');
                     }
                     return;
                 }
@@ -857,6 +862,16 @@
                 } catch (error) {
                     console.error('Error:', error);
                     await alertAsync('Error de Conexión', 'No se pudo conectar con el servidor', 'error');
+                }
+            }
+
+            // Función para marcar como modificado
+            function markPriceModified() {
+                pricesModified = true;
+                const saveBtn = document.querySelector('.section-actions .btn-primary');
+                if (saveBtn) {
+                    saveBtn.style.animation = 'pulse 1s infinite';
+                    saveBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Guardar Cambios';
                 }
             }
 
@@ -2308,25 +2323,33 @@
                 };
                 
                 grid.innerHTML = membershipPrices.map(price => `
-                    <div class="price-card" data-plan="${price.planType}" style="background: var(--gris-oscuro); border-radius: 15px; padding: 2rem; border: 2px solid ${colors[price.planType] || 'var(--violeta-medio)'};">
+                    <div class="price-card" data-plan="${price.planType}" style="background: var(--gris-oscuro); border-radius: 15px; padding: 2rem; border: 2px solid ${colors[price.planType] || 'var(--violeta-medio)'}; display: flex; flex-direction: column;">
+                        
+                        <!-- Header -->
                         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem;">
-                            <div>
-                                <i class="fas ${icons[price.planType] || 'fa-box'}" style="font-size: 2.5rem; color: ${colors[price.planType]}; margin-bottom: 0.5rem;"></i>
-                                <h3 style="color: var(--blanco); margin: 0.5rem 0;">${price.displayName}</h3>
+                            <div style="flex: 1;">
+                                <i class="fas ${icons[price.planType] || 'fa-box'}" style="font-size: 2.5rem; color: ${colors[price.planType]}; margin-bottom: 0.5rem; display: block;"></i>
+                                <h3 style="color: var(--blanco); margin: 0.5rem 0; font-size: 1.3rem;">${price.displayName}</h3>
                                 <p style="color: var(--gris-claro); font-size: 0.9rem; margin: 0;">${price.description || ''}</p>
                             </div>
-                            <span style="padding: 0.3rem 0.8rem; background: ${price.isActive ? '#22c55e' : '#6b7280'}; color: white; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">
+                            <span style="padding: 0.3rem 0.8rem; background: ${price.isActive ? '#22c55e' : '#6b7280'}; color: white; border-radius: 15px; font-size: 0.85rem; font-weight: bold; white-space: nowrap;">
                                 ${price.isActive ? 'ACTIVO' : 'INACTIVO'}
                             </span>
                         </div>
 
+                        <!-- Input de Precio -->
                         <div style="background: var(--negro); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
                             <label style="color: var(--violeta-claro); font-weight: 600; margin-bottom: 0.5rem; display: block;">Precio Actual:</label>
-                            <div style="display: flex; align-items: center; gap: 1rem;">
-                                <span style="font-size: 0.9rem; color: var(--gris-claro);">$</span>
-                                <input type="number" id="price-${price.planType}" value="${price.price}" min="0" step="1000" 
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="font-size: 1.2rem; color: var(--blanco); font-weight: bold;">$</span>
+                                <input 
+                                    type="number" 
+                                    id="price-${price.planType}" 
+                                    value="${price.price}" 
+                                    min="0" 
+                                    step="1000" 
                                     onchange="markPriceModified()"
-                                    style="flex: 1; padding: 0.8rem; border: 2px solid var(--violeta-medio); border-radius: 8px; background: var(--gris-oscuro); color: var(--blanco); font-size: 1.2rem; font-weight: bold;">
+                                    style="flex: 1; padding: 0.8rem; border: 2px solid var(--violeta-medio); border-radius: 8px; background: var(--gris-oscuro); color: var(--blanco); font-size: 1.2rem; font-weight: bold; width: 100%;">
                             </div>
                             ${price.updatedAt ? `
                                 <p style="color: var(--gris-claro); font-size: 0.8rem; margin: 0.5rem 0 0 0;">
@@ -2335,7 +2358,8 @@
                             ` : ''}
                         </div>
 
-                        <div style="margin-bottom: 1rem;">
+                        <!-- Características -->
+                        <div style="flex: 1;">
                             <h4 style="color: var(--violeta-claro); font-size: 0.95rem; margin-bottom: 0.8rem;">Características:</h4>
                             ${price.features && price.features.length > 0 ? `
                                 <ul style="list-style: none; padding: 0; margin: 0;">
@@ -2353,18 +2377,6 @@
                 
                 console.log('✅ Grid de precios renderizado correctamente');
             }
-
-            // Función para marcar como modificado
-            function markPriceModified() {
-                pricesModified = true;
-                const saveBtn = document.querySelector('.section-actions .btn-primary');
-                if (saveBtn) {
-                    saveBtn.style.animation = 'pulse 1s infinite';
-                    saveBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Guardar Cambios';
-                }
-            }
-
-            
 
             // Editar detalles de precio
             function editPriceDetails(planType) {
@@ -2425,9 +2437,14 @@
                 tbody.innerHTML = '<tr><td colspan="5" class="loading">Cargando asistencias...</td></tr>';
                 
                 try {
-                    const response = await fetch(`/api/employee/attendances-history?days=${days}`, {
+                    const response = await fetch(`/api/admin/attendances-history?days=${days}`, {
                         credentials: 'same-origin'
                     });
+                    
+                    // ⭐ AGREGAR ESTA VALIDACIÓN
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
                     
                     const data = await response.json();
                     
@@ -2441,7 +2458,7 @@
                     }
                 } catch (error) {
                     console.error('❌ Error cargando asistencias:', error);
-                    tbody.innerHTML = '<tr><td colspan="5" class="error">Error cargando asistencias</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="error">Error cargando asistencias. Verifica que el endpoint exista.</td></tr>';
                 }
             }
 
