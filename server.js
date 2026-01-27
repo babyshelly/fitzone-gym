@@ -1553,7 +1553,7 @@ app.get('/api/admin/users', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // ==================== ENDPOINT: HISTORIAL DE ASISTENCIAS PARA ADMIN ====================
-app.get('/api/admin/attendances-history', isAdmin, async (req, res) => {
+app.get('/api/admin/attendances-history', requireAuth, requireAdmin, async (req, res) => {
     try {
         const days = parseInt(req.query.days) || 30;
         
