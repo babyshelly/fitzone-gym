@@ -1055,6 +1055,54 @@ app.get('/api/employee/attendances-history', verificarEmpleado, async (req, res)
     }
 });
 
+// ==================== ENDPOINT PARA ADMIN: HISTORIAL DE ASISTENCIAS ====================
+app.get('/api/admin/attendances-history', requireAuth, requireAdmin, async (req, res) => {
+    try {
+        const { days = 30 } = req.query;
+        
+        console.log(`📊 Admin solicitando asistencias de los últimos ${days} días`);
+        
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - parseInt(days));
+        startDate.setHours(0, 0, 0, 0);
+        
+        const attendances = await Attendance.find({
+            date: { $gte: startDate }
+        })
+        .populate('userId', 'fullName email phone')
+        .sort({ date: -1, checkInTime: -1 })
+        .lean();
+        
+        // Formatear respuesta
+        const formattedAttendances = attendances.map(att => ({
+            _id: att._id,
+            user: {
+                fullName: att.userId?.fullName || 'Usuario eliminado',
+                email: att.userId?.email || 'N/A',
+                phone: att.userId?.phone || 'N/A'
+            },
+            date: att.date,
+            checkInTime: att.checkInTime,
+            registeredBy: att.registeredBy || 'Sistema'
+        }));
+        
+        console.log(`✅ ${formattedAttendances.length} asistencias encontradas`);
+        
+        res.json({
+            success: true,
+            attendances: formattedAttendances
+        });
+        
+    } catch (error) {
+        console.error('❌ Error cargando asistencias:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al cargar asistencias',
+            attendances: []
+        });
+    }
+});
+
 // Obtener asistencias de hoy
 app.get('/api/employee/today-attendances', verificarEmpleado, async (req, res) => {
     try {
@@ -1500,6 +1548,39 @@ app.get('/api/admin/users', requireAuth, requireAdmin, async (req, res) => {
             success: false, 
             message: 'Error al cargar usuarios',
             error: error.message 
+        });
+    }
+});
+
+// ==================== ENDPOINT: HISTORIAL DE ASISTENCIAS PARA ADMIN ====================
+app.get('/api/admin/attendances-history', isAdmin, async (req, res) => {
+    try {
+        const days = parseInt(req.query.days) || 30;
+        
+        // Calcular fecha límite
+        const dateLimit = new Date();
+        dateLimit.setDate(dateLimit.getDate() - days);
+        
+        // Buscar asistencias desde la fecha límite
+        const attendances = await Attendance.find({
+            checkInTime: { $gte: dateLimit }
+        })
+        .populate('user', 'fullName email phone')
+        .sort({ checkInTime: -1 })
+        .lean();
+        
+        console.log(`📊 Admin consultó ${attendances.length} asistencias de los últimos ${days} días`);
+        
+        res.json({
+            success: true,
+            attendances: attendances
+        });
+        
+    } catch (error) {
+        console.error('❌ Error obteniendo historial de asistencias:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener historial de asistencias'
         });
     }
 });
