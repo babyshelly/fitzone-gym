@@ -353,6 +353,37 @@
 
                 <!-- TAB: Usuarios registrados por empleados -->
                 <div id="employee-users-tab" style="display: block;">
+                    
+                    <!-- ⭐ BÚSQUEDA Y FILTROS PARA EMPLEADOS -->
+                    <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="display: grid; grid-template-columns: 1fr auto auto; gap: 1rem; align-items: end;">
+                            <div>
+                                <label style="color: var(--violeta-claro); font-weight: 600; margin-bottom: 0.5rem; display: block;">
+                                    <i class="fas fa-search"></i> Buscar Usuario
+                                </label>
+                                <input type="text" id="employee-user-search" 
+                                    placeholder="Buscar por nombre, email o teléfono..." 
+                                    onkeyup="searchEmployeeUsers()"
+                                    style="width: 100%; padding: 0.8rem; border: 2px solid var(--violeta-medio); border-radius: 8px; background: var(--gris-oscuro); color: var(--blanco);">
+                            </div>
+                            <div>
+                                <label style="color: var(--violeta-claro); font-weight: 600; margin-bottom: 0.5rem; display: block;">
+                                    <i class="fas fa-filter"></i> Estado
+                                </label>
+                                <select id="employee-user-status-filter" onchange="filterEmployeeUsers()"
+                                        style="padding: 0.8rem; border: 2px solid var(--violeta-medio); border-radius: 8px; background: var(--gris-oscuro); color: var(--blanco); min-width: 200px;">
+                                    <option value="">Todos</option>
+                                    <option value="active">Activos</option>
+                                    <option value="expired">Inactivos/Expirados</option>
+                                    <option value="none">Sin Membresía</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-secondary" onclick="clearEmployeeFilters()">
+                                <i class="fas fa-times"></i> Limpiar
+                            </button>
+                        </div>
+                    </div>
+
                     <div style="background: var(--negro); border-radius: 15px; padding: 2rem; overflow-x: auto;">
                         <table class="registered-users-table">
                             <thead>
@@ -360,7 +391,7 @@
                                     <th>Usuario</th>
                                     <th>Email</th>
                                     <th>Membresía</th>
-                                    <th>Estado</th> <!-- ⭐ COLUMNA ESTADO -->
+                                    <th>Estado</th>
                                     <th>Contraseña Temporal</th>
                                     <th>Código Compartido</th>
                                     <th>Registrado Por</th>
@@ -375,11 +406,55 @@
                                 </tr>
                             </tbody>
                         </table>
+                        
+                        <!-- ⭐ PAGINACIÓN EMPLEADOS -->
+                        <div id="employee-users-pagination" class="pagination" style="margin-top: 2rem; display: flex; justify-content: center; align-items: center; gap: 1rem;"></div>
                     </div>
                 </div>
 
                 <!-- TAB: Todos los usuarios -->
                 <div id="all-users-tab" style="display: none;">
+                    
+                    <!-- ⭐ BÚSQUEDA Y FILTROS PARA TODOS -->
+                    <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="display: grid; grid-template-columns: 1fr auto auto auto; gap: 1rem; align-items: end;">
+                            <div>
+                                <label style="color: var(--violeta-claro); font-weight: 600; margin-bottom: 0.5rem; display: block;">
+                                    <i class="fas fa-search"></i> Buscar Usuario
+                                </label>
+                                <input type="text" id="all-user-search" 
+                                    placeholder="Buscar por nombre, email o teléfono..." 
+                                    onkeyup="searchAllUsers()"
+                                    style="width: 100%; padding: 0.8rem; border: 2px solid var(--violeta-medio); border-radius: 8px; background: var(--gris-oscuro); color: var(--blanco);">
+                            </div>
+                            <div>
+                                <label style="color: var(--violeta-claro); font-weight: 600; margin-bottom: 0.5rem; display: block;">
+                                    <i class="fas fa-filter"></i> Estado
+                                </label>
+                                <select id="all-user-status-filter" onchange="filterAllUsers()"
+                                        style="padding: 0.8rem; border: 2px solid var(--violeta-medio); border-radius: 8px; background: var(--gris-oscuro); color: var(--blanco); min-width: 150px;">
+                                    <option value="">Todos</option>
+                                    <option value="active">Activos</option>
+                                    <option value="inactive">Inactivos</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="color: var(--violeta-claro); font-weight: 600; margin-bottom: 0.5rem; display: block;">
+                                    <i class="fas fa-user-tag"></i> Origen
+                                </label>
+                                <select id="all-user-origin-filter" onchange="filterAllUsers()"
+                                        style="padding: 0.8rem; border: 2px solid var(--violeta-medio); border-radius: 8px; background: var(--gris-oscuro); color: var(--blanco); min-width: 150px;">
+                                    <option value="">Todos</option>
+                                    <option value="employee">Empleados</option>
+                                    <option value="web">Web</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-secondary" onclick="clearAllFilters()">
+                                <i class="fas fa-times"></i> Limpiar
+                            </button>
+                        </div>
+                    </div>
+
                     <div style="background: var(--negro); border-radius: 15px; padding: 2rem; overflow-x: auto;">
                         <table class="registered-users-table">
                             <thead>
@@ -402,6 +477,9 @@
                                 </tr>
                             </tbody>
                         </table>
+                        
+                        <!-- ⭐ PAGINACIÓN TODOS -->
+                        <div id="all-users-pagination" class="pagination" style="margin-top: 2rem; display: flex; justify-content: center; align-items: center; gap: 1rem;"></div>
                     </div>
                 </div>
             </div>
@@ -611,6 +689,13 @@
         let registrationData = {};
         let registeredUsers = [];
         let membershipPricesForEmployee = {}; // ⭐ AGREGAR ESTA LÍNEA
+        let allEmployeeUsers = [];
+        let filteredEmployeeUsers = [];
+        let allSystemUsers = [];
+        let filteredSystemUsers = [];
+        let currentEmployeeUsersPage = 1;
+        let currentSystemUsersPage = 1;
+        const usersPerPage = 7;
 
         // ==================== INICIALIZACIÓN ====================
         document.addEventListener('DOMContentLoaded', function() {
@@ -1545,65 +1630,16 @@
                 
                 const data = await response.json();
                 
-                console.log('Datos recibidos:', data); // ⭐ PARA DEBUG
-                
                 if (data.success && data.users && data.users.length > 0) {
-                    document.getElementById('employee-users-count').textContent = data.users.length;
+                    allEmployeeUsers = data.users;
+                    filteredEmployeeUsers = [...allEmployeeUsers];
+                    document.getElementById('employee-users-count').textContent = allEmployeeUsers.length;
                     
-                    tbody.innerHTML = data.users.map(user => {
-                        const registerDate = new Date(user.createdAt).toLocaleDateString('es-ES');
-                        
-                        // ⭐ DETERMINAR ESTADO BASADO EN membershipRealStatus
-                        let accountStatus;
-                        
-                        console.log(`Usuario: ${user.fullName}, Status: ${user.membershipRealStatus}, Tipo: ${user.membershipType}`); // DEBUG
-                        
-                        if (user.membershipRealStatus === 'none' || !user.membershipRealStatus) {
-                            accountStatus = '<span style="background: #f59e0b; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">⚠️ Sin Membresía</span>';
-                        } else if (user.membershipRealStatus === 'expired') {
-                            accountStatus = '<span style="background: #ef4444; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">❌ Inactivo</span>';
-                        } else if (user.membershipRealStatus === 'active') {
-                            accountStatus = '<span style="background: #22c55e; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">✅ Activo</span>';
-                        } else {
-                            accountStatus = '<span style="background: #6b7280; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">❓ Desconocido</span>';
-                        }
-                        
-                        return `
-                            <tr>
-                                <td style="color: var(--blanco);">${user.fullName}</td>
-                                <td style="color: var(--gris-claro);">${user.email}</td>
-                                <td>
-                                    <span style="color: ${user.membershipColor}; font-weight: bold;">
-                                        ${user.membershipType}
-                                    </span>
-                                </td>
-                                <td>${accountStatus}</td>
-                                <td>
-                                    ${user.tempPassword ? `
-                                        <div class="password-display">
-                                            <span class="password-pixelated" id="pass-${user._id}">••••••</span>
-                                            <button class="btn-toggle-password" onclick="togglePassword('${user._id}', '${user.tempPassword}')">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                        </div>
-                                    ` : '<span style="color: #22c55e;"><i class="fas fa-check"></i> Cambiada</span>'}
-                                </td>
-                                <td>
-                                    ${user.sharedCode ? `
-                                        <div class="code-display">${user.sharedCode}</div>
-                                    ` : '<span style="color: var(--gris-claro);">N/A</span>'}
-                                </td>
-                                <td style="color: var(--gris-claro);">
-                                    ${user.registeredBy}<br>
-                                    <small>${user.registeredByEmail}</small>
-                                </td>
-                                <td style="color: var(--gris-claro);">${registerDate}</td>
-                            </tr>
-                        `;
-                    }).join('');
-                    
+                    displayEmployeeUsersPage();
                 } else {
                     document.getElementById('employee-users-count').textContent = '0';
+                    allEmployeeUsers = [];
+                    filteredEmployeeUsers = [];
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="8" style="text-align: center; padding: 3rem;">
@@ -1620,7 +1656,151 @@
             }
         }
 
-        // Cargar TODOS los usuarios
+        // Mostrar página de usuarios empleados
+        function displayEmployeeUsersPage() {
+            const start = (currentEmployeeUsersPage - 1) * usersPerPage;
+            const end = start + usersPerPage;
+            const usersToShow = filteredEmployeeUsers.slice(start, end);
+            
+            const tbody = document.getElementById('registered-users-tbody');
+            
+            if (usersToShow.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 2rem;">
+                            <i class="fas fa-search" style="font-size: 2rem; color: var(--gris-claro);"></i>
+                            <p style="color: var(--gris-claro);">No se encontraron usuarios con los filtros aplicados</p>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('employee-users-pagination').innerHTML = '';
+                return;
+            }
+            
+            tbody.innerHTML = usersToShow.map(user => {
+                const registerDate = new Date(user.createdAt).toLocaleDateString('es-ES');
+                
+                let accountStatus;
+                if (user.membershipRealStatus === 'none' || !user.membershipRealStatus) {
+                    accountStatus = '<span style="background: #f59e0b; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">⚠️ Sin Membresía</span>';
+                } else if (user.membershipRealStatus === 'expired') {
+                    accountStatus = '<span style="background: #ef4444; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">❌ Inactivo</span>';
+                } else if (user.membershipRealStatus === 'active') {
+                    accountStatus = '<span style="background: #22c55e; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">✅ Activo</span>';
+                } else {
+                    accountStatus = '<span style="background: #6b7280; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: bold;">❓ Desconocido</span>';
+                }
+                
+                return `
+                    <tr>
+                        <td style="color: var(--blanco);">${user.fullName}</td>
+                        <td style="color: var(--gris-claro);">${user.email}</td>
+                        <td>
+                            <span style="color: ${user.membershipColor}; font-weight: bold;">
+                                ${user.membershipType}
+                            </span>
+                        </td>
+                        <td>${accountStatus}</td>
+                        <td>
+                            ${user.tempPassword ? `
+                                <div class="password-display">
+                                    <span class="password-pixelated" id="pass-${user._id}">••••••</span>
+                                    <button class="btn-toggle-password" onclick="togglePassword('${user._id}', '${user.tempPassword}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            ` : '<span style="color: #22c55e;"><i class="fas fa-check"></i> Cambiada</span>'}
+                        </td>
+                        <td>
+                            ${user.sharedCode ? `
+                                <div class="code-display">${user.sharedCode}</div>
+                            ` : '<span style="color: var(--gris-claro);">N/A</span>'}
+                        </td>
+                        <td style="color: var(--gris-claro);">
+                            ${user.registeredBy}<br>
+                            <small>${user.registeredByEmail}</small>
+                        </td>
+                        <td style="color: var(--gris-claro);">${registerDate}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            setupEmployeeUsersPagination();
+        }
+
+        // Paginación para usuarios empleados
+        function setupEmployeeUsersPagination() {
+            const totalPages = Math.ceil(filteredEmployeeUsers.length / usersPerPage);
+            const pagination = document.getElementById('employee-users-pagination');
+            
+            if (!pagination || totalPages <= 1) {
+                if (pagination) pagination.innerHTML = '';
+                return;
+            }
+            
+            pagination.innerHTML = `
+                <button onclick="changeEmployeeUsersPage(${currentEmployeeUsersPage - 1})" 
+                        ${currentEmployeeUsersPage === 1 ? 'disabled' : ''}
+                        style="padding: 0.5rem 1rem; background: var(--violeta-medio); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </button>
+                <span style="color: var(--violeta-claro); padding: 0 1rem; font-weight: bold;">
+                    Página ${currentEmployeeUsersPage} de ${totalPages} (${filteredEmployeeUsers.length} usuarios)
+                </span>
+                <button onclick="changeEmployeeUsersPage(${currentEmployeeUsersPage + 1})" 
+                        ${currentEmployeeUsersPage === totalPages ? 'disabled' : ''}
+                        style="padding: 0.5rem 1rem; background: var(--violeta-medio); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </button>
+            `;
+        }
+
+        function changeEmployeeUsersPage(page) {
+            const totalPages = Math.ceil(filteredEmployeeUsers.length / usersPerPage);
+            if (page < 1 || page > totalPages) return;
+            
+            currentEmployeeUsersPage = page;
+            displayEmployeeUsersPage();
+        }
+
+        // Búsqueda de usuarios empleados
+        function searchEmployeeUsers() {
+            const searchTerm = document.getElementById('employee-user-search').value.toLowerCase();
+            const statusFilter = document.getElementById('employee-user-status-filter').value;
+            
+            filteredEmployeeUsers = allEmployeeUsers.filter(user => {
+                const matchesSearch = !searchTerm || 
+                    user.fullName.toLowerCase().includes(searchTerm) ||
+                    user.email.toLowerCase().includes(searchTerm) ||
+                    user.phone?.toLowerCase().includes(searchTerm);
+                
+                const matchesStatus = !statusFilter ||
+                    (statusFilter === 'active' && user.membershipRealStatus === 'active') ||
+                    (statusFilter === 'expired' && user.membershipRealStatus === 'expired') ||
+                    (statusFilter === 'none' && (!user.membershipRealStatus || user.membershipRealStatus === 'none'));
+                
+                return matchesSearch && matchesStatus;
+            });
+            
+            currentEmployeeUsersPage = 1;
+            displayEmployeeUsersPage();
+        }
+
+        // Filtrar usuarios empleados
+        function filterEmployeeUsers() {
+            searchEmployeeUsers(); // Reutilizar la lógica
+        }
+
+        // Limpiar filtros empleados
+        function clearEmployeeFilters() {
+            document.getElementById('employee-user-search').value = '';
+            document.getElementById('employee-user-status-filter').value = '';
+            filteredEmployeeUsers = [...allEmployeeUsers];
+            currentEmployeeUsersPage = 1;
+            displayEmployeeUsersPage();
+        }
+
+        // ==================== CARGAR TODOS LOS USUARIOS ====================
         async function loadAllUsers() {
             console.log('📋 Cargando TODOS los usuarios...');
             
@@ -1644,39 +1824,15 @@
                 const data = await response.json();
                 
                 if (data.success && data.users && data.users.length > 0) {
-                    document.getElementById('all-users-count').textContent = data.users.length;
+                    allSystemUsers = data.users;
+                    filteredSystemUsers = [...allSystemUsers];
+                    document.getElementById('all-users-count').textContent = allSystemUsers.length;
                     
-                    tbody.innerHTML = data.users.map(user => {
-                        const registerDate = new Date(user.createdAt).toLocaleDateString('es-ES');
-                        
-                        return `
-                            <tr>
-                                <td style="color: var(--blanco);">${user.fullName}</td>
-                                <td style="color: var(--gris-claro);">${user.email}</td>
-                                <td style="color: var(--gris-claro);">${user.phone}</td>
-                                <td>
-                                    ${user.membershipType !== 'Sin membresía' 
-                                        ? `<span style="color: var(--violeta-claro); font-weight: bold;">${user.membershipType}</span>` 
-                                        : `<span style="color: #ef4444; font-weight: bold;">❌ Sin Membresía</span>`}
-                                </td>
-                                <td>
-                                    ${user.registeredBy === 'Empleado' 
-                                        ? '<span style="color: #3b82f6;"><i class="fas fa-user-tie"></i> Empleado</span>' 
-                                        : '<span style="color: var(--gris-claro);"><i class="fas fa-globe"></i> Web</span>'}
-                                </td>
-                                <td style="color: var(--gris-claro);">${user.registeredByName}</td>
-                                <td style="color: var(--gris-claro);">${registerDate}</td>
-                                <td>
-                                    <span style="background: ${user.status === 'active' ? '#22c55e' : '#ef4444'}; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">
-                                        ${user.status === 'active' ? 'Activo' : 'Inactivo'}
-                                    </span>
-                                </td>
-                            </tr>
-                        `;
-                    }).join('');
-                    
+                    displayAllUsersPage();
                 } else {
                     document.getElementById('all-users-count').textContent = '0';
+                    allSystemUsers = [];
+                    filteredSystemUsers = [];
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="8" style="text-align: center; padding: 3rem;">
@@ -1692,9 +1848,140 @@
             }
         }
 
+        // Mostrar página de todos los usuarios
+        function displayAllUsersPage() {
+            const start = (currentSystemUsersPage - 1) * usersPerPage;
+            const end = start + usersPerPage;
+            const usersToShow = filteredSystemUsers.slice(start, end);
+            
+            const tbody = document.getElementById('all-users-tbody');
+            
+            if (usersToShow.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 2rem;">
+                            <i class="fas fa-search" style="font-size: 2rem; color: var(--gris-claro);"></i>
+                            <p style="color: var(--gris-claro);">No se encontraron usuarios con los filtros aplicados</p>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('all-users-pagination').innerHTML = '';
+                return;
+            }
+            
+            tbody.innerHTML = usersToShow.map(user => {
+                const registerDate = new Date(user.createdAt).toLocaleDateString('es-ES');
+                
+                return `
+                    <tr>
+                        <td style="color: var(--blanco);">${user.fullName}</td>
+                        <td style="color: var(--gris-claro);">${user.email}</td>
+                        <td style="color: var(--gris-claro);">${user.phone}</td>
+                        <td>
+                            ${user.membershipType !== 'Sin membresía' 
+                                ? `<span style="color: var(--violeta-claro); font-weight: bold;">${user.membershipType}</span>` 
+                                : `<span style="color: #ef4444; font-weight: bold;">❌ Sin Membresía</span>`}
+                        </td>
+                        <td>
+                            ${user.registeredBy === 'Empleado' 
+                                ? '<span style="color: #3b82f6;"><i class="fas fa-user-tie"></i> Empleado</span>' 
+                                : '<span style="color: var(--gris-claro);"><i class="fas fa-globe"></i> Web</span>'}
+                        </td>
+                        <td style="color: var(--gris-claro);">${user.registeredByName}</td>
+                        <td style="color: var(--gris-claro);">${registerDate}</td>
+                        <td>
+                            <span style="background: ${user.status === 'active' ? '#22c55e' : '#ef4444'}; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">
+                                ${user.status === 'active' ? 'Activo' : 'Inactivo'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            setupAllUsersPagination();
+        }
+
+        // Paginación para todos los usuarios
+        function setupAllUsersPagination() {
+            const totalPages = Math.ceil(filteredSystemUsers.length / usersPerPage);
+            const pagination = document.getElementById('all-users-pagination');
+            
+            if (!pagination || totalPages <= 1) {
+                if (pagination) pagination.innerHTML = '';
+                return;
+            }
+            
+            pagination.innerHTML = `
+                <button onclick="changeAllUsersPage(${currentSystemUsersPage - 1})" 
+                        ${currentSystemUsersPage === 1 ? 'disabled' : ''}
+                        style="padding: 0.5rem 1rem; background: var(--violeta-medio); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </button>
+                <span style="color: var(--violeta-claro); padding: 0 1rem; font-weight: bold;">
+                    Página ${currentSystemUsersPage} de ${totalPages} (${filteredSystemUsers.length} usuarios)
+                </span>
+                <button onclick="changeAllUsersPage(${currentSystemUsersPage + 1})" 
+                        ${currentSystemUsersPage === totalPages ? 'disabled' : ''}
+                        style="padding: 0.5rem 1rem; background: var(--violeta-medio); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </button>
+            `;
+        }
+
+        function changeAllUsersPage(page) {
+            const totalPages = Math.ceil(filteredSystemUsers.length / usersPerPage);
+            if (page < 1 || page > totalPages) return;
+            
+            currentSystemUsersPage = page;
+            displayAllUsersPage();
+        }
+
+        // Búsqueda de todos los usuarios
+        function searchAllUsers() {
+            const searchTerm = document.getElementById('all-user-search').value.toLowerCase();
+            const statusFilter = document.getElementById('all-user-status-filter').value;
+            const originFilter = document.getElementById('all-user-origin-filter').value;
+            
+            filteredSystemUsers = allSystemUsers.filter(user => {
+                const matchesSearch = !searchTerm || 
+                    user.fullName.toLowerCase().includes(searchTerm) ||
+                    user.email.toLowerCase().includes(searchTerm) ||
+                    user.phone?.toLowerCase().includes(searchTerm);
+                
+                const matchesStatus = !statusFilter ||
+                    user.status === statusFilter;
+                
+                const matchesOrigin = !originFilter ||
+                    (originFilter === 'employee' && user.registeredBy === 'Empleado') ||
+                    (originFilter === 'web' && user.registeredBy !== 'Empleado');
+                
+                return matchesSearch && matchesStatus && matchesOrigin;
+            });
+            
+            currentSystemUsersPage = 1;
+            displayAllUsersPage();
+        }
+
+        // Filtrar todos los usuarios
+        function filterAllUsers() {
+            searchAllUsers(); // Reutilizar la lógica
+        }
+
+        // Limpiar filtros todos
+        function clearAllFilters() {
+            document.getElementById('all-user-search').value = '';
+            document.getElementById('all-user-status-filter').value = '';
+            document.getElementById('all-user-origin-filter').value = '';
+            filteredSystemUsers = [...allSystemUsers];
+            currentSystemUsersPage = 1;
+            displayAllUsersPage();
+        }
+
         // Cambiar entre tabs de usuarios
         function switchUsersTab(tab, button) {
-            document.querySelectorAll('.tab-btn').forEach(btn => {
+            // Actualizar botones
+            const tabs = document.querySelectorAll('#usuarios-registrados .tab-btn');
+            tabs.forEach(btn => {
                 btn.classList.remove('active');
                 btn.style.color = 'var(--gris-claro)';
                 btn.style.borderBottom = '3px solid transparent';
@@ -1704,19 +1991,46 @@
             button.style.color = 'var(--violeta-claro)';
             button.style.borderBottom = '3px solid var(--violeta-claro)';
             
+            // Cambiar tabs
             if (tab === 'employee') {
                 document.getElementById('employee-users-tab').style.display = 'block';
                 document.getElementById('all-users-tab').style.display = 'none';
-                loadRegisteredUsers();
+                
+                // Cargar si no hay datos
+                if (allEmployeeUsers.length === 0) {
+                    loadRegisteredUsers();
+                }
             } else {
                 document.getElementById('employee-users-tab').style.display = 'none';
                 document.getElementById('all-users-tab').style.display = 'block';
-                loadAllUsers();
+                
+                // Cargar si no hay datos
+                if (allSystemUsers.length === 0) {
+                    loadAllUsers();
+                }
             }
         }
 
         // Actualizar ambas tabs
-        function refreshAllUsersTabs() {
+       function refreshAllUsersTabs() {
+            // Resetear páginas
+            currentEmployeeUsersPage = 1;
+            currentSystemUsersPage = 1;
+            
+            // Limpiar filtros
+            const employeeSearch = document.getElementById('employee-user-search');
+            const employeeStatus = document.getElementById('employee-user-status-filter');
+            const allSearch = document.getElementById('all-user-search');
+            const allStatus = document.getElementById('all-user-status-filter');
+            const allOrigin = document.getElementById('all-user-origin-filter');
+            
+            if (employeeSearch) employeeSearch.value = '';
+            if (employeeStatus) employeeStatus.value = '';
+            if (allSearch) allSearch.value = '';
+            if (allStatus) allStatus.value = '';
+            if (allOrigin) allOrigin.value = '';
+            
+            // Recargar ambas tabs
             loadRegisteredUsers();
             loadAllUsers();
         }
