@@ -4456,43 +4456,55 @@ app.post('/api/employee/register-user', verificarEmpleado, async (req, res) => {
 // Obtener clases de hoy
 app.get('/api/employee/today-classes', verificarEmpleado, async (req, res) => {
     try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        // Obtener todas las clases activas
         const classes = await Class.find({ active: true });
         
-        // Filtrar clases de hoy según scheduleDetails
-        const today = new Date();
+        // Filtrar clases de hoy
+        const todayClasses = [];
         const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
         const todayName = dayNames[today.getDay()];
         
-        const todayClasses = [];
+        console.log(`📅 Buscando clases para: ${todayName}`);
         
         for (const classItem of classes) {
             if (classItem.scheduleDetails) {
                 const todaySchedule = classItem.scheduleDetails.filter(s => s.day === todayName);
                 
                 for (const schedule of todaySchedule) {
+                    // ⭐ CONTAR RESERVAS PARA ESTA CLASE Y HORARIO ESPECÍFICO
                     const reservationCount = await Reservation.countDocuments({
                         classId: classItem._id,
                         date: {
                             $gte: today,
-                            $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+                            $lt: tomorrow
                         },
+                        time: schedule.time, // ⭐ IMPORTANTE: Filtrar por horario
                         status: 'active'
                     });
+                    
+                    console.log(`📊 ${classItem.name} - ${schedule.time}: ${reservationCount} reservas`);
                     
                     todayClasses.push({
                         classId: classItem._id,
                         className: classItem.name,
                         time: schedule.time,
                         capacity: classItem.capacity,
-                        reservations: reservationCount
+                        reservations: reservationCount // ⭐ AHORA TIENE EL NÚMERO CORRECTO
                     });
                 }
             }
         }
         
+        console.log(`✅ Total de horarios hoy: ${todayClasses.length}`);
+        
         res.json({ success: true, classes: todayClasses });
     } catch (error) {
-        console.error('Error:', error);
+        console.error('❌ Error:', error);
         res.status(500).json({ success: false, message: 'Error al cargar clases' });
     }
 });
