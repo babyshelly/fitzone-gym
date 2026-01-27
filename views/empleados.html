@@ -904,31 +904,47 @@
                         todayClassesCount.textContent = data.classes.length;
                     }
                     
-                    grid.innerHTML = data.classes.map(cls => `
+                    grid.innerHTML = data.classes.map(cls => {
+                        const percentage = cls.capacity > 0 ? Math.round((cls.reservations / cls.capacity) * 100) : 0;
+                        const isFull = cls.reservations >= cls.capacity;
+                        const hasReservations = cls.reservations > 0;
+                        
+                        return `
                         <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border: 2px solid var(--violeta-medio);">
                             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                                <div>
+                                <div style="flex: 1;">
                                     <h4 style="color: var(--violeta-claro); font-size: 1.3rem; margin-bottom: 0.5rem;">
                                         ${cls.className}
                                     </h4>
                                     <p style="color: var(--gris-claro); margin: 0.3rem 0;">
                                         <i class="fas fa-clock"></i> ${cls.time}
                                     </p>
-                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
-                                        <i class="fas fa-users"></i> ${cls.reservations} / ${cls.capacity} inscritos
-                                    </p>
+                                    <div style="margin-top: 0.8rem;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                            <span style="color: ${hasReservations ? 'var(--violeta-claro)' : 'var(--gris-claro)'}; font-weight: bold;">
+                                                <i class="fas fa-users"></i> ${cls.reservations} / ${cls.capacity} inscritos
+                                            </span>
+                                            <span style="color: ${hasReservations ? 'var(--violeta-claro)' : 'var(--gris-claro)'}; font-weight: bold; font-size: 0.9rem;">
+                                                ${percentage}%
+                                            </span>
+                                        </div>
+                                        <div style="background: var(--gris-oscuro); height: 8px; border-radius: 10px; overflow: hidden;">
+                                            <div style="background: ${isFull ? '#ef4444' : hasReservations ? '#22c55e' : '#6b7280'}; height: 100%; width: ${percentage}%; transition: width 0.3s ease;"></div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div style="text-align: center;">
-                                    <div style="background: ${cls.reservations >= cls.capacity ? '#ef4444' : '#22c55e'}; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">
-                                        ${cls.reservations >= cls.capacity ? 'LLENO' : 'DISPONIBLE'}
+                                <div style="margin-left: 1rem; text-align: center;">
+                                    <div style="background: ${isFull ? '#ef4444' : '#22c55e'}; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">
+                                        ${isFull ? '🔴 LLENO' : '🟢 DISPONIBLE'}
                                     </div>
                                 </div>
                             </div>
-                            <button class="btn btn-secondary" onclick="viewClassDetails('${cls.classId}')" style="width: 100%; margin-top: 0.5rem;">
-                                <i class="fas fa-eye"></i> Ver Inscriptos
+                            <button class="btn btn-secondary" onclick="viewClassDetails('${cls.classId}', '${cls.time}')" style="width: 100%; margin-top: 0.5rem;">
+                                <i class="fas fa-eye"></i> Ver Inscriptos ${hasReservations ? `(${cls.reservations})` : ''}
                             </button>
                         </div>
-                    `).join('');
+                    `;
+                    }).join('');
                 } else {
                     grid.innerHTML = `
                         <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
@@ -943,7 +959,7 @@
         }
 
         // ==================== VER DETALLES DE CLASE ====================
-        async function viewClassDetails(classId) {
+        async function viewClassDetails(classId, time) {
             try {
                 const response = await fetch(`/api/employee/class-reservations/${classId}`, {
                     credentials: 'same-origin'
@@ -953,14 +969,20 @@
                 if (data.success) {
                     const { className, reservations } = data;
                     
+                    // Filtrar por horario específico si se proporciona
+                    const filteredReservations = time 
+                        ? reservations.filter(res => res.time === time)
+                        : reservations;
+                    
                     let content = `
                         <div style="padding: 1.5rem;">
                             <h3 style="color: var(--violeta-claro); margin-bottom: 1.5rem;">
                                 <i class="fas fa-users"></i> Inscriptos en ${className}
+                                ${time ? ` - ${time}` : ''}
                             </h3>
                     `;
                     
-                    if (reservations.length === 0) {
+                    if (filteredReservations.length === 0) {
                         content += `
                             <div style="text-align: center; padding: 2rem; background: var(--negro); border-radius: 10px;">
                                 <i class="fas fa-user-slash" style="font-size: 3rem; color: var(--gris-claro); margin-bottom: 1rem;"></i>
@@ -979,7 +1001,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        ${reservations.map((res, index) => `
+                                        ${filteredReservations.map((res, index) => `
                                             <tr style="border-bottom: 1px solid var(--violeta-medio); ${index % 2 === 0 ? 'background: rgba(127, 76, 165, 0.1);' : ''}">
                                                 <td style="padding: 1rem; color: var(--blanco);">${res.user?.fullName || 'Usuario'}</td>
                                                 <td style="padding: 1rem; color: var(--gris-claro);">${res.user?.email || 'N/A'}</td>
@@ -991,7 +1013,7 @@
                             </div>
                             <div style="margin-top: 1rem; padding: 1rem; background: var(--negro); border-radius: 10px; text-align: center;">
                                 <p style="color: var(--violeta-claro); font-weight: bold; font-size: 1.1rem;">
-                                    Total: ${reservations.length} personas inscritas
+                                    Total: ${filteredReservations.length} personas inscritas
                                 </p>
                             </div>
                         `;
@@ -1130,35 +1152,11 @@
                 });
                 const data = await response.json();
                 
-                const container = document.getElementById('delivered-orders-list');
-                
                 if (data.success && data.orders.length > 0) {
                     allDeliveredOrders = data.orders;
-                    
-                    container.innerHTML = data.orders.map(order => `
-                        <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border-left: 4px solid #22c55e; margin-bottom: 1rem;">
-                            <div style="display: flex; justify-content: space-between; align-items: start;">
-                                <div>
-                                    <h4 style="color: #22c55e; margin-bottom: 0.5rem;">
-                                        Pedido #${order._id.slice(-8).toUpperCase()} <i class="fas fa-check-circle"></i>
-                                    </h4>
-                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
-                                        <i class="fas fa-user"></i> ${order.customer?.name || 'Cliente'}
-                                    </p>
-                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
-                                        <i class="fas fa-calendar"></i> Entregado: ${new Date(order.deliveredAt || order.updatedAt).toLocaleDateString('es-ES')}
-                                    </p>
-                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
-                                        <i class="fas fa-user-tie"></i> Por: ${order.deliveredBy || 'Empleado'}
-                                    </p>
-                                </div>
-                                <div style="font-size: 1.5rem; font-weight: bold; color: #22c55e;">
-                                    $${order.total.toLocaleString()}
-                                </div>
-                            </div>
-                        </div>
-                    `).join('');
+                    displayDeliveredOrdersPage();
                 } else {
+                    const container = document.getElementById('delivered-orders-list');
                     container.innerHTML = `
                         <div style="text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
                             <i class="fas fa-box-open" style="font-size: 4rem; color: var(--gris-claro); margin-bottom: 1rem;"></i>
@@ -1169,6 +1167,77 @@
             } catch (error) {
                 console.error('❌ Error:', error);
             }
+        }
+
+        // Nueva función para mostrar página de pedidos entregados
+        function displayDeliveredOrdersPage() {
+            const start = (currentDeliveredPage - 1) * ordersPerPage;
+            const end = start + ordersPerPage;
+            const ordersToShow = allDeliveredOrders.slice(start, end);
+            
+            const container = document.getElementById('delivered-orders-list');
+            
+            container.innerHTML = ordersToShow.map(order => `
+                <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border-left: 4px solid #22c55e;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <h4 style="color: #22c55e; margin-bottom: 0.5rem;">
+                                Pedido #${order._id.slice(-8).toUpperCase()} <i class="fas fa-check-circle"></i>
+                            </h4>
+                            <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                <i class="fas fa-user"></i> ${order.customer?.name || 'Cliente'}
+                            </p>
+                            <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                <i class="fas fa-calendar"></i> Entregado: ${new Date(order.deliveredAt || order.updatedAt).toLocaleDateString('es-ES')}
+                            </p>
+                            <p style="color: var(--gris-claro); margin: 0.3rem 0;">
+                                <i class="fas fa-user-tie"></i> Por: ${order.deliveredBy || 'Empleado'}
+                            </p>
+                        </div>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #22c55e;">
+                            $${order.total.toLocaleString()}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            setupDeliveredPagination();
+        }
+
+        // Nueva función para paginación de entregados
+        function setupDeliveredPagination() {
+            const totalPages = Math.ceil(allDeliveredOrders.length / ordersPerPage);
+            const pagination = document.getElementById('delivered-pagination');
+            
+            if (!pagination || totalPages <= 1) {
+                if (pagination) pagination.innerHTML = '';
+                return;
+            }
+            
+            pagination.innerHTML = `
+                <button onclick="changeDeliveredPage(${currentDeliveredPage - 1})" 
+                        ${currentDeliveredPage === 1 ? 'disabled' : ''}
+                        style="padding: 0.5rem 1rem; background: var(--violeta-medio); color: white; border: none; border-radius: 8px; cursor: pointer; margin: 0 0.5rem;">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </button>
+                <span style="color: var(--violeta-claro); padding: 0 1rem; font-weight: bold;">
+                    Página ${currentDeliveredPage} de ${totalPages}
+                </span>
+                <button onclick="changeDeliveredPage(${currentDeliveredPage + 1})" 
+                        ${currentDeliveredPage === totalPages ? 'disabled' : ''}
+                        style="padding: 0.5rem 1rem; background: var(--violeta-medio); color: white; border: none; border-radius: 8px; cursor: pointer; margin: 0 0.5rem;">
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </button>
+            `;
+        }
+
+        // Nueva función para cambiar página de entregados
+        function changeDeliveredPage(page) {
+            const totalPages = Math.ceil(allDeliveredOrders.length / ordersPerPage);
+            if (page < 1 || page > totalPages) return;
+            
+            currentDeliveredPage = page;
+            displayDeliveredOrdersPage();
         }
 
         async function confirmMarkAsDelivered(orderId) {
