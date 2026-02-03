@@ -6,6 +6,7 @@
     <title>FitZone Gym - Tu gimnasio de confianza</title>
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234b1c71'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='%23dbb6ee' font-family='Arial, sans-serif' font-weight='bold'>F</text></svg>">
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/promo-banners.css"> <!-- 03.02.2026 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
@@ -439,6 +440,11 @@
         </div>
     </section>
 
+     <!--  03.02.2026 Banner promocional de tienda -->
+    <div class="container">
+        <div id="promo-index"></div>
+    </div>
+
     <!-- Tienda Preview -->
     <section id="tienda" class="store-preview">
         <div class="container">
@@ -564,6 +570,11 @@
             }
         });
     </script>
-    
+    <!--  03.02.2026 -->
+    <script src="/js/promo-banners.js"></script>
+    <script>
+        insertPromoHorizontal('promo-index');
+        showPromoFlotante(5000); // flotante aparece 5 seg después de abrir la página
+    </script>
 </body>
 </html>
