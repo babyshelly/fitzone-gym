@@ -4243,7 +4243,9 @@ app.get('/api/employee/registered-users', verificarEmpleado, async (req, res) =>
                     phone: user.phone,
                     membershipType: membershipStatus,
                     membershipColor: membershipColor, // ⭐ NUEVO: Color para el frontend
-                    membershipRealStatus: membership?.status || 'none', // ⭐ NUEVO: Estado real
+                    membershipRealStatus: (membership && (membership.status === "expired" || new Date(membership.endDate) < today)) 
+                    ? "expired" 
+                    : (membership?.status || "none"),
                     tempPassword: user.hasChangedPassword ? null : user.temporaryPassword,
                     hasChangedPassword: user.hasChangedPassword,
                     sharedCode: membership?.sharedMembership?.membershipCode || null,
@@ -4325,7 +4327,9 @@ app.get('/api/employee/all-users', verificarEmpleado, async (req, res) => {
                     email: user.email,
                     phone: user.phone,
                     membershipType: membershipStatus,
-                    membershipRealStatus: membership?.status || 'none',
+                    membershipRealStatus: (membership && (membership.status === "expired" || new Date(membership.endDate) < today)) 
+                    ? "expired" 
+                    : (membership?.status || "none"),
                     registeredBy: user.registeredBy === 'employee' ? 'Empleado' : 'Web',
                     registeredByName: user.registeredByEmployeeName || 'Auto-registro',
                     createdAt: user.createdAt,
@@ -5706,53 +5710,6 @@ async function initializeInstructors() {
 }
 
 // ==================== APIs PARA EMPLEADOS ====================
-
-// Stats del dashboard de empleados
-app.get('/api/employee/today-classes', async (req, res) => {
-    try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        // Obtener todas las clases
-        const classes = await Class.find({ active: true });
-        
-        // Filtrar clases de hoy
-        const todayClasses = [];
-        const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-        const todayName = dayNames[today.getDay()];
-        
-        for (const classItem of classes) {
-            if (classItem.scheduleDetails) {
-                const todaySchedule = classItem.scheduleDetails.filter(s => s.day === todayName);
-                
-                for (const schedule of todaySchedule) {
-                    // Contar reservas
-                    const reservationCount = await Reservation.countDocuments({
-                        classId: classItem._id,
-                        date: {
-                            $gte: today,
-                            $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
-                        },
-                        status: 'active'
-                    });
-                    
-                    todayClasses.push({
-                        classId: classItem._id,
-                        className: classItem.name,
-                        time: schedule.time,
-                        capacity: classItem.capacity,
-                        reservations: reservationCount
-                    });
-                }
-            }
-        }
-        
-        res.json({ success: true, classes: todayClasses });
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ success: false, message: 'Error al cargar clases' });
-    }
-});
 
 // Pedidos pendientes
 app.get('/api/employee/pending-orders', async (req, res) => {
