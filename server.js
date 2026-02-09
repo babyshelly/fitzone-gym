@@ -4243,9 +4243,7 @@ app.get('/api/employee/registered-users', verificarEmpleado, async (req, res) =>
                     phone: user.phone,
                     membershipType: membershipStatus,
                     membershipColor: membershipColor, // ⭐ NUEVO: Color para el frontend
-                    membershipRealStatus: (membership && (membership.status === "expired" || new Date(membership.endDate) < today)) 
-                    ? "expired" 
-                    : (membership?.status || "none"),
+                    membershipRealStatus: (membership && (membership.status === "expired" || new Date(membership.endDate) < today)) ? "expired" : (membership?.status || "none"), // ⭐ NUEVO: Estado real
                     tempPassword: user.hasChangedPassword ? null : user.temporaryPassword,
                     hasChangedPassword: user.hasChangedPassword,
                     sharedCode: membership?.sharedMembership?.membershipCode || null,
@@ -4327,9 +4325,7 @@ app.get('/api/employee/all-users', verificarEmpleado, async (req, res) => {
                     email: user.email,
                     phone: user.phone,
                     membershipType: membershipStatus,
-                    membershipRealStatus: (membership && (membership.status === "expired" || new Date(membership.endDate) < today)) 
-                    ? "expired" 
-                    : (membership?.status || "none"),
+                    membershipRealStatus: (membership && (membership.status === "expired" || new Date(membership.endDate) < today)) ? "expired" : (membership?.status || "none"),
                     registeredBy: user.registeredBy === 'employee' ? 'Empleado' : 'Web',
                     registeredByName: user.registeredByEmployeeName || 'Auto-registro',
                     createdAt: user.createdAt,
@@ -5710,6 +5706,8 @@ async function initializeInstructors() {
 }
 
 // ==================== APIs PARA EMPLEADOS ====================
+
+// Stats del dashboard de empleados
 
 // Pedidos pendientes
 app.get('/api/employee/pending-orders', async (req, res) => {
