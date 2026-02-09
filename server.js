@@ -813,6 +813,9 @@ async function initializeData() {
     } catch (error) {
         console.log('Error inicializando datos:', error);
     }
+
+    // Llamar a la función de corrección
+    await corregirClasesSinScheduleDetails();
 }
 
 function requireAuth(req, res, next) {
@@ -918,6 +921,79 @@ function requireAdmin(req, res, next) {
         } else {
             res.redirect('/login');
         }
+    }
+}
+
+async function corregirClasesSinScheduleDetails() {
+    try {
+        console.log('\n🔧 Verificando y corrigiendo clases...\n');
+        
+        const classes = await Class.find();
+        let clasesCorregidas = 0;
+        
+        for (const classItem of classes) {
+            // Si no tiene scheduleDetails o está vacío, agregarlo
+            if (!classItem.scheduleDetails || classItem.scheduleDetails.length === 0) {
+                console.log(`⚠️ Clase "${classItem.name}" sin scheduleDetails, corrigiendo...`);
+                
+                let scheduleDetails = [];
+                
+                // F.E.C - Lunes y Miércoles
+                if (classItem.name === 'F.E.C') {
+                    scheduleDetails = [
+                        { day: 'Lunes', time: '10:00 - 11:00', period: 'mañana' },
+                        { day: 'Lunes', time: '18:00 - 19:00', period: 'tarde' },
+                        { day: 'Miércoles', time: '10:00 - 11:00', period: 'mañana' },
+                        { day: 'Miércoles', time: '18:00 - 19:00', period: 'tarde' }
+                    ];
+                }
+                // Yoga - Martes y Jueves
+                else if (classItem.name === 'Yoga') {
+                    scheduleDetails = [
+                        { day: 'Martes', time: '09:00 - 10:00', period: 'mañana' },
+                        { day: 'Martes', time: '19:00 - 20:00', period: 'noche' },
+                        { day: 'Jueves', time: '09:00 - 10:00', period: 'mañana' },
+                        { day: 'Jueves', time: '19:00 - 20:00', period: 'noche' }
+                    ];
+                }
+                // Spinning - Miércoles y Viernes
+                else if (classItem.name === 'Spinning') {
+                    scheduleDetails = [
+                        { day: 'Miércoles', time: '08:00 - 09:00', period: 'mañana' },
+                        { day: 'Miércoles', time: '19:00 - 20:00', period: 'noche' },
+                        { day: 'Viernes', time: '08:00 - 09:00', period: 'mañana' },
+                        { day: 'Viernes', time: '19:00 - 20:00', period: 'noche' }
+                    ];
+                }
+                // Pilates - Martes y Viernes
+                else if (classItem.name === 'Pilates') {
+                    scheduleDetails = [
+                        { day: 'Martes', time: '11:00 - 12:00', period: 'mañana' },
+                        { day: 'Martes', time: '17:00 - 18:00', period: 'tarde' },
+                        { day: 'Viernes', time: '11:00 - 12:00', period: 'mañana' },
+                        { day: 'Viernes', time: '17:00 - 18:00', period: 'tarde' }
+                    ];
+                }
+                
+                if (scheduleDetails.length > 0) {
+                    classItem.scheduleDetails = scheduleDetails;
+                    await classItem.save();
+                    console.log(`   ✅ "${classItem.name}" corregida con ${scheduleDetails.length} horarios`);
+                    clasesCorregidas++;
+                }
+            } else {
+                console.log(`   ✅ "${classItem.name}" ya tiene scheduleDetails (${classItem.scheduleDetails.length} horarios)`);
+            }
+        }
+        
+        if (clasesCorregidas > 0) {
+            console.log(`\n✅ ${clasesCorregidas} clases corregidas exitosamente\n`);
+        } else {
+            console.log(`\n✅ Todas las clases están correctas\n`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error corrigiendo clases:', error);
     }
 }
 
