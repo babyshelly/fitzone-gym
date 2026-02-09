@@ -3583,6 +3583,131 @@ app.post('/api/classes/available-dates', async (req, res) => {
     }
 });
 
+// ==================== ENDPOINT: OBTENER HORARIOS DISPONIBLES PARA RESERVA ====================
+app.get('/api/classes/available-schedules', requireAuth, async (req, res) => {
+    try {
+        const { classId, date } = req.query;
+        
+        console.log('📅 [HORARIOS] Solicitud recibida:');
+        console.log('   - ClassID:', classId);
+        console.log('   - Fecha:', date);
+        
+        // Validar parámetros
+        if (!classId || !date) {
+            console.log('❌ [HORARIOS] Faltan parámetros');
+            return res.status(400).json({
+                success: false,
+                message: 'Faltan parámetros requeridos (classId y date)'
+            });
+        }
+        
+        // Buscar la clase
+        const classDoc = await Class.findById(classId);
+        
+        if (!classDoc) {
+            console.log('❌ [HORARIOS] Clase no encontrada:', classId);
+            return res.status(404).json({
+                success: false,
+                message: 'Clase no encontrada'
+            });
+        }
+        
+        console.log('✅ [HORARIOS] Clase encontrada:', classDoc.name);
+        console.log('📋 [HORARIOS] Schedule Details:', JSON.stringify(classDoc.scheduleDetails, null, 2));
+        
+        // Convertir fecha y obtener día de la semana
+        const selectedDate = new Date(date);
+        const dayOfWeek = selectedDate.getDay(); // 0 = Domingo, 1 = Lunes, etc.
+        
+        // Mapear números a nombres de días
+        const daysMap = {
+            0: 'Domingo',
+            1: 'Lunes',
+            2: 'Martes',
+            3: 'Miércoles',
+            4: 'Jueves',
+            5: 'Viernes',
+            6: 'Sábado'
+        };
+        
+        const dayName = daysMap[dayOfWeek];
+        console.log('📆 [HORARIOS] Día seleccionado:', dayName, `(${dayOfWeek})`);
+        
+        // Filtrar horarios para ese día
+        const availableSchedules = classDoc.scheduleDetails.filter(schedule => {
+            const match = schedule.day === dayName;
+            console.log(`   Comparando: "${schedule.day}" === "${dayName}" → ${match}`);
+            return match;
+        });
+        
+        console.log(`✅ [HORARIOS] Horarios filtrados: ${availableSchedules.length}`);
+        
+        if (availableSchedules.length === 0) {
+            console.log('⚠️ [HORARIOS] No hay horarios para este día');
+            return res.json({
+                success: true,
+                schedules: [],
+                message: 'No hay horarios disponibles para este día'
+            });
+        }
+        
+        // Procesar cada horario y verificar disponibilidad
+        const schedulesWithAvailability = await Promise.all(
+            availableSchedules.map(async (schedule) => {
+                // ⭐ EXTRAER SOLO LA HORA DE INICIO (antes del " - ")
+                let timeToUse = schedule.time;
+                
+                // Si el formato es "10:00 - 11:00", extraer solo "10:00"
+                if (schedule.time.includes(' - ')) {
+                    timeToUse = schedule.time.split(' - ')[0].trim();
+                }
+                
+                console.log(`   Procesando horario: ${schedule.time} → Usando: ${timeToUse}`);
+                
+                // Contar reservas para este horario específico en esta fecha
+                const reservationCount = await Reservation.countDocuments({
+                    classId: classId,
+                    date: {
+                        $gte: new Date(date).setHours(0, 0, 0, 0),
+                        $lt: new Date(date).setHours(23, 59, 59, 999)
+                    },
+                    time: timeToUse, // ⭐ Usar hora de inicio
+                    status: 'active'
+                });
+                
+                const availableSpots = classDoc.capacity - reservationCount;
+                
+                console.log(`   📊 ${schedule.time}: ${reservationCount}/${classDoc.capacity} reservas (${availableSpots} disponibles)`);
+                
+                return {
+                    time: timeToUse, // ⭐ Devolver hora de inicio
+                    displayTime: schedule.time, // Tiempo completo para mostrar
+                    capacity: classDoc.capacity,
+                    reserved: reservationCount,
+                    available: availableSpots,
+                    instructor: classDoc.instructor || 'Instructor FitZone',
+                    period: schedule.period || 'tarde'
+                };
+            })
+        );
+        
+        console.log('📊 [HORARIOS] Respuesta final:', JSON.stringify(schedulesWithAvailability, null, 2));
+        
+        res.json({
+            success: true,
+            schedules: schedulesWithAvailability
+        });
+        
+    } catch (error) {
+        console.error('❌ [HORARIOS] Error en available-schedules:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener horarios',
+            error: error.message
+        });
+    }
+});
+
 // API mejorada: Reservar clase con validación de horario
 app.post('/api/reserve-class/improved', requireAuth, requireActiveMembership, async (req, res) => {
     try {

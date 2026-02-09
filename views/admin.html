@@ -1532,6 +1532,112 @@
 
             console.log('✅ Panel de administración cargado correctamente');
 
+            async function loadAvailableSchedules(classId, dateInput) {
+                console.log('🔍 [FRONTEND] Cargando horarios para:', { classId, dateInput });
+                
+                const scheduleSelect = document.getElementById('schedule-select');
+                
+                if (!scheduleSelect) {
+                    console.error('❌ [FRONTEND] No se encontró el select de horarios');
+                    return;
+                }
+                
+                // Resetear select
+                scheduleSelect.innerHTML = '<option value="">Cargando...</option>';
+                scheduleSelect.disabled = true;
+                
+                if (!classId || !dateInput) {
+                    console.log('⚠️ [FRONTEND] Faltan parámetros');
+                    scheduleSelect.innerHTML = '<option value="">Primero selecciona fecha y clase</option>';
+                    return;
+                }
+                
+                try {
+                    // Convertir fecha a formato YYYY-MM-DD
+                    const dateObj = new Date(dateInput);
+                    const dateISO = dateObj.toISOString().split('T')[0];
+                    
+                    console.log('📅 [FRONTEND] Fecha convertida:', dateISO);
+                    console.log('📋 [FRONTEND] ClassID:', classId);
+                    
+                    const url = `/api/classes/available-schedules?classId=${classId}&date=${dateISO}`;
+                    console.log('🌐 [FRONTEND] URL:', url);
+                    
+                    const response = await fetch(url, { 
+                        credentials: 'same-origin' 
+                    });
+                    
+                    const data = await response.json();
+                    
+                    console.log('📦 [FRONTEND] Respuesta del servidor:', data);
+                    
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Error al cargar horarios');
+                    }
+                    
+                    if (data.success && data.schedules && data.schedules.length > 0) {
+                        scheduleSelect.innerHTML = '<option value="">Selecciona un horario...</option>';
+                        
+                        data.schedules.forEach(schedule => {
+                            const option = document.createElement('option');
+                            
+                            // ⭐ IMPORTANTE: Guardar la hora de inicio (sin el rango)
+                            option.value = schedule.time;
+                            
+                            // Mostrar el rango completo + disponibilidad
+                            const displayTime = schedule.displayTime || schedule.time;
+                            const availabilityText = schedule.available > 0 
+                                ? `(${schedule.available} cupos)` 
+                                : '(LLENO)';
+                            
+                            option.textContent = `${displayTime} - ${schedule.instructor} ${availabilityText}`;
+                            option.disabled = schedule.available <= 0;
+                            
+                            scheduleSelect.appendChild(option);
+                        });
+                        
+                        scheduleSelect.disabled = false;
+                        console.log('✅ [FRONTEND] Horarios cargados exitosamente');
+                        
+                    } else {
+                        console.log('⚠️ [FRONTEND] No hay horarios disponibles');
+                        scheduleSelect.innerHTML = '<option value="">No hay horarios para este día</option>';
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ [FRONTEND] Error al cargar horarios:', error);
+                    scheduleSelect.innerHTML = '<option value="">Error al cargar horarios</option>';
+                    alert('Error al cargar horarios: ' + error.message);
+                }
+            }
+
+            // Listener para cambio de fecha
+            const dateInput = document.getElementById('reservation-date');
+            const classSelect = document.getElementById('class-select');
+
+            if (dateInput) {
+                dateInput.addEventListener('change', function() {
+                    console.log('📅 [EVENT] Fecha cambiada:', this.value);
+                    const selectedClass = classSelect?.value;
+                    
+                    if (selectedClass) {
+                        loadAvailableSchedules(selectedClass, this.value);
+                    }
+                });
+            }
+
+            // Listener para cambio de clase
+            if (classSelect) {
+                classSelect.addEventListener('change', function() {
+                    console.log('📋 [EVENT] Clase cambiada:', this.value);
+                    const selectedDate = dateInput?.value;
+                    
+                    if (selectedDate) {
+                        loadAvailableSchedules(this.value, selectedDate);
+                    }
+                });
+            }
+
             // ==================== GESTIÓN DE CATEGORÍAS ====================
 
             async function loadCategories() {
