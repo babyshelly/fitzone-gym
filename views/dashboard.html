@@ -1470,48 +1470,79 @@
                 return options || '<option value="">No hay fechas disponibles</option>';
             }
 
-            // Actualizar opciones de horario - NUEVA FUNCIÓN
-            function updateTimeOptions(classId, selectedDate) {
+            // Actualizar opciones de horario - VERSIÓN CORREGIDA
+            async function updateTimeOptions(classId, selectedDate) {
+                console.log('🔍 [FRONTEND] updateTimeOptions llamada:', { classId, selectedDate });
+                
                 const timeSelector = document.getElementById(`time-${classId}`);
+                
+                if (!timeSelector) {
+                    console.error('❌ [FRONTEND] Selector de tiempo no encontrado:', `time-${classId}`);
+                    return;
+                }
                 
                 if (!selectedDate) {
                     timeSelector.innerHTML = '<option value="">Primero selecciona una fecha...</option>';
                     return;
                 }
                 
-                // Buscar la clase
-                fetch('/api/classes')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            const classItem = data.classes.find(c => c._id === classId);
-                            
-                            if (!classItem || !classItem.scheduleDetails) {
-                                timeSelector.innerHTML = '<option value="">No hay horarios disponibles</option>';
-                                return;
-                            }
-                            
-                            const date = new Date(selectedDate + 'T00:00:00');
-                            const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-                            const dayName = dayNames[date.getDay()];
-                            
-                            const availableTimes = classItem.scheduleDetails.filter(schedule => schedule.day === dayName);
-                            
-                            if (availableTimes.length === 0) {
-                                timeSelector.innerHTML = '<option value="">No hay horarios para este día</option>';
-                                return;
-                            }
-                            
-                            timeSelector.innerHTML = '<option value="">Seleccionar horario...</option>' +
-                                availableTimes.map(schedule => 
-                                    `<option value="${schedule.time}">${schedule.time}</option>`
-                                ).join('');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        timeSelector.innerHTML = '<option value="">Error cargando horarios</option>';
+                // Mostrar "Cargando..." mientras se obtienen los horarios
+                timeSelector.innerHTML = '<option value="">Cargando horarios...</option>';
+                timeSelector.disabled = true;
+                
+                try {
+                    // ⭐ LLAMAR AL ENDPOINT CORRECTO
+                    const url = `/api/classes/available-schedules?classId=${classId}&date=${selectedDate}`;
+                    console.log('🌐 [FRONTEND] Llamando a:', url);
+                    
+                    const response = await fetch(url, {
+                        credentials: 'same-origin'
                     });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log('📦 [FRONTEND] Respuesta recibida:', data);
+                    
+                    if (data.success && data.schedules && data.schedules.length > 0) {
+                        // Construir opciones
+                        let options = '<option value="">Seleccionar horario...</option>';
+                        
+                        data.schedules.forEach(schedule => {
+                            const availabilityText = schedule.available > 0 
+                                ? `(${schedule.available} cupos disponibles)` 
+                                : '(LLENO)';
+                            
+                            const disabled = schedule.available <= 0 ? 'disabled' : '';
+                            
+                            options += `<option value="${schedule.time}" ${disabled}>
+                                ${schedule.displayTime} - ${schedule.instructor} ${availabilityText}
+                            </option>`;
+                        });
+                        
+                        timeSelector.innerHTML = options;
+                        timeSelector.disabled = false;
+                        
+                        console.log('✅ [FRONTEND] Horarios cargados correctamente');
+                        
+                    } else {
+                        console.log('⚠️ [FRONTEND] No hay horarios para este día');
+                        timeSelector.innerHTML = '<option value="">No hay horarios para este día</option>';
+                        timeSelector.disabled = true;
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ [FRONTEND] Error cargando horarios:', error);
+                    timeSelector.innerHTML = '<option value="">Error al cargar horarios</option>';
+                    timeSelector.disabled = true;
+                    
+                    // Mostrar alerta al usuario
+                    if (typeof showToast === 'function') {
+                        showToast('error', 'Error al cargar horarios. Intenta nuevamente.');
+                    }
+                }
             }
 
             // Reservar clase - VERSIÓN CORREGIDA Y SIMPLIFICADA

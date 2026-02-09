@@ -3583,8 +3583,8 @@ app.post('/api/classes/available-dates', async (req, res) => {
     }
 });
 
-// ==================== ENDPOINT: OBTENER HORARIOS DISPONIBLES PARA RESERVA ====================
-app.get('/api/classes/available-schedules', requireAuth, async (req, res) => {
+// ENDPOINT: Obtener horarios disponibles para una clase en una fecha específica
+app.get('/api/classes/available-schedules', async (req, res) => {
     try {
         const { classId, date } = req.query;
         
@@ -3616,7 +3616,7 @@ app.get('/api/classes/available-schedules', requireAuth, async (req, res) => {
         console.log('📋 [HORARIOS] Schedule Details:', JSON.stringify(classDoc.scheduleDetails, null, 2));
         
         // Convertir fecha y obtener día de la semana
-        const selectedDate = new Date(date);
+        const selectedDate = new Date(date + 'T00:00:00'); // ⭐ Agregar hora para evitar problemas de zona horaria
         const dayOfWeek = selectedDate.getDay(); // 0 = Domingo, 1 = Lunes, etc.
         
         // Mapear números a nombres de días
