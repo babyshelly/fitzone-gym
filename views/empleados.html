@@ -1055,9 +1055,15 @@
                 if (data.success) {
                     const { className, reservations } = data;
                     
+                    // ⭐ EXTRAER SOLO LA HORA DE INICIO si viene en formato "10:00 - 11:00"
+                    let timeToFilter = time;
+                    if (time && time.includes(' - ')) {
+                        timeToFilter = time.split(' - ')[0].trim();
+                    }
+                    
                     // Filtrar por horario específico si se proporciona
-                    const filteredReservations = time 
-                        ? reservations.filter(res => res.time === time)
+                    const filteredReservations = timeToFilter 
+                        ? reservations.filter(res => res.time === timeToFilter)
                         : reservations;
                     
                     let content = `

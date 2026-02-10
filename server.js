@@ -4677,6 +4677,14 @@ app.get('/api/employee/today-classes', verificarEmpleado, async (req, res) => {
                 const todaySchedule = classItem.scheduleDetails.filter(s => s.day === todayName);
                 
                 for (const schedule of todaySchedule) {
+                    // ⭐ EXTRAER SOLO LA HORA DE INICIO (antes del " - ")
+                    let timeToUse = schedule.time;
+                    
+                    // Si el formato es "10:00 - 11:00", extraer solo "10:00"
+                    if (schedule.time.includes(' - ')) {
+                        timeToUse = schedule.time.split(' - ')[0].trim();
+                    }
+                    
                     // ⭐ CONTAR RESERVAS PARA ESTA CLASE Y HORARIO ESPECÍFICO
                     const reservationCount = await Reservation.countDocuments({
                         classId: classItem._id,
@@ -4684,7 +4692,7 @@ app.get('/api/employee/today-classes', verificarEmpleado, async (req, res) => {
                             $gte: today,
                             $lt: tomorrow
                         },
-                        time: schedule.time, // ⭐ IMPORTANTE: Filtrar por horario
+                        time: timeToUse, // ⭐ IMPORTANTE: Usar hora de inicio
                         status: 'active'
                     });
                     
@@ -4693,7 +4701,8 @@ app.get('/api/employee/today-classes', verificarEmpleado, async (req, res) => {
                     todayClasses.push({
                         classId: classItem._id,
                         className: classItem.name,
-                        time: schedule.time,
+                        time: schedule.time, // Mostrar tiempo completo en el frontend
+                        timeKey: timeToUse, // Hora de inicio para consultas
                         capacity: classItem.capacity,
                         reservations: reservationCount // ⭐ AHORA TIENE EL NÚMERO CORRECTO
                     });
