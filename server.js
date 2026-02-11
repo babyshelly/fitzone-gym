@@ -67,6 +67,26 @@ const userSchema = new mongoose.Schema({
         default: false
     },
 
+    // ⭐ PERFIL LABORAL DEL EMPLEADO
+    specialty: {
+        type: String,
+        enum: ['recepcionista', 'encargado', 'personal_trainer', 'asistente_musculacion', 'personal_limpieza', 'otro'],
+        default: null
+    },
+    workShift: {
+        type: String,
+        enum: ['manana', 'tarde', 'noche', 'full_day', 'part_time'],
+        default: null
+    },
+    workHours: {
+        start: { type: String, default: null },
+        end:   { type: String, default: null }
+    },
+    assignedClasses: [{
+        type: String,
+        enum: ['F.E.C', 'Pilates', 'Spinning', 'Yoga', 'Musculacion', 'Joya']
+    }],
+
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -1423,17 +1443,56 @@ app.post('/api/login-empleado', async (req, res) => {
             });
         }
         
-        req.session.userId = user._id;
-        req.session.role = user.role;
+        // ⭐ Verificar especialidad: solo recepcionistas y encargados acceden al panel
+        const canAccessPanel = ['recepcionista', 'encargado'].includes(user.specialty);
+        if (!canAccessPanel) {
+            const specialtyLabels = {
+                personal_trainer: 'Personal Trainer',
+                asistente_musculacion: 'Asistente de Musculación',
+                personal_limpieza: 'Personal de Limpieza',
+                otro: 'Otro'
+            };
+            const label = specialtyLabels[user.specialty] || user.specialty || 'sin asignar';
+            return res.json({
+                success: false,
+                wrongRole: true,
+                message: `Tu rol (${label}) no tiene acceso al panel de gestión. Solo recepcionistas y encargados pueden ingresar.`
+            });
+        }
+
+        // ⭐ Verificar horario laboral (margen de 15 min)
+        if (user.workHours && user.workHours.start && user.workHours.end) {
+            const now = new Date();
+            const [sh, sm] = user.workHours.start.split(':').map(Number);
+            const [eh, em] = user.workHours.end.split(':').map(Number);
+            const nowMin   = now.getHours() * 60 + now.getMinutes();
+            const startMin = sh * 60 + sm;
+            const endMin   = eh * 60 + em;
+            if (nowMin < startMin - 15 || nowMin > endMin + 15) {
+                return res.json({
+                    success: false,
+                    outsideShift: true,
+                    message: 'Fuera de tu jornada laboral',
+                    workHours: { start: user.workHours.start, end: user.workHours.end },
+                    employeeName: user.fullName
+                });
+            }
+        }
+
+        req.session.userId    = user._id;
+        req.session.role      = user.role;
         req.session.userEmail = user.email;
-        req.session.fullName = user.fullName;
-        
-        console.log('✅ Login empleado exitoso');
-        
+        req.session.fullName  = user.fullName;
+        req.session.specialty = user.specialty;
+        req.session.workHours = user.workHours;
+
+        console.log('✅ Login empleado exitoso:', user.specialty);
+
         res.json({ 
             success: true, 
             message: 'Login exitoso',
             role: user.role,
+            specialty: user.specialty,
             redirectUrl: '/empleados'
         });
         
@@ -1976,43 +2035,41 @@ app.get('/api/admin/employees', requireAuth, requireAdmin, async (req, res) => {
 app.post('/api/admin/employees', requireAuth, requireAdmin, async (req, res) => {
 
     try {
-        const { fullName, email, phone, password } = req.body;
+        const { fullName, email, phone, password, specialty, workShift, workHoursStart, workHoursEnd, assignedClasses } = req.body;
         
-        // Validar datos
-        if (!fullName || !email || !phone || !password) {
+        if (!fullName || !email || !phone || !password)
             return res.json({ success: false, message: 'Todos los campos son requeridos' });
-        }
-        
-        if (password.length < 6) {
+        if (!specialty)
+            return res.json({ success: false, message: 'La especialidad es requerida' });
+        if (!workShift || !workHoursStart || !workHoursEnd)
+            return res.json({ success: false, message: 'La jornada y horario laboral son requeridos' });
+        if (password.length < 6)
             return res.json({ success: false, message: 'La contraseña debe tener al menos 6 caracteres' });
-        }
         
-        // Verificar si el email ya existe
         const existingUser = await User.findOne({ email: email.toLowerCase() });
-        if (existingUser) {
+        if (existingUser)
             return res.json({ success: false, message: 'El email ya está registrado' });
-        }
         
-        // Crear empleado
         const hashedPassword = await bcrypt.hash(password, 10);
+        const classes = Array.isArray(assignedClasses) ? assignedClasses : (assignedClasses ? [assignedClasses] : []);
         const newEmployee = await User.create({
-            fullName,
-            email: email.toLowerCase(),
-            phone,
-            password: hashedPassword,
-            role: 'employee',
-            status: 'active'
+            fullName, email: email.toLowerCase(), phone,
+            password: hashedPassword, role: 'employee', status: 'active',
+            specialty: specialty || null,
+            workShift: workShift || null,
+            workHours: { start: workHoursStart || null, end: workHoursEnd || null },
+            assignedClasses: ['personal_trainer','asistente_musculacion'].includes(specialty) ? classes : []
         });
         
         res.json({ 
             success: true, 
             message: 'Empleado creado correctamente',
             employee: {
-                _id: newEmployee._id,
-                fullName: newEmployee.fullName,
-                email: newEmployee.email,
-                phone: newEmployee.phone,
-                status: newEmployee.status
+                _id: newEmployee._id, fullName: newEmployee.fullName,
+                email: newEmployee.email, phone: newEmployee.phone,
+                status: newEmployee.status, specialty: newEmployee.specialty,
+                workShift: newEmployee.workShift, workHours: newEmployee.workHours,
+                assignedClasses: newEmployee.assignedClasses
             }
         });
         
@@ -2026,9 +2083,17 @@ app.post('/api/admin/employees', requireAuth, requireAdmin, async (req, res) => 
 app.put('/api/admin/employees/:id', requireAuth, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const { fullName, email, phone, status, password } = req.body;
+        const { fullName, email, phone, status, password, specialty, workShift, workHoursStart, workHoursEnd, assignedClasses } = req.body;
         
         const updateData = { fullName, email, phone, status };
+        if (specialty !== undefined) updateData.specialty = specialty;
+        if (workShift !== undefined) updateData.workShift = workShift;
+        if (workHoursStart !== undefined || workHoursEnd !== undefined) {
+            updateData.workHours = { start: workHoursStart, end: workHoursEnd };
+        }
+        if (assignedClasses !== undefined) {
+            updateData.assignedClasses = Array.isArray(assignedClasses) ? assignedClasses : (assignedClasses ? [assignedClasses] : []);
+        }
         
         // Si hay nueva contraseña, hashearla
         if (password && password.length > 0) {

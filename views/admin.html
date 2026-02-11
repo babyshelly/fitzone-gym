@@ -12,6 +12,19 @@
                 0%, 100% { transform: scale(1); }
                 50% { transform: scale(1.05); }
             }
+            /* Clases check labels en formulario empleado */
+            .class-check-label {
+                display: flex; align-items: center; gap: 0.5rem;
+                color: var(--blanco); cursor: pointer;
+                background: rgba(127,76,165,0.1); padding: 0.7rem;
+                border-radius: 8px; border: 2px solid transparent;
+                transition: border-color 0.2s, background 0.2s;
+            }
+            .class-check-label:has(input:checked) {
+                border-color: var(--violeta-claro);
+                background: rgba(127,76,165,0.25);
+            }
+            .class-check-label input { accent-color: #7f4ca5; }
         </style>
     </head>
     <body>
@@ -158,9 +171,9 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Nombre</th>
-                                    <th>Email</th>
-                                    <th>Teléfono</th>
-                                    <th>Fecha Registro</th>
+                                    <th>Email / Teléfono</th>
+                                    <th>Especialidad</th>
+                                    <th>Jornada / Horario</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -676,42 +689,120 @@
                 <div class="modal-body">
                     <form id="employee-form">
                         <input type="hidden" id="employee-id">
-                        
-                        <div class="form-group">
-                            <label for="employee-fullname">Nombre Completo *</label>
-                            <input type="text" id="employee-fullname" required>
+
+                        <!-- Datos personales -->
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                            <div class="form-group">
+                                <label for="employee-fullname">Nombre Completo *</label>
+                                <input type="text" id="employee-fullname" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="employee-phone">Teléfono *</label>
+                                <input type="tel" id="employee-phone" required>
+                            </div>
                         </div>
-                        
                         <div class="form-group">
                             <label for="employee-email">Email *</label>
                             <input type="email" id="employee-email" required>
                         </div>
-                        
-                        <div class="form-group">
-                            <label for="employee-phone">Teléfono *</label>
-                            <input type="tel" id="employee-phone" required>
-                        </div>
-                        
                         <div class="form-group">
                             <label for="employee-password">Contraseña *</label>
                             <input type="password" id="employee-password" required>
-                            <small style="color: var(--gris-claro); display: block; margin-top: 0.3rem;">
-                                Mínimo 6 caracteres. El empleado podrá cambiarla después.
+                            <small style="color:var(--gris-claro);display:block;margin-top:0.3rem;">Mínimo 6 caracteres.</small>
+                        </div>
+
+                        <!-- Separador Perfil Laboral -->
+                        <div style="border-top:2px solid var(--violeta-medio);margin:1.5rem 0;padding-top:1.5rem;">
+                            <p style="color:var(--violeta-claro);font-weight:bold;margin:0 0 1rem;">
+                                <i class="fas fa-id-badge"></i> Perfil Laboral
+                            </p>
+                        </div>
+
+                        <!-- Especialidad -->
+                        <div class="form-group">
+                            <label for="employee-specialty">Especialidad / Rol *</label>
+                            <select id="employee-specialty" required onchange="toggleClassesSection()">
+                                <option value="">-- Seleccionar especialidad --</option>
+                                <option value="recepcionista">🛎 Recepcionista</option>
+                                <option value="encargado">👔 Encargado</option>
+                                <option value="personal_trainer">💪 Personal Trainer</option>
+                                <option value="asistente_musculacion">🏋 Asistente de Musculación</option>
+                                <option value="personal_limpieza">🧹 Personal de Limpieza</option>
+                                <option value="otro">🔧 Otro</option>
+                            </select>
+                            <small id="specialty-panel-note" style="display:none;color:#22c55e;margin-top:0.4rem;font-style:italic;">
+                                ✅ Tiene acceso al panel de gestión (sujeto a horario laboral)
+                            </small>
+                            <small id="specialty-nopanel-note" style="display:none;color:var(--gris-claro);margin-top:0.4rem;font-style:italic;">
+                                ℹ️ Sin acceso al panel de gestión
                             </small>
                         </div>
-                        
-                        <div class="form-group">
-                            <label for="employee-status">Estado *</label>
-                            <select id="employee-status" required>
-                                <option value="active">Activo</option>
-                                <option value="inactive">Inactivo</option>
-                            </select>
+
+                        <!-- Jornada y Estado -->
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                            <div class="form-group">
+                                <label for="employee-shift">Jornada Laboral *</label>
+                                <select id="employee-shift" required>
+                                    <option value="">-- Seleccionar --</option>
+                                    <option value="manana">🌅 Mañana</option>
+                                    <option value="tarde">☀️ Tarde</option>
+                                    <option value="noche">🌙 Noche</option>
+                                    <option value="full_day">🕐 Full Day</option>
+                                    <option value="part_time">⏰ Part Time</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="employee-status">Estado *</label>
+                                <select id="employee-status" required>
+                                    <option value="active">Activo</option>
+                                    <option value="inactive">Inactivo</option>
+                                </select>
+                            </div>
                         </div>
-                        
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" onclick="closeEmployeeModal()">
-                                Cancelar
-                            </button>
+
+                        <!-- Horario -->
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                            <div class="form-group">
+                                <label for="employee-hour-start">Hora de Entrada *</label>
+                                <input type="time" id="employee-hour-start" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="employee-hour-end">Hora de Salida *</label>
+                                <input type="time" id="employee-hour-end" required>
+                            </div>
+                        </div>
+
+                        <!-- Clases asignadas (solo trainers) -->
+                        <div id="classes-section" style="display:none;">
+                            <div style="border-top:2px solid var(--violeta-medio);margin:1rem 0 1.5rem;padding-top:1.5rem;">
+                                <p style="color:var(--violeta-claro);font-weight:bold;margin:0 0 1rem;">
+                                    <i class="fas fa-dumbbell"></i> Clases Asignadas
+                                </p>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;">
+                                <label class="class-check-label">
+                                    <input type="checkbox" name="assignedClasses" value="F.E.C"> F.E.C
+                                </label>
+                                <label class="class-check-label">
+                                    <input type="checkbox" name="assignedClasses" value="Pilates"> Pilates
+                                </label>
+                                <label class="class-check-label">
+                                    <input type="checkbox" name="assignedClasses" value="Spinning"> Spinning
+                                </label>
+                                <label class="class-check-label">
+                                    <input type="checkbox" name="assignedClasses" value="Yoga"> Yoga
+                                </label>
+                                <label class="class-check-label">
+                                    <input type="checkbox" name="assignedClasses" value="Musculacion"> Musculación
+                                </label>
+                                <label class="class-check-label">
+                                    <input type="checkbox" name="assignedClasses" value="Joya"> Joya
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-actions" style="margin-top:1.5rem;">
+                            <button type="button" class="btn btn-secondary" onclick="closeEmployeeModal()">Cancelar</button>
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save"></i> Guardar Empleado
                             </button>
@@ -777,6 +868,11 @@
                 document.getElementById('employee-form').reset();
                 document.getElementById('employee-id').value = '';
                 document.getElementById('employee-password').required = true;
+                // Reset campos nuevos
+                document.getElementById('classes-section').style.display = 'none';
+                document.getElementById('specialty-panel-note').style.display = 'none';
+                document.getElementById('specialty-nopanel-note').style.display = 'none';
+                document.querySelectorAll('input[name="assignedClasses"]').forEach(cb => cb.checked = false);
                 document.getElementById('employee-modal').style.display = 'flex';
             }
 
@@ -2192,39 +2288,67 @@
 
             function displayEmployees() {
                 const tbody = document.getElementById('employees-table-body');
-                
+
                 if (filteredEmployees.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7" class="no-data">No hay empleados registrados</td></tr>';
                     return;
                 }
 
                 const startIndex = (currentEmployeePage - 1) * employeesPerPage;
-                const endIndex = startIndex + employeesPerPage;
-                const employeesToShow = filteredEmployees.slice(startIndex, endIndex);
+                const employeesToShow = filteredEmployees.slice(startIndex, startIndex + employeesPerPage);
 
-                tbody.innerHTML = employeesToShow.map(employee => `
+                const spLabels = {
+                    recepcionista: { icon: '🛎', text: 'Recepcionista',    color: '#3b82f6' },
+                    encargado:     { icon: '👔', text: 'Encargado',        color: '#7f4ca5' },
+                    personal_trainer:      { icon: '💪', text: 'P. Trainer',      color: '#22c55e' },
+                    asistente_musculacion: { icon: '🏋', text: 'Asist. Musc.',    color: '#f59e0b' },
+                    personal_limpieza:     { icon: '🧹', text: 'Limpieza',        color: '#6b7280' },
+                    otro:          { icon: '🔧', text: 'Otro',             color: '#6b7280' }
+                };
+                const shLabels = { manana: 'Mañana', tarde: 'Tarde', noche: 'Noche', full_day: 'Full Day', part_time: 'Part Time' };
+
+                tbody.innerHTML = employeesToShow.map(emp => {
+                    const sp = spLabels[emp.specialty] || { icon: '❓', text: 'Sin asignar', color: '#6b7280' };
+                    const sh = shLabels[emp.workShift] || '-';
+                    const wh = emp.workHours?.start ? `${emp.workHours.start} - ${emp.workHours.end}` : '-';
+                    const canPanel = ['recepcionista','encargado'].includes(emp.specialty);
+
+                    return `
                     <tr>
-                        <td>${employee._id.slice(-6)}</td>
-                        <td>${employee.fullName}</td>
-                        <td>${employee.email}</td>
-                        <td>${employee.phone}</td>
-                        <td>${new Date(employee.createdAt).toLocaleDateString('es-ES')}</td>
+                        <td>${emp._id.slice(-6)}</td>
                         <td>
-                            <span class="status ${employee.status === 'active' ? 'active' : ''}" 
-                                style="background: ${employee.status === 'active' ? '#4CAF50' : '#666'};">
-                                ${employee.status === 'active' ? 'Activo' : 'Inactivo'}
+                            <div style="font-weight:600;">${emp.fullName}</div>
+                            ${canPanel ? '<small style="color:#22c55e;font-size:0.75rem;">✓ Panel activo</small>' : ''}
+                        </td>
+                        <td>
+                            <div>${emp.email}</div>
+                            <small style="color:var(--gris-claro);">${emp.phone}</small>
+                        </td>
+                        <td>
+                            <span style="background:${sp.color}22;color:${sp.color};border:1px solid ${sp.color}44;padding:0.25rem 0.6rem;border-radius:20px;font-size:0.82rem;white-space:nowrap;">
+                                ${sp.icon} ${sp.text}
                             </span>
                         </td>
                         <td>
-                            <button class="btn-table-action" onclick="editEmployee('${employee._id}')" title="Editar">
+                            <div style="font-size:0.85rem;">${sh}</div>
+                            <small style="color:var(--gris-claro);font-family:monospace;">${wh}</small>
+                        </td>
+                        <td>
+                            <span class="status ${emp.status === 'active' ? 'active' : ''}"
+                                style="background:${emp.status === 'active' ? '#4CAF50' : '#666'};">
+                                ${emp.status === 'active' ? 'Activo' : 'Inactivo'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn-table-action" onclick="editEmployee('${emp._id}')" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-table-action delete" onclick="deleteEmployee('${employee._id}')" title="Eliminar">
+                            <button class="btn-table-action delete" onclick="deleteEmployee('${emp._id}')" title="Eliminar">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
-                    </tr>
-                `).join('');
+                    </tr>`;
+                }).join('');
             }
 
             function setupEmployeesPagination() {
@@ -2270,61 +2394,96 @@
                 document.getElementById('employee-modal').style.display = 'none';
             }
 
+            // Labels para especialidades
+            const SPECIALTY_LABELS = {
+                recepcionista: 'Recepcionista', encargado: 'Encargado',
+                personal_trainer: 'Personal Trainer', asistente_musculacion: 'Asist. Musculación',
+                personal_limpieza: 'Limpieza', otro: 'Otro'
+            };
+            const SHIFT_LABELS = {
+                manana: 'Mañana', tarde: 'Tarde', noche: 'Noche', full_day: 'Full Day', part_time: 'Part Time'
+            };
+
+            // Mostrar/ocultar sección de clases según especialidad
+            function toggleClassesSection() {
+                const sp = document.getElementById('employee-specialty').value;
+                const needsClasses = ['personal_trainer', 'asistente_musculacion'].includes(sp);
+                const hasPanel     = ['recepcionista', 'encargado'].includes(sp);
+                document.getElementById('classes-section').style.display = needsClasses ? 'block' : 'none';
+                document.getElementById('specialty-panel-note').style.display = hasPanel ? 'block' : 'none';
+                document.getElementById('specialty-nopanel-note').style.display = (!hasPanel && sp) ? 'block' : 'none';
+            }
+
             function editEmployee(employeeId) {
-                const employee = allEmployees.find(e => e._id === employeeId);
-                if (!employee) return;
+                const emp = allEmployees.find(e => e._id === employeeId);
+                if (!emp) return;
 
                 document.getElementById('employee-modal-title').textContent = 'Editar Empleado';
-                document.getElementById('employee-id').value = employee._id;
-                document.getElementById('employee-fullname').value = employee.fullName;
-                document.getElementById('employee-email').value = employee.email;
-                document.getElementById('employee-phone').value = employee.phone;
-                document.getElementById('employee-status').value = employee.status;
+                document.getElementById('employee-id').value        = emp._id;
+                document.getElementById('employee-fullname').value  = emp.fullName;
+                document.getElementById('employee-email').value     = emp.email;
+                document.getElementById('employee-phone').value     = emp.phone;
+                document.getElementById('employee-status').value    = emp.status;
                 document.getElementById('employee-password').required = false;
-                document.getElementById('employee-password').value = '';
+                document.getElementById('employee-password').value  = '';
+                document.getElementById('employee-specialty').value = emp.specialty || '';
+                document.getElementById('employee-shift').value     = emp.workShift || '';
+                document.getElementById('employee-hour-start').value = emp.workHours?.start || '';
+                document.getElementById('employee-hour-end').value   = emp.workHours?.end || '';
+
+                // Marcar clases
+                document.querySelectorAll('input[name="assignedClasses"]').forEach(cb => {
+                    cb.checked = (emp.assignedClasses || []).includes(cb.value);
+                });
+                toggleClassesSection();
 
                 document.getElementById('employee-modal').style.display = 'flex';
             }
 
             document.getElementById('employee-form').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                
                 const employeeId = document.getElementById('employee-id').value;
+
+                const checkedClasses = Array.from(
+                    document.querySelectorAll('input[name="assignedClasses"]:checked')
+                ).map(cb => cb.value);
+
                 const formData = {
-                    fullName: document.getElementById('employee-fullname').value,
-                    email: document.getElementById('employee-email').value,
-                    phone: document.getElementById('employee-phone').value,
-                    status: document.getElementById('employee-status').value
+                    fullName:        document.getElementById('employee-fullname').value,
+                    email:           document.getElementById('employee-email').value,
+                    phone:           document.getElementById('employee-phone').value,
+                    status:          document.getElementById('employee-status').value,
+                    specialty:       document.getElementById('employee-specialty').value,
+                    workShift:       document.getElementById('employee-shift').value,
+                    workHoursStart:  document.getElementById('employee-hour-start').value,
+                    workHoursEnd:    document.getElementById('employee-hour-end').value,
+                    assignedClasses: checkedClasses
                 };
-                
+
                 const password = document.getElementById('employee-password').value;
-                if (password) {
-                    formData.password = password;
-                }
+                if (password) formData.password = password;
 
                 try {
-                    const url = employeeId ? `/api/admin/employees/${employeeId}` : '/api/admin/employees';
+                    const url    = employeeId ? `/api/admin/employees/${employeeId}` : '/api/admin/employees';
                     const method = employeeId ? 'PUT' : 'POST';
-                    
+
                     const response = await fetch(url, {
-                        method: method,
-                        headers: { 'Content-Type': 'application/json' },
+                        method, headers: { 'Content-Type': 'application/json' },
                         credentials: 'same-origin',
                         body: JSON.stringify(formData)
                     });
-
                     const result = await response.json();
-                    
+
                     if (result.success) {
-                        alert(result.message);
+                        showToast('success', result.message);
                         closeEmployeeModal();
                         loadEmployees();
                     } else {
-                        throw new Error(result.message);
+                        showToast('error', result.message || 'Error al guardar empleado');
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('Error al guardar empleado');
+                    showToast('error', 'Error al guardar empleado');
                 }
             });
 
