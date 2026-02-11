@@ -114,18 +114,29 @@
     <div id="outside-shift-screen">
         <div class="shift-card">
             <div class="shift-icon">
-                <i class="fas fa-clock" style="font-size:2.8rem;color:#ef4444;"></i>
+                <i id="shift-clock-icon" class="fas fa-clock" style="font-size:2.8rem;color:#ef4444;"></i>
             </div>
-            <h2 style="color:#ef4444;font-size:1.8rem;margin-bottom:0.5rem;">Fuera de Jornada</h2>
+            <h2 id="shift-screen-title" style="color:#ef4444;font-size:1.8rem;margin-bottom:0.5rem;">Fuera de Jornada</h2>
             <p style="color:rgba(255,255,255,0.7);margin-bottom:1.5rem;">
                 Hola, <strong id="shift-employee-name" style="color:white;">empleado/a</strong>
             </p>
+
+            <!-- Hora actual -->
             <div class="shift-time-box">
                 <p style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-bottom:0.5rem;">Hora actual</p>
                 <p id="shift-current-time" style="color:#ef4444;font-size:2.5rem;font-weight:bold;margin:0;font-family:monospace;">--:--</p>
+                <p id="shift-today" style="display:none;color:rgba(255,255,255,0.5);font-size:0.82rem;margin:0.4rem 0 0;"></p>
             </div>
-            <div class="shift-assigned-box">
-                <p style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-bottom:1rem;">Tu jornada asignada</p>
+
+            <!-- Días laborales asignados -->
+            <div id="shift-days-container" style="display:none;background:rgba(127,76,165,0.1);border:2px solid rgba(127,76,165,0.3);border-radius:15px;padding:1.2rem;margin-bottom:1.5rem;">
+                <p style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-bottom:0.8rem;">Tus días laborales</p>
+                <div id="shift-days-list" style="display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;"></div>
+            </div>
+
+            <!-- Horario asignado (si aplica) -->
+            <div id="shift-hours-box" class="shift-assigned-box">
+                <p style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-bottom:1rem;">Tu horario de hoy</p>
                 <div class="shift-times-row">
                     <div>
                         <p class="time-label">Entrada</p>
@@ -141,6 +152,7 @@
                     * Se permite un margen de 15 minutos antes y después
                 </p>
             </div>
+
             <p style="color:rgba(255,255,255,0.5);font-size:0.9rem;margin-bottom:2rem;">
                 Si crees que hay un error, contactá a tu supervisor o al administrador del sistema.
             </p>
@@ -160,18 +172,65 @@
             return `${h12}:${m} ${ampm}`;
         }
 
+        // Mapa de nombres de días
+        const DAY_LABELS = {
+            lunes:'Lunes', martes:'Martes', miercoles:'Miércoles',
+            jueves:'Jueves', viernes:'Viernes', sabado:'Sábado', domingo:'Domingo'
+        };
+
         function showShiftScreen(data) {
             document.getElementById('shift-employee-name').textContent = data.employeeName || 'empleado/a';
             const now = new Date();
             document.getElementById('shift-current-time').textContent =
                 now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            document.getElementById('shift-start').textContent = formatTime12h(data.workHours?.start);
-            document.getElementById('shift-end').textContent   = formatTime12h(data.workHours?.end);
+
+            // Título dinámico
+            const titleEl = document.getElementById('shift-screen-title');
+            if (data.notWorkDay) {
+                if (titleEl) titleEl.textContent = 'Hoy no es tu día laboral';
+                document.getElementById('shift-clock-icon').style.color = '#f59e0b';
+                document.querySelector('.shift-card').style.borderColor = '#f59e0b';
+                document.getElementById('shift-current-time').style.color = '#f59e0b';
+            }
+
+            // Mostrar días laborales
+            const daysContainer = document.getElementById('shift-days-container');
+            if (data.workDays && data.workDays.length > 0) {
+                daysContainer.style.display = 'block';
+                document.getElementById('shift-days-list').innerHTML = data.workDays
+                    .map(d => `<span style="background:rgba(127,76,165,0.2);color:#b57edc;border:1px solid rgba(127,76,165,0.4);padding:0.3rem 0.7rem;border-radius:6px;font-size:0.85rem;">${DAY_LABELS[d] || d}</span>`)
+                    .join(' ');
+                // Resaltar hoy
+                if (data.todayName) {
+                    document.getElementById('shift-today').textContent = `Hoy es ${DAY_LABELS[data.todayName] || data.todayName}`;
+                    document.getElementById('shift-today').style.display = 'block';
+                }
+            }
+
+            // Mostrar horario si hay
+            const hoursBox = document.getElementById('shift-hours-box');
+            if (data.workHours && data.workHours.start) {
+                hoursBox.style.display = 'block';
+                document.getElementById('shift-start').textContent = formatTime12h(data.workHours.start);
+                document.getElementById('shift-end').textContent   = formatTime12h(data.workHours.end);
+            } else {
+                hoursBox.style.display = 'none';
+            }
+
             document.getElementById('outside-shift-screen').classList.add('show');
         }
 
         function hideShiftScreen() {
             document.getElementById('outside-shift-screen').classList.remove('show');
+            // Resetear colores y estados
+            document.getElementById('shift-screen-title').textContent = 'Fuera de Jornada';
+            document.getElementById('shift-screen-title').style.color = '#ef4444';
+            document.getElementById('shift-clock-icon').style.color   = '#ef4444';
+            document.querySelector('.shift-card').style.borderColor   = '#ef4444';
+            document.getElementById('shift-current-time').style.color = '#ef4444';
+            document.getElementById('shift-today').style.display      = 'none';
+            document.getElementById('shift-days-container').style.display = 'none';
+            document.getElementById('shift-hours-box').style.display  = 'block';
             document.getElementById('loginForm').reset();
             const btn = document.querySelector('.btn-login-form');
             btn.disabled = false;

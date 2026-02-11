@@ -70,21 +70,29 @@ const userSchema = new mongoose.Schema({
     // ⭐ PERFIL LABORAL DEL EMPLEADO
     specialty: {
         type: String,
-        enum: ['recepcionista', 'encargado', 'personal_trainer', 'asistente_musculacion', 'personal_limpieza', 'otro'],
+        enum: ['recepcionista', 'encargado', 'personal_trainer',
+               'profesor_yoga', 'profesor_pilates', 'profesor_spinning', 'profesor_fec',
+               'personal_limpieza', 'otro'],
         default: null
     },
     workShift: {
         type: String,
-        enum: ['manana', 'tarde', 'noche', 'full_day', 'part_time'],
+        enum: ['manana', 'tarde', 'part_time'],
         default: null
     },
+    workDays: [{
+        type: String,
+        enum: ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']
+    }],
     workHours: {
         start: { type: String, default: null },
         end:   { type: String, default: null }
     },
+    partTimeHours: { type: Number, default: null },
+    partTimeStart: { type: String, default: null },
     assignedClasses: [{
         type: String,
-        enum: ['F.E.C', 'Pilates', 'Spinning', 'Yoga', 'Musculacion', 'Joya']
+        enum: ['F.E.C', 'Pilates', 'Spinning', 'Yoga']
     }],
 
     createdAt: { type: Date, default: Date.now }
@@ -1460,20 +1468,65 @@ app.post('/api/login-empleado', async (req, res) => {
             });
         }
 
-        // ⭐ Verificar horario laboral (margen de 15 min)
-        if (user.workHours && user.workHours.start && user.workHours.end) {
-            const now = new Date();
-            const [sh, sm] = user.workHours.start.split(':').map(Number);
-            const [eh, em] = user.workHours.end.split(':').map(Number);
+        // ⭐ Horarios fijos del gym por turno y tipo de día
+        const GYM_SHIFTS = {
+            semana:  { manana: ['07:00','14:00'], tarde: ['15:00','22:00'] },
+            sabado:  { manana: ['07:00','13:30'], tarde: ['13:30','20:00'] },
+            domingo: { manana: ['08:00','13:00'], tarde: ['13:00','18:00'] }
+        };
+        const now       = new Date();
+        const dayOfWeek = now.getDay(); // 0=Dom, 6=Sáb
+        const dayKey    = dayOfWeek === 0 ? 'domingo' : dayOfWeek === 6 ? 'sabado' : 'semana';
+        const DAY_NAMES = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
+        const todayName = DAY_NAMES[dayOfWeek];
+
+        // Verificar que hoy es día laboral del empleado
+        const workDaysList = user.workDays || [];
+        if (workDaysList.length > 0 && !workDaysList.includes(todayName)) {
+            return res.json({
+                success: false,
+                outsideShift: true,
+                message: 'Hoy no es tu día laboral',
+                notWorkDay: true,
+                workDays: workDaysList,
+                todayName,
+                workHours: null,
+                employeeName: user.fullName
+            });
+        }
+
+        // Verificar horario según turno (margen ±15 min)
+        if (user.workShift === 'manana' || user.workShift === 'tarde') {
+            const shiftData = GYM_SHIFTS[dayKey]?.[user.workShift];
+            if (shiftData) {
+                const [sh, sm] = shiftData[0].split(':').map(Number);
+                const [eh, em] = shiftData[1].split(':').map(Number);
+                const nowMin   = now.getHours() * 60 + now.getMinutes();
+                if (nowMin < sh*60+sm - 15 || nowMin > eh*60+em + 15) {
+                    return res.json({
+                        success: false,
+                        outsideShift: true,
+                        message: 'Fuera de tu jornada laboral',
+                        workHours: { start: shiftData[0], end: shiftData[1] },
+                        workDays: workDaysList, todayName,
+                        employeeName: user.fullName
+                    });
+                }
+            }
+        } else if (user.workShift === 'part_time' && user.partTimeStart && user.partTimeHours) {
+            const [sh, sm] = user.partTimeStart.split(':').map(Number);
             const nowMin   = now.getHours() * 60 + now.getMinutes();
             const startMin = sh * 60 + sm;
-            const endMin   = eh * 60 + em;
+            const endMin   = startMin + user.partTimeHours * 60;
+            const endH = String(Math.floor(endMin/60)).padStart(2,'0');
+            const endM = String(endMin%60).padStart(2,'0');
             if (nowMin < startMin - 15 || nowMin > endMin + 15) {
                 return res.json({
                     success: false,
                     outsideShift: true,
                     message: 'Fuera de tu jornada laboral',
-                    workHours: { start: user.workHours.start, end: user.workHours.end },
+                    workHours: { start: user.partTimeStart, end: `${endH}:${endM}` },
+                    workDays: workDaysList, todayName,
                     employeeName: user.fullName
                 });
             }
@@ -2035,14 +2088,17 @@ app.get('/api/admin/employees', requireAuth, requireAdmin, async (req, res) => {
 app.post('/api/admin/employees', requireAuth, requireAdmin, async (req, res) => {
 
     try {
-        const { fullName, email, phone, password, specialty, workShift, workHoursStart, workHoursEnd, assignedClasses } = req.body;
+        const { fullName, email, phone, password, specialty, workShift, workDays,
+                partTimeHours, partTimeStart, assignedClasses } = req.body;
         
         if (!fullName || !email || !phone || !password)
             return res.json({ success: false, message: 'Todos los campos son requeridos' });
         if (!specialty)
             return res.json({ success: false, message: 'La especialidad es requerida' });
-        if (!workShift || !workHoursStart || !workHoursEnd)
-            return res.json({ success: false, message: 'La jornada y horario laboral son requeridos' });
+        if (!workShift)
+            return res.json({ success: false, message: 'El turno es requerido' });
+        if (!workDays || workDays.length === 0)
+            return res.json({ success: false, message: 'Seleccioná al menos un día laboral' });
         if (password.length < 6)
             return res.json({ success: false, message: 'La contraseña debe tener al menos 6 caracteres' });
         
@@ -2050,15 +2106,21 @@ app.post('/api/admin/employees', requireAuth, requireAdmin, async (req, res) => 
         if (existingUser)
             return res.json({ success: false, message: 'El email ya está registrado' });
         
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const days    = Array.isArray(workDays) ? workDays : (workDays ? [workDays] : []);
         const classes = Array.isArray(assignedClasses) ? assignedClasses : (assignedClasses ? [assignedClasses] : []);
+        const isProfesor     = specialty && specialty.startsWith('profesor_');
+        const canHaveClasses = isProfesor || specialty === 'personal_trainer';
+        const canPartTime    = ['personal_trainer','personal_limpieza'].includes(specialty);
+
+        const hashedPassword = await bcrypt.hash(password, 10);
         const newEmployee = await User.create({
             fullName, email: email.toLowerCase(), phone,
             password: hashedPassword, role: 'employee', status: 'active',
-            specialty: specialty || null,
-            workShift: workShift || null,
-            workHours: { start: workHoursStart || null, end: workHoursEnd || null },
-            assignedClasses: ['personal_trainer','asistente_musculacion'].includes(specialty) ? classes : []
+            specialty, workShift, workDays: days,
+            workHours: { start: partTimeStart || null, end: null },
+            partTimeHours: (workShift === 'part_time' && canPartTime) ? Number(partTimeHours) : null,
+            partTimeStart: (workShift === 'part_time' && canPartTime) ? partTimeStart : null,
+            assignedClasses: canHaveClasses ? classes : []
         });
         
         res.json({ 
@@ -2068,8 +2130,9 @@ app.post('/api/admin/employees', requireAuth, requireAdmin, async (req, res) => 
                 _id: newEmployee._id, fullName: newEmployee.fullName,
                 email: newEmployee.email, phone: newEmployee.phone,
                 status: newEmployee.status, specialty: newEmployee.specialty,
-                workShift: newEmployee.workShift, workHours: newEmployee.workHours,
-                assignedClasses: newEmployee.assignedClasses
+                workShift: newEmployee.workShift, workDays: newEmployee.workDays,
+                workHours: newEmployee.workHours, partTimeHours: newEmployee.partTimeHours,
+                partTimeStart: newEmployee.partTimeStart, assignedClasses: newEmployee.assignedClasses
             }
         });
         
@@ -2083,16 +2146,22 @@ app.post('/api/admin/employees', requireAuth, requireAdmin, async (req, res) => 
 app.put('/api/admin/employees/:id', requireAuth, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const { fullName, email, phone, status, password, specialty, workShift, workHoursStart, workHoursEnd, assignedClasses } = req.body;
+        const { fullName, email, phone, status, password, specialty, workShift, workDays,
+                partTimeHours, partTimeStart, assignedClasses } = req.body;
         
         const updateData = { fullName, email, phone, status };
-        if (specialty !== undefined) updateData.specialty = specialty;
-        if (workShift !== undefined) updateData.workShift = workShift;
-        if (workHoursStart !== undefined || workHoursEnd !== undefined) {
-            updateData.workHours = { start: workHoursStart, end: workHoursEnd };
-        }
+        if (specialty !== undefined) updateData.specialty  = specialty;
+        if (workShift !== undefined) updateData.workShift  = workShift;
+        if (workDays  !== undefined) updateData.workDays   = Array.isArray(workDays) ? workDays : (workDays ? [workDays] : []);
+        if (partTimeHours !== undefined) updateData.partTimeHours = workShift === 'part_time' ? Number(partTimeHours) : null;
+        if (partTimeStart !== undefined) updateData.partTimeStart = workShift === 'part_time' ? partTimeStart : null;
+        updateData.workHours = { start: workShift === 'part_time' ? (partTimeStart || null) : null, end: null };
         if (assignedClasses !== undefined) {
-            updateData.assignedClasses = Array.isArray(assignedClasses) ? assignedClasses : (assignedClasses ? [assignedClasses] : []);
+            const isProfesor     = specialty && specialty.startsWith('profesor_');
+            const canHaveClasses = isProfesor || specialty === 'personal_trainer';
+            updateData.assignedClasses = canHaveClasses
+                ? (Array.isArray(assignedClasses) ? assignedClasses : (assignedClasses ? [assignedClasses] : []))
+                : [];
         }
         
         // Si hay nueva contraseña, hashearla
