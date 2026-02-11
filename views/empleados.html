@@ -196,26 +196,49 @@
                 </p>
                 
                 <!-- Stats del Día -->
-                <div class="overview-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
-                    <div class="overview-card" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 2rem; display: flex; align-items: center; gap: 1.5rem; border: 2px solid var(--violeta-claro);">
-                        <i class="fas fa-calendar-check" style="font-size: 3rem; color: var(--violeta-muy-claro);"></i>
+                <div class="overview-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                    <div class="overview-card" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 1.5rem; display: flex; align-items: center; gap: 1.2rem; border: 2px solid var(--violeta-claro);">
+                        <i class="fas fa-calendar-check" style="font-size: 2.5rem; color: var(--violeta-muy-claro);"></i>
                         <div class="card-content">
-                            <h3 id="today-classes" style="font-size: 2rem; color: var(--blanco); margin-bottom: 0.5rem;">0</h3>
-                            <p style="color: white; font-size: 0.9rem;">Clases Hoy</p>
+                            <h3 id="today-classes" style="font-size: 1.8rem; color: var(--blanco); margin-bottom: 0.3rem;">0</h3>
+                            <p style="color: white; font-size: 0.85rem;">Clases Hoy</p>
                         </div>
                     </div>
-                    <div class="overview-card" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 2rem; display: flex; align-items: center; gap: 1.5rem; border: 2px solid var(--violeta-claro);">
-                        <i class="fas fa-users" style="font-size: 3rem; color: var(--violeta-muy-claro);"></i>
+                    <div class="overview-card" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 1.5rem; display: flex; align-items: center; gap: 1.2rem; border: 2px solid var(--violeta-claro);">
+                        <i class="fas fa-users" style="font-size: 2.5rem; color: var(--violeta-muy-claro);"></i>
                         <div class="card-content">
-                            <h3 id="today-attendance" style="font-size: 2rem; color: var(--blanco); margin-bottom: 0.5rem;">0</h3>
-                            <p style="color: white; font-size: 0.9rem;">Asistencias Hoy</p>
+                            <h3 id="today-attendance" style="font-size: 1.8rem; color: var(--blanco); margin-bottom: 0.3rem;">0</h3>
+                            <p style="color: white; font-size: 0.85rem;">Asistencias Hoy</p>
                         </div>
                     </div>
-                    <div class="overview-card" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 2rem; display: flex; align-items: center; gap: 1.5rem; border: 2px solid var(--violeta-claro);">
-                        <i class="fas fa-shopping-bag" style="font-size: 3rem; color: var(--violeta-muy-claro);"></i>
+                    <div class="overview-card" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 1.5rem; display: flex; align-items: center; gap: 1.2rem; border: 2px solid var(--violeta-claro);">
+                        <i class="fas fa-shopping-bag" style="font-size: 2.5rem; color: var(--violeta-muy-claro);"></i>
                         <div class="card-content">
-                            <h3 id="pending-orders" style="font-size: 2rem; color: var(--blanco); margin-bottom: 0.5rem;">0</h3>
-                            <p style="color: white; font-size: 0.9rem;">Pedidos Pendientes</p>
+                            <h3 id="pending-orders" style="font-size: 1.8rem; color: var(--blanco); margin-bottom: 0.3rem;">0</h3>
+                            <p style="color: white; font-size: 0.85rem;">Pedidos Pendientes</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Estadísticas Adicionales -->
+                <div style="margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                    <!-- Clases Más Populares -->
+                    <div style="background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); border-radius: 15px; padding: 1.5rem; border: 2px solid rgba(127, 76, 165, 0.3);">
+                        <h4 style="color: var(--violeta-claro); margin-bottom: 1rem; font-size: 1.1rem;">
+                            <i class="fas fa-fire"></i> Clases Más Populares
+                        </h4>
+                        <div id="popular-classes" style="color: var(--gris-claro); font-size: 0.9rem;">
+                            Cargando...
+                        </div>
+                    </div>
+                    
+                    <!-- Productos Top -->
+                    <div style="background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); border-radius: 15px; padding: 1.5rem; border: 2px solid rgba(127, 76, 165, 0.3);">
+                        <h4 style="color: var(--violeta-claro); margin-bottom: 1rem; font-size: 1.1rem;">
+                            <i class="fas fa-trophy"></i> Productos Top
+                        </h4>
+                        <div id="top-products" style="color: var(--gris-claro); font-size: 0.9rem;">
+                            Cargando...
                         </div>
                     </div>
                 </div>
@@ -529,12 +552,31 @@
 
                 <!-- Tab: Asistencias de Hoy -->
                 <div id="attendance-history-tab" style="display: none;">
+                    <!-- Contador y info -->
+                    <div style="background: var(--gris-oscuro); border-radius: 15px; padding: 1.5rem; margin-bottom: 1.5rem; border: 2px solid var(--violeta-medio); display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h3 style="color: var(--violeta-claro); margin: 0;">
+                                <i class="fas fa-users"></i> Total de Asistencias Hoy
+                            </h3>
+                            <p style="color: var(--gris-claro); margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+                                Registro completo del día
+                            </p>
+                        </div>
+                        <div style="text-align: right;">
+                            <h2 id="attendance-count" style="font-size: 2.5rem; color: var(--violeta-muy-claro); margin: 0;">0</h2>
+                            <p style="color: var(--gris-claro); margin: 0; font-size: 0.85rem;">personas</p>
+                        </div>
+                    </div>
+                    
                     <div id="today-attendances-list">
                         <div style="text-align: center; padding: 2rem; color: var(--gris-claro);">
                             <i class="fas fa-clipboard-list" style="font-size: 3rem; margin-bottom: 1rem;"></i>
                             <p>Cargando asistencias del día...</p>
                         </div>
                     </div>
+                    
+                    <!-- Paginación -->
+                    <div id="attendance-pagination" style="margin-top: 1.5rem;"></div>
                 </div>
             </div>
         </section>
@@ -576,6 +618,22 @@
                     <button class="tab-btn" onclick="switchOrdersTab('delivered', this)" style="background: none; border: none; padding: 1rem 2rem; color: var(--gris-claro); font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s;">
                         <i class="fas fa-check-circle"></i> Entregados
                     </button>
+                </div>
+                
+                <!-- Filtros -->
+                <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; margin-bottom: 1.5rem; border: 2px solid var(--violeta-medio);">
+                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <input type="text" id="order-search" placeholder="🔍 Buscar por nombre de cliente..." 
+                                style="width: 100%; padding: 0.8rem; border: 2px solid var(--violeta-medio); border-radius: 10px; background: var(--gris-oscuro); color: var(--blanco);">
+                        </div>
+                        <button class="btn btn-secondary" onclick="applyOrderFilters()" style="white-space: nowrap;">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearOrderFilters()" style="white-space: nowrap;">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Pedidos Pendientes -->
@@ -915,37 +973,51 @@
         }
 
         // ==================== CARGAR ASISTENCIAS DE HOY ====================
-        async function loadTodayAttendances() {
+        // Variables globales para paginación
+        let currentAttendancePage = 1;
+        let currentOrderSearch = '';
+        
+        async function loadTodayAttendances(page = 1) {
             try {
-                const response = await fetch('/api/employee/today-attendances', {
+                currentAttendancePage = page;
+                const response = await fetch(`/api/employee/attendances-paginated?page=${page}&limit=7`, {
                     credentials: 'same-origin'
                 });
                 const data = await response.json();
                 
                 const container = document.getElementById('today-attendances-list');
+                const countEl = document.getElementById('attendance-count');
+                const paginationEl = document.getElementById('attendance-pagination');
+                
                 if (!container) return;
                 
+                // Actualizar contador total
+                if (countEl && data.pagination) {
+                    countEl.textContent = data.pagination.total;
+                }
+                
+                // Actualizar contador en overview
+                const todayAttendanceEl = document.getElementById('today-attendance');
+                if (todayAttendanceEl && data.pagination) {
+                    todayAttendanceEl.textContent = data.pagination.total;
+                }
+                
                 if (data.success && data.attendances.length > 0) {
-                    const todayAttendanceEl = document.getElementById('today-attendance');
-                    if (todayAttendanceEl) {
-                        todayAttendanceEl.textContent = data.attendances.length;
-                    }
-                    
                     container.innerHTML = data.attendances.map(att => {
-                        const checkInTime = new Date(att.checkInTime);
-                        const timeStr = checkInTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                        const timestamp = new Date(att.timestamp);
+                        const timeStr = timestamp.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
                         
                         return `
-                            <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border-left: 4px solid #22c55e; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border-left: 4px solid #22c55e; display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <h4 style="color: var(--blanco); font-size: 1.1rem; margin-bottom: 0.5rem;">
                                         <i class="fas fa-user-check" style="color: #22c55e;"></i>
                                         ${att.user.fullName}
                                     </h4>
-                                    <p style="color: var(--gris-claro); margin: 0.2rem 0;">
+                                    <p style="color: var(--gris-claro); margin: 0.2rem 0; font-size: 0.9rem;">
                                         <i class="fas fa-envelope"></i> ${att.user.email}
                                     </p>
-                                    <p style="color: var(--gris-claro); margin: 0.2rem 0;">
+                                    <p style="color: var(--gris-claro); margin: 0.2rem 0; font-size: 0.9rem;">
                                         <i class="fas fa-phone"></i> ${att.user.phone}
                                     </p>
                                 </div>
@@ -953,13 +1025,20 @@
                                     <div style="background: #22c55e; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-weight: bold; margin-bottom: 0.5rem;">
                                         <i class="fas fa-clock"></i> ${timeStr}
                                     </div>
-                                    <p style="color: var(--gris-claro); font-size: 0.9rem; margin: 0;">
-                                        Por: ${att.registeredBy}
+                                    <p style="color: var(--gris-claro); font-size: 0.85rem; margin: 0;">
+                                        Por: ${att.recordedBy}
                                     </p>
                                 </div>
                             </div>
                         `;
                     }).join('');
+                    
+                    // Crear paginación
+                    if (paginationEl && data.pagination.pages > 1) {
+                        paginationEl.innerHTML = createPagination(data.pagination, 'loadTodayAttendances');
+                    } else if (paginationEl) {
+                        paginationEl.innerHTML = '';
+                    }
                 } else {
                     container.innerHTML = `
                         <div style="text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
@@ -967,6 +1046,7 @@
                             <p style="color: var(--gris-claro); font-size: 1.2rem;">No hay asistencias registradas hoy</p>
                         </div>
                     `;
+                    if (paginationEl) paginationEl.innerHTML = '';
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -1171,165 +1251,6 @@
                     loadDeliveredOrders();
                 }
             }
-        }
-
-        async function loadPendingOrders() {
-            try {
-                const response = await fetch('/api/employee/pending-orders', {
-                    credentials: 'same-origin'
-                });
-                const data = await response.json();
-                
-                const container = document.getElementById('pending-orders-list');
-                
-                if (data.success && data.orders.length > 0) {
-                    allPendingOrders = data.orders;
-                    
-                    const pendingOrdersEl = document.getElementById('pending-orders');
-                    const pendingCountEl = document.getElementById('pending-count');
-                    
-                    if (pendingOrdersEl) pendingOrdersEl.textContent = data.orders.length;
-                    if (pendingCountEl) pendingCountEl.textContent = data.orders.length;
-                    
-                    container.innerHTML = data.orders.map(order => `
-                        <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border-left: 4px solid var(--violeta-claro); margin-bottom: 1rem;">
-                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                                <div>
-                                    <h4 style="color: var(--violeta-claro); margin-bottom: 0.5rem;">
-                                        Pedido #${order._id.slice(-8).toUpperCase()}
-                                    </h4>
-                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
-                                        <i class="fas fa-user"></i> ${order.customer?.name || 'Cliente'}
-                                    </p>
-                                    <p style="color: var(--gris-claro); margin: 0.3rem 0;">
-                                        <i class="fas fa-calendar"></i> ${new Date(order.createdAt).toLocaleDateString('es-ES')}
-                                    </p>
-                                </div>
-                                <div style="text-align: right;">
-                                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--violeta-claro); margin-bottom: 0.5rem;">
-                                        $${order.total.toLocaleString()}
-                                    </div>
-                                    <button class="btn btn-primary" onclick="confirmMarkAsDelivered('${order._id}')" style="font-size: 0.9rem;">
-                                        <i class="fas fa-check"></i> Marcar Entregado
-                                    </button>
-                                </div>
-                            </div>
-                            <div style="padding-top: 1rem; border-top: 1px solid var(--violeta-medio);">
-                                <strong style="color: var(--violeta-claro);">Productos:</strong>
-                                ${order.items.map(item => `
-                                    <div style="color: var(--gris-claro); padding: 0.3rem 0;">
-                                        • ${item.name} x${item.quantity} - $${(item.price * item.quantity).toLocaleString()}
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    container.innerHTML = `
-                        <div style="text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
-                            <i class="fas fa-check-circle" style="font-size: 4rem; color: #22c55e; margin-bottom: 1rem;"></i>
-                            <p style="color: var(--gris-claro); font-size: 1.2rem;">¡No hay pedidos pendientes!</p>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('❌ Error:', error);
-            }
-        }
-
-        async function loadDeliveredOrders() {
-            try {
-                const response = await fetch('/api/employee/delivered-orders', {
-                    credentials: 'same-origin'
-                });
-                const data = await response.json();
-                
-                if (data.success && data.orders.length > 0) {
-                    allDeliveredOrders = data.orders;
-                    displayDeliveredOrdersPage();
-                } else {
-                    const container = document.getElementById('delivered-orders-list');
-                    container.innerHTML = `
-                        <div style="text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
-                            <i class="fas fa-box-open" style="font-size: 4rem; color: var(--gris-claro); margin-bottom: 1rem;"></i>
-                            <p style="color: var(--gris-claro); font-size: 1.2rem;">No hay pedidos entregados aún</p>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('❌ Error:', error);
-            }
-        }
-
-        // Nueva función para mostrar página de pedidos entregados
-        function displayDeliveredOrdersPage() {
-            const start = (currentDeliveredPage - 1) * ordersPerPage;
-            const end = start + ordersPerPage;
-            const ordersToShow = allDeliveredOrders.slice(start, end);
-            
-            const container = document.getElementById('delivered-orders-list');
-            
-            container.innerHTML = ordersToShow.map(order => `
-                <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border-left: 4px solid #22c55e;">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div>
-                            <h4 style="color: #22c55e; margin-bottom: 0.5rem;">
-                                Pedido #${order._id.slice(-8).toUpperCase()} <i class="fas fa-check-circle"></i>
-                            </h4>
-                            <p style="color: var(--gris-claro); margin: 0.3rem 0;">
-                                <i class="fas fa-user"></i> ${order.customer?.name || 'Cliente'}
-                            </p>
-                            <p style="color: var(--gris-claro); margin: 0.3rem 0;">
-                                <i class="fas fa-calendar"></i> Entregado: ${new Date(order.deliveredAt || order.updatedAt).toLocaleDateString('es-ES')}
-                            </p>
-                            <p style="color: var(--gris-claro); margin: 0.3rem 0;">
-                                <i class="fas fa-user-tie"></i> Por: ${order.deliveredBy || 'Empleado'}
-                            </p>
-                        </div>
-                        <div style="font-size: 1.5rem; font-weight: bold; color: #22c55e;">
-                            $${order.total.toLocaleString()}
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-            
-            setupDeliveredPagination();
-        }
-
-        // Nueva función para paginación de entregados
-        function setupDeliveredPagination() {
-            const totalPages = Math.ceil(allDeliveredOrders.length / ordersPerPage);
-            const pagination = document.getElementById('delivered-pagination');
-            
-            if (!pagination || totalPages <= 1) {
-                if (pagination) pagination.innerHTML = '';
-                return;
-            }
-            
-            pagination.innerHTML = `
-                <button onclick="changeDeliveredPage(${currentDeliveredPage - 1})" 
-                        ${currentDeliveredPage === 1 ? 'disabled' : ''}
-                        style="padding: 0.5rem 1rem; background: var(--violeta-medio); color: white; border: none; border-radius: 8px; cursor: pointer; margin: 0 0.5rem;">
-                    <i class="fas fa-chevron-left"></i> Anterior
-                </button>
-                <span style="color: var(--violeta-claro); padding: 0 1rem; font-weight: bold;">
-                    Página ${currentDeliveredPage} de ${totalPages}
-                </span>
-                <button onclick="changeDeliveredPage(${currentDeliveredPage + 1})" 
-                        ${currentDeliveredPage === totalPages ? 'disabled' : ''}
-                        style="padding: 0.5rem 1rem; background: var(--violeta-medio); color: white; border: none; border-radius: 8px; cursor: pointer; margin: 0 0.5rem;">
-                    Siguiente <i class="fas fa-chevron-right"></i>
-                </button>
-            `;
-        }
-
-        // Nueva función para cambiar página de entregados
-        function changeDeliveredPage(page) {
-            const totalPages = Math.ceil(allDeliveredOrders.length / ordersPerPage);
-            if (page < 1 || page > totalPages) return;
-            
-            currentDeliveredPage = page;
-            displayDeliveredOrdersPage();
         }
 
         async function confirmMarkAsDelivered(orderId) {
@@ -2139,6 +2060,276 @@
                 await alertAsync('Error de Conexión', 'No se pudo conectar con el servidor', 'error');
             }
         });
+        
+        // ==================== NUEVAS FUNCIONES ====================
+        
+        // Función helper para crear paginación
+        function createPagination(pagination, functionName) {
+            const { page, pages } = pagination;
+            let html = '<div style="display: flex; justify-content: center; align-items: center; gap: 0.5rem;">';
+            
+            // Botón anterior
+            html += `
+                <button onclick="${functionName}(${page - 1})" 
+                        ${page === 1 ? 'disabled' : ''}
+                        style="padding: 0.6rem 1rem; background: var(--violeta-medio); color: white; border: none; border-radius: 8px; cursor: pointer; ${page === 1 ? 'opacity: 0.5; cursor: not-allowed;' : ''}">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            `;
+            
+            // Números de página
+            const maxButtons = 5;
+            let startPage = Math.max(1, page - Math.floor(maxButtons / 2));
+            let endPage = Math.min(pages, startPage + maxButtons - 1);
+            
+            if (endPage - startPage < maxButtons - 1) {
+                startPage = Math.max(1, endPage - maxButtons + 1);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                html += `
+                    <button onclick="${functionName}(${i})" 
+                            style="padding: 0.6rem 1rem; background: ${i === page ? 'var(--violeta-claro)' : 'var(--negro)'}; color: white; border: 2px solid var(--violeta-medio); border-radius: 8px; cursor: pointer; font-weight: ${i === page ? 'bold' : 'normal'};">
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            // Botón siguiente
+            html += `
+                <button onclick="${functionName}(${page + 1})" 
+                        ${page === pages ? 'disabled' : ''}
+                        style="padding: 0.6rem 1rem; background: var(--violeta-medio); color: white; border: none; border-radius: 8px; cursor: pointer; ${page === pages ? 'opacity: 0.5; cursor: not-allowed;' : ''}">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            `;
+            
+            html += `<span style="color: var(--gris-claro); margin-left: 1rem;">Página ${page} de ${pages}</span>`;
+            html += '</div>';
+            
+            return html;
+        }
+        
+        // Cargar estadísticas
+        async function loadEmployeeStats() {
+            try {
+                const response = await fetch('/api/employee/stats', {
+                    credentials: 'same-origin'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Actualizar contadores principales
+                    const todayAttendance = document.getElementById('today-attendance');
+                    const pendingOrders = document.getElementById('pending-orders');
+                    
+                    if (todayAttendance) todayAttendance.textContent = data.stats.todayAttendances;
+                    if (pendingOrders) pendingOrders.textContent = data.stats.pendingOrders;
+                    
+                    // Clases populares
+                    const popularClassesEl = document.getElementById('popular-classes');
+                    if (popularClassesEl) {
+                        if (data.stats.popularClasses.length > 0) {
+                            popularClassesEl.innerHTML = data.stats.popularClasses.map((cls, idx) => `
+                                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(127, 76, 165, 0.2);">
+                                    <span style="color: var(--blanco);">${idx + 1}. ${cls.name}</span>
+                                    <span style="color: var(--violeta-claro); font-weight: bold;">${cls.reservations} reservas</span>
+                                </div>
+                            `).join('');
+                        } else {
+                            popularClassesEl.innerHTML = '<p style="color: var(--gris-claro); font-size: 0.9rem;">Sin datos disponibles</p>';
+                        }
+                    }
+                    
+                    // Productos top
+                    const topProductsEl = document.getElementById('top-products');
+                    if (topProductsEl) {
+                        if (data.stats.topProducts.length > 0) {
+                            topProductsEl.innerHTML = data.stats.topProducts.map((prod, idx) => `
+                                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(127, 76, 165, 0.2);">
+                                    <span style="color: var(--blanco);">${idx + 1}. ${prod.name}</span>
+                                    <span style="color: var(--violeta-claro); font-weight: bold;">${prod.sold} vendidos</span>
+                                </div>
+                            `).join('');
+                        } else {
+                            topProductsEl.innerHTML = '<p style="color: var(--gris-claro); font-size: 0.9rem;">Sin datos disponibles</p>';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando estadísticas:', error);
+            }
+        }
+        
+        // Actualizar loadPendingOrders con paginación
+        async function loadPendingOrders(page = 1) {
+            try {
+                currentPendingPage = page;
+                const search = currentOrderSearch || '';
+                const response = await fetch(`/api/employee/orders-paginated?page=${page}&limit=7&status=completed&search=${encodeURIComponent(search)}`, {
+                    credentials: 'same-origin'
+                });
+                const data = await response.json();
+                
+                const container = document.getElementById('pending-orders-list');
+                const paginationEl = document.getElementById('pending-pagination');
+                
+                if (data.success && data.orders.length > 0) {
+                    const pendingOrdersEl = document.getElementById('pending-orders');
+                    const pendingCountEl = document.getElementById('pending-count');
+                    
+                    if (pendingOrdersEl && data.pagination) pendingOrdersEl.textContent = data.pagination.total;
+                    if (pendingCountEl && data.pagination) pendingCountEl.textContent = data.pagination.total;
+                    
+                    container.innerHTML = data.orders.map(order => `
+                        <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border-left: 4px solid var(--violeta-claro);">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                                <div>
+                                    <h4 style="color: var(--violeta-claro); margin-bottom: 0.5rem;">
+                                        Pedido #${order._id.slice(-8).toUpperCase()}
+                                    </h4>
+                                    <p style="color: var(--gris-claro); margin: 0.3rem 0; font-size: 0.9rem;">
+                                        <i class="fas fa-user"></i> ${order.customer?.name || 'Cliente'}
+                                    </p>
+                                    <p style="color: var(--gris-claro); margin: 0.3rem 0; font-size: 0.9rem;">
+                                        <i class="fas fa-calendar"></i> ${new Date(order.createdAt).toLocaleDateString('es-ES')}
+                                    </p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 1.4rem; font-weight: bold; color: var(--violeta-claro); margin-bottom: 0.5rem;">
+                                        $${order.total.toLocaleString()}
+                                    </div>
+                                    <button class="btn btn-primary" onclick="confirmMarkAsDelivered('${order._id}')" style="font-size: 0.85rem; padding: 0.5rem 1rem;">
+                                        <i class="fas fa-check"></i> Entregar
+                                    </button>
+                                </div>
+                            </div>
+                            <div style="padding-top: 0.8rem; border-top: 1px solid var(--violeta-medio);">
+                                <strong style="color: var(--violeta-claro); font-size: 0.9rem;">Productos:</strong>
+                                ${order.items.map(item => `
+                                    <div style="color: var(--gris-claro); padding: 0.2rem 0; font-size: 0.85rem;">
+                                        • ${item.name} x${item.quantity} - $${(item.price * item.quantity).toLocaleString()}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    // Crear paginación
+                    if (paginationEl && data.pagination.pages > 1) {
+                        paginationEl.innerHTML = createPagination(data.pagination, 'loadPendingOrders');
+                    } else if (paginationEl) {
+                        paginationEl.innerHTML = '';
+                    }
+                } else {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
+                            <i class="fas fa-check-circle" style="font-size: 4rem; color: #22c55e; margin-bottom: 1rem;"></i>
+                            <p style="color: var(--gris-claro); font-size: 1.2rem;">
+                                ${search ? 'No se encontraron pedidos con ese criterio' : '¡No hay pedidos pendientes!'}
+                            </p>
+                        </div>
+                    `;
+                    if (paginationEl) paginationEl.innerHTML = '';
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+            }
+        }
+        
+        // Actualizar loadDeliveredOrders con paginación
+        async function loadDeliveredOrders(page = 1) {
+            try {
+                currentDeliveredPage = page;
+                const search = currentOrderSearch || '';
+                const response = await fetch(`/api/employee/orders-paginated?page=${page}&limit=7&status=delivered&search=${encodeURIComponent(search)}`, {
+                    credentials: 'same-origin'
+                });
+                const data = await response.json();
+                
+                const container = document.getElementById('delivered-orders-list');
+                const paginationEl = document.getElementById('delivered-pagination');
+                
+                if (data.success && data.orders.length > 0) {
+                    container.innerHTML = data.orders.map(order => `
+                        <div style="background: var(--negro); border-radius: 15px; padding: 1.5rem; border-left: 4px solid #22c55e;">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div>
+                                    <h4 style="color: #22c55e; margin-bottom: 0.5rem;">
+                                        Pedido #${order._id.slice(-8).toUpperCase()} <i class="fas fa-check-circle"></i>
+                                    </h4>
+                                    <p style="color: var(--gris-claro); margin: 0.3rem 0; font-size: 0.9rem;">
+                                        <i class="fas fa-user"></i> ${order.customer?.name || 'Cliente'}
+                                    </p>
+                                    <p style="color: var(--gris-claro); margin: 0.3rem 0; font-size: 0.9rem;">
+                                        <i class="fas fa-calendar"></i> Entregado: ${new Date(order.deliveredAt || order.updatedAt).toLocaleDateString('es-ES')}
+                                    </p>
+                                    <p style="color: var(--gris-claro); margin: 0.3rem 0; font-size: 0.9rem;">
+                                        <i class="fas fa-user-tie"></i> Por: ${order.deliveredBy || 'Empleado'}
+                                    </p>
+                                </div>
+                                <div style="font-size: 1.4rem; font-weight: bold; color: #22c55e;">
+                                    $${order.total.toLocaleString()}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    // Crear paginación
+                    if (paginationEl && data.pagination.pages > 1) {
+                        paginationEl.innerHTML = createPagination(data.pagination, 'loadDeliveredOrders');
+                    } else if (paginationEl) {
+                        paginationEl.innerHTML = '';
+                    }
+                } else {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 3rem; background: var(--negro); border-radius: 15px;">
+                            <i class="fas fa-box-open" style="font-size: 4rem; color: var(--gris-claro); margin-bottom: 1rem;"></i>
+                            <p style="color: var(--gris-claro); font-size: 1.2rem;">
+                                ${search ? 'No se encontraron pedidos con ese criterio' : 'No hay pedidos entregados aún'}
+                            </p>
+                        </div>
+                    `;
+                    if (paginationEl) paginationEl.innerHTML = '';
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+            }
+        }
+        
+        // Funciones para filtros de pedidos
+        function applyOrderFilters() {
+            const searchInput = document.getElementById('order-search');
+            currentOrderSearch = searchInput ? searchInput.value.trim() : '';
+            
+            // Recargar según qué tab esté activo
+            const pendingSection = document.getElementById('pending-orders-section');
+            if (pendingSection && pendingSection.style.display !== 'none') {
+                loadPendingOrders(1);
+            } else {
+                loadDeliveredOrders(1);
+            }
+        }
+        
+        function clearOrderFilters() {
+            const searchInput = document.getElementById('order-search');
+            if (searchInput) searchInput.value = '';
+            currentOrderSearch = '';
+            
+            // Recargar según qué tab esté activo
+            const pendingSection = document.getElementById('pending-orders-section');
+            if (pendingSection && pendingSection.style.display !== 'none') {
+                loadPendingOrders(1);
+            } else {
+                loadDeliveredOrders(1);
+            }
+        }
+        
+        // Cargar estadísticas al inicio
+        document.addEventListener('DOMContentLoaded', () => {
+            loadEmployeeStats();
+        });
+        
         console.log('✅ Sistema de registro de usuarios mejorado cargado correctamente');
     </script>
 </body>

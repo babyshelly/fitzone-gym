@@ -5872,6 +5872,229 @@ app.get('/api/employee/delivered-orders', verificarEmpleado, async (req, res) =>
     }
 });
 
+// ==================== NUEVOS ENDPOINTS PARA EMPLEADOS ====================
+
+// Estadísticas para empleados
+app.get('/api/employee/stats', verificarEmpleado, async (req, res) => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        // Asistencias de hoy
+        const todayAttendances = await Attendance.countDocuments({
+            timestamp: {
+                $gte: today,
+                $lt: tomorrow
+            }
+        });
+        
+        // Pedidos pendientes (completados pero no entregados)
+        const pendingOrders = await Order.countDocuments({ 
+            status: 'completed'
+        });
+        
+        // Clases más populares (últimos 30 días)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const popularClasses = await Reservation.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: thirtyDaysAgo },
+                    status: 'active'
+                }
+            },
+            {
+                $group: {
+                    _id: '$className',
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { count: -1 }
+            },
+            {
+                $limit: 5
+            }
+        ]);
+        
+        // Productos más vendidos (últimos 30 días)
+        const topProducts = await Order.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: thirtyDaysAgo },
+                    status: { $in: ['completed', 'delivered'] }
+                }
+            },
+            { $unwind: '$items' },
+            {
+                $group: {
+                    _id: '$items.name',
+                    totalSold: { $sum: '$items.quantity' }
+                }
+            },
+            {
+                $sort: { totalSold: -1 }
+            },
+            {
+                $limit: 5
+            }
+        ]);
+        
+        res.json({
+            success: true,
+            stats: {
+                todayAttendances,
+                pendingOrders,
+                popularClasses: popularClasses.map(c => ({
+                    name: c._id,
+                    reservations: c.count
+                })),
+                topProducts: topProducts.map(p => ({
+                    name: p._id,
+                    sold: p.totalSold
+                }))
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Error obteniendo estadísticas:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al cargar estadísticas' 
+        });
+    }
+});
+
+// Asistencias con paginación
+app.get('/api/employee/attendances-paginated', verificarEmpleado, async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 7;
+        const skip = (page - 1) * limit;
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        const attendances = await Attendance.find({
+            timestamp: {
+                $gte: today,
+                $lt: tomorrow
+            }
+        })
+        .populate('userId', 'fullName email phone')
+        .populate('recordedBy', 'fullName')
+        .sort({ timestamp: -1 })
+        .limit(limit)
+        .skip(skip);
+        
+        const total = await Attendance.countDocuments({
+            timestamp: {
+                $gte: today,
+                $lt: tomorrow
+            }
+        });
+        
+        const formattedAttendances = attendances.map(att => ({
+            _id: att._id,
+            user: {
+                fullName: att.userId?.fullName || 'Usuario',
+                email: att.userId?.email || 'N/A',
+                phone: att.userId?.phone || 'N/A'
+            },
+            timestamp: att.timestamp,
+            recordedBy: att.recordedBy?.fullName || 'Sistema'
+        }));
+        
+        res.json({
+            success: true,
+            attendances: formattedAttendances,
+            pagination: {
+                page,
+                limit,
+                total,
+                pages: Math.ceil(total / limit)
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al cargar asistencias' 
+        });
+    }
+});
+
+// Pedidos con paginación y filtros
+app.get('/api/employee/orders-paginated', verificarEmpleado, async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 7;
+        const skip = (page - 1) * limit;
+        const status = req.query.status || 'completed'; // completed o delivered
+        const search = req.query.search || '';
+        
+        // Construir query
+        let query = { status: status };
+        
+        // Si hay búsqueda, buscar en nombre de usuario
+        if (search) {
+            const users = await User.find({
+                fullName: { $regex: search, $options: 'i' }
+            }).select('_id');
+            
+            const userIds = users.map(u => u._id);
+            query.userId = { $in: userIds };
+        }
+        
+        const orders = await Order.find(query)
+            .populate('userId', 'fullName email phone')
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .skip(skip);
+        
+        const total = await Order.countDocuments(query);
+        
+        const formattedOrders = orders.map(order => ({
+            _id: order._id,
+            customer: {
+                name: order.userId?.fullName || 'Cliente eliminado',
+                email: order.userId?.email || 'N/A',
+                phone: order.userId?.phone || 'N/A'
+            },
+            items: order.items,
+            total: order.total,
+            createdAt: order.createdAt,
+            deliveredAt: order.deliveredAt,
+            deliveredBy: order.deliveredBy,
+            status: order.status
+        }));
+        
+        res.json({
+            success: true,
+            orders: formattedOrders,
+            pagination: {
+                page,
+                limit,
+                total,
+                pages: Math.ceil(total / limit)
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al cargar pedidos' 
+        });
+    }
+});
+
 // ============== ACTUALIZAR LA FUNCIÓN initializeData() ====================
 // AGREGAR esta llamada dentro de initializeData() existente
 
