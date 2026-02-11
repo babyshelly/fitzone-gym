@@ -5884,7 +5884,7 @@ app.get('/api/employee/stats', verificarEmpleado, async (req, res) => {
         
         // Asistencias de hoy
         const todayAttendances = await Attendance.countDocuments({
-            timestamp: {
+            date: {
                 $gte: today,
                 $lt: tomorrow
             }
@@ -5981,19 +5981,18 @@ app.get('/api/employee/attendances-paginated', verificarEmpleado, async (req, re
         tomorrow.setDate(tomorrow.getDate() + 1);
         
         const attendances = await Attendance.find({
-            timestamp: {
+            date: {
                 $gte: today,
                 $lt: tomorrow
             }
         })
         .populate('userId', 'fullName email phone')
-        .populate('recordedBy', 'fullName')
-        .sort({ timestamp: -1 })
+        .sort({ checkInTime: -1 })
         .limit(limit)
         .skip(skip);
         
         const total = await Attendance.countDocuments({
-            timestamp: {
+            date: {
                 $gte: today,
                 $lt: tomorrow
             }
@@ -6006,8 +6005,8 @@ app.get('/api/employee/attendances-paginated', verificarEmpleado, async (req, re
                 email: att.userId?.email || 'N/A',
                 phone: att.userId?.phone || 'N/A'
             },
-            timestamp: att.timestamp,
-            recordedBy: att.recordedBy?.fullName || 'Sistema'
+            timestamp: att.checkInTime,
+            recordedBy: att.registeredBy || 'Sistema'
         }));
         
         res.json({
