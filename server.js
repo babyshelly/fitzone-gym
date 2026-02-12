@@ -77,7 +77,7 @@ const userSchema = new mongoose.Schema({
     },
     workShift: {
         type: String,
-        enum: ['manana', 'tarde', 'part_time'],
+        enum: ['manana', 'tarde', 'full_time', 'part_time', 'clase'],
         default: null
     },
     workDays: [{
@@ -90,6 +90,11 @@ const userSchema = new mongoose.Schema({
     },
     partTimeHours: { type: Number, default: null },
     partTimeStart: { type: String, default: null },
+    // Horarios de clase para profesores
+    classScheduleHours: [{
+        start: { type: String },
+        end:   { type: String }
+    }],
     assignedClasses: [{
         type: String,
         enum: ['F.E.C', 'Pilates', 'Spinning', 'Yoga']
@@ -1474,63 +1479,101 @@ app.post('/api/login-empleado', async (req, res) => {
             sabado:  { manana: ['07:00','13:30'], tarde: ['13:30','20:00'] },
             domingo: { manana: ['08:00','13:00'], tarde: ['13:00','18:00'] }
         };
+        const CLASE_SCHEDULE_LOGIN = {
+            profesor_fec:      { hours: [['10:00','11:00'],['18:00','19:00']] },
+            profesor_yoga:     { hours: [['09:00','10:00'],['19:00','20:00']] },
+            profesor_spinning: { hours: [['08:00','09:00'],['19:00','20:00']] },
+            profesor_pilates:  { hours: [['11:00','12:00'],['17:00','18:00']] }
+        };
         const now       = new Date();
-        const dayOfWeek = now.getDay(); // 0=Dom, 6=Sáb
+        const dayOfWeek = now.getDay();
         const dayKey    = dayOfWeek === 0 ? 'domingo' : dayOfWeek === 6 ? 'sabado' : 'semana';
         const DAY_NAMES = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
         const todayName = DAY_NAMES[dayOfWeek];
+        const nowMin    = now.getHours() * 60 + now.getMinutes();
 
         // Verificar que hoy es día laboral del empleado
         const workDaysList = user.workDays || [];
         if (workDaysList.length > 0 && !workDaysList.includes(todayName)) {
             return res.json({
-                success: false,
-                outsideShift: true,
+                success: false, outsideShift: true,
                 message: 'Hoy no es tu día laboral',
                 notWorkDay: true,
-                workDays: workDaysList,
-                todayName,
-                workHours: null,
-                employeeName: user.fullName
+                workDays: workDaysList, todayName,
+                workHours: null, employeeName: user.fullName
             });
         }
 
-        // Verificar horario según turno (margen ±15 min)
+        // ⭐ Verificar horario según tipo de turno
         if (user.workShift === 'manana' || user.workShift === 'tarde') {
             const shiftData = GYM_SHIFTS[dayKey]?.[user.workShift];
             if (shiftData) {
                 const [sh, sm] = shiftData[0].split(':').map(Number);
                 const [eh, em] = shiftData[1].split(':').map(Number);
-                const nowMin   = now.getHours() * 60 + now.getMinutes();
                 if (nowMin < sh*60+sm - 15 || nowMin > eh*60+em + 15) {
                     return res.json({
-                        success: false,
-                        outsideShift: true,
+                        success: false, outsideShift: true,
                         message: 'Fuera de tu jornada laboral',
                         workHours: { start: shiftData[0], end: shiftData[1] },
-                        workDays: workDaysList, todayName,
-                        employeeName: user.fullName
+                        workDays: workDaysList, todayName, employeeName: user.fullName
                     });
                 }
             }
+        } else if (user.workShift === 'full_time') {
+            // Full time: 07:00-22:00, adaptado al día
+            const ftEnd = dayOfWeek === 0 ? '18:00' : dayOfWeek === 6 ? '20:00' : '22:00';
+            const ftStart = dayOfWeek === 0 ? '08:00' : '07:00';
+            const [sh, sm] = ftStart.split(':').map(Number);
+            const [eh, em] = ftEnd.split(':').map(Number);
+            if (nowMin < sh*60+sm - 15 || nowMin > eh*60+em + 15) {
+                return res.json({
+                    success: false, outsideShift: true,
+                    message: 'Fuera de tu jornada laboral',
+                    workHours: { start: ftStart, end: ftEnd },
+                    workDays: workDaysList, todayName, employeeName: user.fullName
+                });
+            }
         } else if (user.workShift === 'part_time' && user.partTimeStart && user.partTimeHours) {
             const [sh, sm] = user.partTimeStart.split(':').map(Number);
-            const nowMin   = now.getHours() * 60 + now.getMinutes();
             const startMin = sh * 60 + sm;
             const endMin   = startMin + user.partTimeHours * 60;
             const endH = String(Math.floor(endMin/60)).padStart(2,'0');
             const endM = String(endMin%60).padStart(2,'0');
             if (nowMin < startMin - 15 || nowMin > endMin + 15) {
                 return res.json({
-                    success: false,
-                    outsideShift: true,
+                    success: false, outsideShift: true,
                     message: 'Fuera de tu jornada laboral',
                     workHours: { start: user.partTimeStart, end: `${endH}:${endM}` },
-                    workDays: workDaysList, todayName,
-                    employeeName: user.fullName
+                    workDays: workDaysList, todayName, employeeName: user.fullName
+                });
+            }
+        } else if (user.workShift === 'clase') {
+            // Profesores: verificar que alguna de sus clases de hoy esté en curso
+            const sched = CLASE_SCHEDULE_LOGIN[user.specialty];
+            const classHours = user.classScheduleHours?.length > 0
+                ? user.classScheduleHours
+                : (sched ? sched.hours.map(h => ({ start: h[0], end: h[1] })) : []);
+            const inAnyClass = classHours.some(ch => {
+                const [sh, sm] = ch.start.split(':').map(Number);
+                const [eh, em] = ch.end.split(':').map(Number);
+                return nowMin >= sh*60+sm - 15 && nowMin <= eh*60+em + 15;
+            });
+            if (!inAnyClass) {
+                // Mostrar todos los horarios de clase del día
+                const todayHours = classHours.length > 0
+                    ? { start: classHours[0].start, end: classHours[classHours.length-1].end, multiple: classHours }
+                    : null;
+                return res.json({
+                    success: false, outsideShift: true,
+                    message: 'Fuera del horario de tu clase',
+                    isProfesor: true,
+                    workHours: todayHours,
+                    classHours: classHours,
+                    workDays: workDaysList, todayName, employeeName: user.fullName
                 });
             }
         }
+
 
         req.session.userId    = user._id;
         req.session.role      = user.role;
@@ -2095,10 +2138,6 @@ app.post('/api/admin/employees', requireAuth, requireAdmin, async (req, res) => 
             return res.json({ success: false, message: 'Todos los campos son requeridos' });
         if (!specialty)
             return res.json({ success: false, message: 'La especialidad es requerida' });
-        if (!workShift)
-            return res.json({ success: false, message: 'El turno es requerido' });
-        if (!workDays || workDays.length === 0)
-            return res.json({ success: false, message: 'Seleccioná al menos un día laboral' });
         if (password.length < 6)
             return res.json({ success: false, message: 'La contraseña debe tener al menos 6 caracteres' });
         
@@ -2106,20 +2145,48 @@ app.post('/api/admin/employees', requireAuth, requireAdmin, async (req, res) => 
         if (existingUser)
             return res.json({ success: false, message: 'El email ya está registrado' });
         
-        const days    = Array.isArray(workDays) ? workDays : (workDays ? [workDays] : []);
-        const classes = Array.isArray(assignedClasses) ? assignedClasses : (assignedClasses ? [assignedClasses] : []);
-        const isProfesor     = specialty && specialty.startsWith('profesor_');
-        const canHaveClasses = isProfesor || specialty === 'personal_trainer';
-        const canPartTime    = ['personal_trainer','personal_limpieza'].includes(specialty);
 
+        // ⭐ CRONOGRAMA FIJO DE PROFESORES
+        const CLASE_SCHEDULE = {
+            profesor_fec:      { days: ['lunes','miercoles'],  hours: [['10:00','11:00'],['18:00','19:00']] },
+            profesor_yoga:     { days: ['martes','jueves'],    hours: [['09:00','10:00'],['19:00','20:00']] },
+            profesor_spinning: { days: ['miercoles','viernes'],hours: [['08:00','09:00'],['19:00','20:00']] },
+            profesor_pilates:  { days: ['martes','viernes'],   hours: [['11:00','12:00'],['17:00','18:00']] }
+        };
+        const isProfesor = specialty && specialty.startsWith('profesor_');
+        const canHaveClasses = isProfesor || specialty === 'personal_trainer';
+        const canFullTime    = ['encargado','recepcionista','personal_limpieza'].includes(specialty);
+        const canPartTime    = ['encargado','recepcionista','personal_limpieza','personal_trainer'].includes(specialty);
+
+        // Para profesores: días y horarios fijos del cronograma
+        let finalDays  = Array.isArray(workDays) ? workDays : (workDays ? [workDays] : []);
+        let finalShift = workShift;
+        let finalClassHours = [];
+
+        if (isProfesor) {
+            const sched = CLASE_SCHEDULE[specialty];
+            if (sched) {
+                finalDays  = sched.days;
+                finalShift = 'clase';
+                finalClassHours = sched.hours.map(h => ({ start: h[0], end: h[1] }));
+            }
+        } else {
+            if (!finalShift)
+                return res.json({ success: false, message: 'El turno es requerido' });
+            if (finalDays.length === 0)
+                return res.json({ success: false, message: 'Seleccioná al menos un día laboral' });
+        }
+
+        const classes = Array.isArray(assignedClasses) ? assignedClasses : (assignedClasses ? [assignedClasses] : []);
         const hashedPassword = await bcrypt.hash(password, 10);
         const newEmployee = await User.create({
             fullName, email: email.toLowerCase(), phone,
             password: hashedPassword, role: 'employee', status: 'active',
-            specialty, workShift, workDays: days,
-            workHours: { start: partTimeStart || null, end: null },
-            partTimeHours: (workShift === 'part_time' && canPartTime) ? Number(partTimeHours) : null,
-            partTimeStart: (workShift === 'part_time' && canPartTime) ? partTimeStart : null,
+            specialty, workShift: finalShift, workDays: finalDays,
+            workHours: { start: null, end: null },
+            partTimeHours:     (finalShift === 'part_time' && canPartTime)  ? Number(partTimeHours) : null,
+            partTimeStart:     (finalShift === 'part_time' && canPartTime)  ? partTimeStart : null,
+            classScheduleHours: isProfesor ? finalClassHours : [],
             assignedClasses: canHaveClasses ? classes : []
         });
         
@@ -2150,15 +2217,40 @@ app.put('/api/admin/employees/:id', requireAuth, requireAdmin, async (req, res) 
                 partTimeHours, partTimeStart, assignedClasses } = req.body;
         
         const updateData = { fullName, email, phone, status };
-        if (specialty !== undefined) updateData.specialty  = specialty;
-        if (workShift !== undefined) updateData.workShift  = workShift;
-        if (workDays  !== undefined) updateData.workDays   = Array.isArray(workDays) ? workDays : (workDays ? [workDays] : []);
-        if (partTimeHours !== undefined) updateData.partTimeHours = workShift === 'part_time' ? Number(partTimeHours) : null;
-        if (partTimeStart !== undefined) updateData.partTimeStart = workShift === 'part_time' ? partTimeStart : null;
-        updateData.workHours = { start: workShift === 'part_time' ? (partTimeStart || null) : null, end: null };
+        
+
+        // Cronograma fijo de profesores
+        const CLASE_SCHEDULE_PUT = {
+            profesor_fec:      { days: ['lunes','miercoles'],  hours: [['10:00','11:00'],['18:00','19:00']] },
+            profesor_yoga:     { days: ['martes','jueves'],    hours: [['09:00','10:00'],['19:00','20:00']] },
+            profesor_spinning: { days: ['miercoles','viernes'],hours: [['08:00','09:00'],['19:00','20:00']] },
+            profesor_pilates:  { days: ['martes','viernes'],   hours: [['11:00','12:00'],['17:00','18:00']] }
+        };
+        const isProfesor     = specialty && specialty.startsWith('profesor_');
+        const canHaveClasses = isProfesor || specialty === 'personal_trainer';
+        const canPartTime    = ['encargado','recepcionista','personal_limpieza','personal_trainer'].includes(specialty);
+
+        if (specialty  !== undefined) updateData.specialty  = specialty;
+
+        if (isProfesor) {
+            // Profesores: días y horarios fijos e inamovibles
+            const sched = CLASE_SCHEDULE_PUT[specialty];
+            if (sched) {
+                updateData.workShift  = 'clase';
+                updateData.workDays   = sched.days;
+                updateData.classScheduleHours = sched.hours.map(h => ({ start: h[0], end: h[1] }));
+            }
+        } else {
+            if (workShift  !== undefined) updateData.workShift  = workShift;
+            if (workDays   !== undefined) updateData.workDays   = Array.isArray(workDays) ? workDays : (workDays ? [workDays] : []);
+            updateData.classScheduleHours = [];
+        }
+
+        if (partTimeHours !== undefined) updateData.partTimeHours = (updateData.workShift === 'part_time' && canPartTime) ? Number(partTimeHours) : null;
+        if (partTimeStart !== undefined) updateData.partTimeStart = (updateData.workShift === 'part_time' && canPartTime) ? partTimeStart : null;
+        updateData.workHours = { start: null, end: null };
+
         if (assignedClasses !== undefined) {
-            const isProfesor     = specialty && specialty.startsWith('profesor_');
-            const canHaveClasses = isProfesor || specialty === 'personal_trainer';
             updateData.assignedClasses = canHaveClasses
                 ? (Array.isArray(assignedClasses) ? assignedClasses : (assignedClasses ? [assignedClasses] : []))
                 : [];

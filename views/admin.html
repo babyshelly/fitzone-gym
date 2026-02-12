@@ -777,13 +777,18 @@
                             <label for="employee-shift">Turno *</label>
                             <select id="employee-shift" required onchange="onShiftChange()">
                                 <option value="">-- Seleccionar turno --</option>
-                                <option value="manana">&#x1F305; Mañana</option>
-                                <option value="tarde">&#x2600;&#xFE0F; Tarde / Noche</option>
-                                <option value="part_time" id="opt-part-time" style="display:none;">&#x23F0; Part Time</option>
+                                <option value="manana"   id="opt-manana"    style="display:none;">&#x1F305; Mañana</option>
+                                <option value="tarde"    id="opt-tarde"     style="display:none;">&#x2600;&#xFE0F; Tarde / Noche</option>
+                                <option value="full_time"id="opt-full-time" style="display:none;">&#x1F550; Full Time (7:00–22:00)</option>
+                                <option value="part_time"id="opt-part-time" style="display:none;">&#x23F0; Part Time (4–6 hs)</option>
+                                <option value="clase"    id="opt-clase"     style="display:none;">&#x1F4CB; Clases (cronograma fijo)</option>
                             </select>
                         </div>
 
-                        <!-- Preview horario fijo -->
+                        <!-- Preview cronograma fijo de profesores -->
+                        <div id="clase-schedule-preview" style="display:none;margin-bottom:0.5rem;"></div>
+
+                        <!-- Preview horario fijo Mañana/Tarde -->
                         <div id="shift-preview" style="display:none;background:rgba(127,76,165,0.12);border:2px solid rgba(127,76,165,0.3);border-radius:12px;padding:1rem;margin-bottom:0.5rem;">
                             <p style="color:var(--violeta-claro);font-size:0.88rem;margin:0 0 0.6rem;font-weight:600;">
                                 <i class="fas fa-clock"></i> Horarios automáticos según turno
@@ -805,7 +810,13 @@
                             <p style="color:rgba(255,255,255,0.4);font-size:0.78rem;margin:0.6rem 0 0;">* Los horarios se aplican automáticamente según el día al momento del login</p>
                         </div>
 
-                        <!-- Part Time config (solo trainers y limpieza) -->
+                        <!-- Full Time note -->
+                        <div id="full-time-note" style="display:none;background:rgba(59,130,246,0.1);border:2px solid rgba(59,130,246,0.3);border-radius:12px;padding:1rem;margin-bottom:0.5rem;">
+                            <p style="color:#3b82f6;font-size:0.88rem;font-weight:600;margin:0 0 0.4rem;"><i class="fas fa-clock"></i> Full Time</p>
+                            <p style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin:0;">Lun–Vie: <strong style="font-family:monospace;">07:00 – 22:00</strong> &nbsp;|&nbsp; Sáb: <strong style="font-family:monospace;">07:00 – 20:00</strong> &nbsp;|&nbsp; Dom: <strong style="font-family:monospace;">08:00 – 18:00</strong></p>
+                        </div>
+
+                        <!-- Part Time config -->
                         <div id="part-time-config" style="display:none;">
                             <div style="background:rgba(245,158,11,0.1);border:2px solid rgba(245,158,11,0.3);border-radius:12px;padding:1rem;">
                                 <p style="color:#f59e0b;font-size:0.88rem;font-weight:600;margin:0 0 0.8rem;">
@@ -844,6 +855,7 @@
                                 <label class="class-check-label"><input type="checkbox" name="assignedClasses" value="Yoga"> &#x1F9D8; Yoga</label>
                             </div>
                         </div>
+
 
                         <div class="form-actions" style="margin-top:1.5rem;">
                             <button type="button" class="btn btn-secondary" onclick="closeEmployeeModal()">Cancelar</button>
@@ -913,15 +925,15 @@
                 document.getElementById('employee-id').value = '';
                 document.getElementById('employee-password').required = true;
                 // Reset UI dinámica
-                document.getElementById('classes-section').style.display     = 'none';
-                document.getElementById('shift-preview').style.display       = 'none';
-                document.getElementById('part-time-config').style.display    = 'none';
-                document.getElementById('specialty-panel-note').style.display  = 'none';
-                document.getElementById('specialty-nopanel-note').style.display = 'none';
+                ['classes-section','shift-preview','part-time-config','full-time-note',
+                 'clase-schedule-preview','specialty-panel-note','specialty-nopanel-note'
+                ].forEach(id => { const el = document.getElementById(id); if(el) el.style.display='none'; });
+                // Ocultar todas las opciones de turno
+                ['opt-manana','opt-tarde','opt-full-time','opt-part-time','opt-clase']
+                    .forEach(id => { const el = document.getElementById(id); if(el) el.style.display='none'; });
+                document.getElementById('employee-shift').disabled = false;
                 document.querySelectorAll('input[name="assignedClasses"]').forEach(cb => cb.checked = false);
-                document.querySelectorAll('input[name="workDays"]').forEach(cb => cb.checked = false);
-                const optPT = document.getElementById('opt-part-time');
-                if (optPT) optPT.style.display = 'none';
+                document.querySelectorAll('input[name="workDays"]').forEach(cb => { cb.checked = false; cb.disabled = false; });
                 document.getElementById('employee-modal').style.display = 'flex';
             }
 
@@ -2349,25 +2361,36 @@
                 tbody.innerHTML = employeesToShow.map(emp => {
                     const sp = SPECIALTY_LABELS[emp.specialty] || { icon: '❓', text: 'Sin asignar', color: '#6b7280' };
                     const sh = SHIFT_LABELS[emp.workShift] || '-';
-                    const canPanel  = ['recepcionista','encargado'].includes(emp.specialty);
-                    const isPartTime = emp.workShift === 'part_time';
+                    const canPanel   = ['recepcionista','encargado'].includes(emp.specialty);
+                    const isProfesor = emp.specialty && emp.specialty.startsWith('profesor_');
 
-                    // Días laborales como badges
+                    // Días como badges (L M X J V S D)
+                    const dayColorProp = isProfesor ? 'rgba(245,158,11,0.2)' : 'rgba(127,76,165,0.2)';
+                    const dayTextColor = isProfesor ? '#f59e0b'               : 'var(--violeta-claro)';
+                    const dayBorder    = isProfesor ? 'rgba(245,158,11,0.3)'  : 'rgba(127,76,165,0.3)';
                     const daysHTML = (emp.workDays || []).map(d =>
-                        `<span style="display:inline-block;background:rgba(127,76,165,0.2);color:var(--violeta-claro);border:1px solid rgba(127,76,165,0.3);border-radius:4px;padding:0.1rem 0.35rem;font-size:0.75rem;font-family:monospace;">${dayMap[d]||d}</span>`
+                        `<span style="display:inline-block;background:${dayColorProp};color:${dayTextColor};border:1px solid ${dayBorder};border-radius:4px;padding:0.1rem 0.35rem;font-size:0.75rem;font-family:monospace;">${dayMap[d]||d}</span>`
                     ).join(' ');
 
-                    // Horario
+                    // Horario a mostrar
                     let horario = '-';
-                    if (isPartTime && emp.partTimeStart) {
+                    if (emp.workShift === 'part_time' && emp.partTimeStart) {
                         const [h,m] = emp.partTimeStart.split(':').map(Number);
                         const endM  = h*60 + m + (emp.partTimeHours||0)*60;
-                        horario = `${emp.partTimeStart} – ${String(Math.floor(endM/60)).padStart(2,'0')}:${String(endM%60).padStart(2,'0')}`;
+                        horario = `${emp.partTimeStart} – ${String(Math.floor(endM/60)).padStart(2,'0')}:${String(endM%60).padStart(2,'0')} (${emp.partTimeHours}hs)`;
                     } else if (emp.workShift === 'manana') {
-                        horario = '07:00 – 14:00';
+                        horario = 'LV: 07:00–14:00';
                     } else if (emp.workShift === 'tarde') {
-                        horario = '15:00 – 22:00';
+                        horario = 'LV: 15:00–22:00';
+                    } else if (emp.workShift === 'full_time') {
+                        horario = '07:00 – 22:00';
+                    } else if (emp.workShift === 'clase') {
+                        const sched = CLASE_SCHEDULE[emp.specialty];
+                        if (sched) {
+                            horario = sched.hours.map(h => `${h[0]}–${h[1]}`).join(' / ');
+                        }
                     }
+
 
                     return `
                     <tr>
@@ -2451,70 +2474,139 @@
                 document.getElementById('employee-modal').style.display = 'none';
             }
 
-            // Labels para especialidades
             // ==================== CONFIG HORARIOS ====================
             const SHIFT_HOURS = {
                 semana:  { manana: ['07:00','14:00'], tarde: ['15:00','22:00'] },
                 sabado:  { manana: ['07:00','13:30'], tarde: ['13:30','20:00'] },
                 domingo: { manana: ['08:00','13:00'], tarde: ['13:00','18:00'] }
             };
+            const CLASE_SCHEDULE = {
+                profesor_fec:      { days:['lunes','miercoles'],  hours:[['10:00','11:00'],['18:00','19:00']] },
+                profesor_yoga:     { days:['martes','jueves'],    hours:[['09:00','10:00'],['19:00','20:00']] },
+                profesor_spinning: { days:['miercoles','viernes'],hours:[['08:00','09:00'],['19:00','20:00']] },
+                profesor_pilates:  { days:['martes','viernes'],   hours:[['11:00','12:00'],['17:00','18:00']] }
+            };
             const SPECIALTY_LABELS = {
-                recepcionista: {icon:'🛎️', text:'Recepcionista',       color:'#3b82f6'},
-                encargado:     {icon:'👔', text:'Encargado',           color:'#7f4ca5'},
+                recepcionista:     {icon:'🛎️', text:'Recepcionista',    color:'#3b82f6'},
+                encargado:         {icon:'👔', text:'Encargado',         color:'#7f4ca5'},
                 personal_trainer:  {icon:'🏋️', text:'Personal Trainer', color:'#22c55e'},
-                personal_limpieza: {icon:'🧹', text:'Limpieza',         color:'#6b7280'},
-                profesor_yoga:    {icon:'🧘', text:'Prof. Yoga',        color:'#f59e0b'},
-                profesor_pilates: {icon:'🤸', text:'Prof. Pilates',     color:'#f59e0b'},
-                profesor_spinning:{icon:'🚴', text:'Prof. Spinning',    color:'#f59e0b'},
-                profesor_fec:     {icon:'💪', text:'Prof. F.E.C',       color:'#f59e0b'},
+                personal_limpieza: {icon:'🧹', text:'Limpieza',          color:'#6b7280'},
+                profesor_yoga:     {icon:'🧘', text:'Prof. Yoga',        color:'#f59e0b'},
+                profesor_pilates:  {icon:'🤸', text:'Prof. Pilates',     color:'#f59e0b'},
+                profesor_spinning: {icon:'🚴', text:'Prof. Spinning',    color:'#f59e0b'},
+                profesor_fec:      {icon:'💪', text:'Prof. F.E.C',       color:'#f59e0b'},
                 otro: {icon:'🔧', text:'Otro', color:'#6b7280'}
             };
-            const SHIFT_LABELS = { manana:'Mañana', tarde:'Tarde/Noche', part_time:'Part Time' };
-            const DAY_LABELS   = { lunes:'L', martes:'M', miercoles:'X', jueves:'J', viernes:'V', sabado:'S', domingo:'D' };
+            const SHIFT_LABELS = {
+                manana:'Mañana', tarde:'Tarde/Noche',
+                full_time:'Full Time', part_time:'Part Time', clase:'Clases'
+            };
+            const DAY_LABELS = { lunes:'L', martes:'M', miercoles:'X', jueves:'J', viernes:'V', sabado:'S', domingo:'D' };
+            const DAY_NAMES_ES = { lunes:'Lunes', martes:'Martes', miercoles:'Miércoles', jueves:'Jueves', viernes:'Viernes', sabado:'Sábado', domingo:'Domingo' };
 
             // ---- Helpers de UI ----
             function onSpecialtyChange() {
                 const sp = document.getElementById('employee-specialty').value;
-                const isProfesor  = sp.startsWith('profesor_');
-                const isTrainer   = sp === 'personal_trainer';
-                const isLimpieza  = sp === 'personal_limpieza';
-                const canPartTime = isTrainer || isLimpieza;
-                const hasPanel    = ['recepcionista','encargado'].includes(sp);
+                if (!sp) return;
+                const isProfesor   = sp.startsWith('profesor_');
+                const isTrainer    = sp === 'personal_trainer';
+                const isGestion    = ['encargado','recepcionista'].includes(sp);
+                const isLimpieza   = sp === 'personal_limpieza';
+                const hasPanel     = isGestion;
                 const needsClasses = isProfesor || isTrainer;
 
-                // Mostrar/ocultar part_time option
-                const optPT = document.getElementById('opt-part-time');
-                if (optPT) optPT.style.display = canPartTime ? '' : 'none';
-                // Si ya tenía part_time y ahora no puede, resetear
-                const shift = document.getElementById('employee-shift');
-                if (!canPartTime && shift.value === 'part_time') shift.value = '';
+                // Opciones de turno disponibles según especialidad
+                const optManana   = document.getElementById('opt-manana');
+                const optTarde    = document.getElementById('opt-tarde');
+                const optFullTime = document.getElementById('opt-full-time');
+                const optPartTime = document.getElementById('opt-part-time');
+                const optClase    = document.getElementById('opt-clase');
 
-                document.getElementById('classes-section').style.display = needsClasses ? 'block' : 'none';
+                // Ocultar todos
+                [optManana, optTarde, optFullTime, optPartTime, optClase].forEach(o => { if(o) o.style.display='none'; });
+
+                const shift = document.getElementById('employee-shift');
+
+                if (isProfesor) {
+                    // Profesores: solo turno 'clase', fijo
+                    if (optClase) optClase.style.display = '';
+                    shift.value = 'clase';
+                    shift.disabled = true;
+                    // Bloquear días y mostrar los fijos
+                    const sched = CLASE_SCHEDULE[sp];
+                    document.querySelectorAll('input[name="workDays"]').forEach(cb => {
+                        cb.checked  = sched ? sched.days.includes(cb.value) : false;
+                        cb.disabled = true;
+                    });
+                    // Mostrar horarios de clase
+                    showClaseSchedulePreview(sp);
+                } else {
+                    shift.disabled = false;
+                    // Desbloquear días
+                    document.querySelectorAll('input[name="workDays"]').forEach(cb => cb.disabled = false);
+                    document.getElementById('clase-schedule-preview').style.display = 'none';
+
+                    if (isTrainer) {
+                        // Personal Trainer: Mañana, Tarde, Part Time (NO full time)
+                        if (optManana)   optManana.style.display   = '';
+                        if (optTarde)    optTarde.style.display    = '';
+                        if (optPartTime) optPartTime.style.display = '';
+                        if (shift.value === 'full_time') shift.value = '';
+                    } else {
+                        // Encargado, Recepcionista, Limpieza, Otro: todos
+                        if (optManana)   optManana.style.display   = '';
+                        if (optTarde)    optTarde.style.display    = '';
+                        if (optFullTime) optFullTime.style.display = '';
+                        if (optPartTime) optPartTime.style.display = '';
+                    }
+                    if (shift.value === 'clase') shift.value = '';
+                }
+
+                document.getElementById('classes-section').style.display     = needsClasses ? 'block' : 'none';
                 document.getElementById('specialty-panel-note').style.display  = hasPanel ? 'block' : 'none';
                 document.getElementById('specialty-nopanel-note').style.display = (!hasPanel && sp) ? 'block' : 'none';
                 onShiftChange();
             }
 
+            function showClaseSchedulePreview(sp) {
+                const sched = CLASE_SCHEDULE[sp];
+                const container = document.getElementById('clase-schedule-preview');
+                if (!sched || !container) return;
+                const dayNames = sched.days.map(d => DAY_NAMES_ES[d] || d).join(' y ');
+                const hoursHTML = sched.hours.map(h =>
+                    `<span style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);padding:0.2rem 0.6rem;border-radius:6px;font-family:monospace;font-size:0.85rem;">${h[0]} – ${h[1]}</span>`
+                ).join(' / ');
+                container.innerHTML = `
+                    <div style="background:rgba(245,158,11,0.08);border:2px solid rgba(245,158,11,0.3);border-radius:12px;padding:1rem;">
+                        <p style="color:#f59e0b;font-size:0.88rem;font-weight:600;margin:0 0 0.6rem;"><i class="fas fa-calendar-check"></i> Horario fijo del cronograma</p>
+                        <p style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin:0 0 0.5rem;">Días: <strong style="color:white;">${dayNames}</strong></p>
+                        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">${hoursHTML}</div>
+                        <p style="color:rgba(255,255,255,0.4);font-size:0.78rem;margin:0.5rem 0 0;">* Días y horarios fijos según el cronograma del gym. No se pueden modificar.</p>
+                    </div>`;
+                container.style.display = 'block';
+            }
+
             function onShiftChange() {
                 const shift = document.getElementById('employee-shift').value;
-                const previewDiv  = document.getElementById('shift-preview');
-                const partDiv     = document.getElementById('part-time-config');
+                const previewDiv = document.getElementById('shift-preview');
+                const partDiv    = document.getElementById('part-time-config');
+                const ftDiv      = document.getElementById('full-time-note');
+
+                previewDiv.style.display = 'none';
+                partDiv.style.display    = 'none';
+                if (ftDiv) ftDiv.style.display = 'none';
+
                 if (shift === 'manana' || shift === 'tarde') {
                     previewDiv.style.display = 'block';
-                    partDiv.style.display    = 'none';
-                    document.getElementById('preview-lv').textContent  =
-                        SHIFT_HOURS.semana[shift][0]  + ' – ' + SHIFT_HOURS.semana[shift][1];
-                    document.getElementById('preview-sab').textContent =
-                        SHIFT_HOURS.sabado[shift][0]  + ' – ' + SHIFT_HOURS.sabado[shift][1];
-                    document.getElementById('preview-dom').textContent =
-                        SHIFT_HOURS.domingo[shift][0] + ' – ' + SHIFT_HOURS.domingo[shift][1];
+                    document.getElementById('preview-lv').textContent  = SHIFT_HOURS.semana[shift][0]  + ' – ' + SHIFT_HOURS.semana[shift][1];
+                    document.getElementById('preview-sab').textContent = SHIFT_HOURS.sabado[shift][0]  + ' – ' + SHIFT_HOURS.sabado[shift][1];
+                    document.getElementById('preview-dom').textContent = SHIFT_HOURS.domingo[shift][0] + ' – ' + SHIFT_HOURS.domingo[shift][1];
+                } else if (shift === 'full_time') {
+                    if (ftDiv) ftDiv.style.display = 'block';
                 } else if (shift === 'part_time') {
-                    previewDiv.style.display = 'none';
-                    partDiv.style.display    = 'block';
-                } else {
-                    previewDiv.style.display = 'none';
-                    partDiv.style.display    = 'none';
+                    partDiv.style.display = 'block';
                 }
+                // 'clase' no muestra nada adicional (ya lo muestra showClaseSchedulePreview)
             }
 
             function updatePtPreview() {
@@ -2545,11 +2637,11 @@
                 document.getElementById('employee-password').required = false;
                 document.getElementById('employee-password').value  = '';
                 document.getElementById('employee-specialty').value = emp.specialty || '';
-                document.getElementById('employee-shift').value     = emp.workShift || '';
 
                 // Días laborales
                 document.querySelectorAll('input[name="workDays"]').forEach(cb => {
-                    cb.checked = (emp.workDays || []).includes(cb.value);
+                    cb.checked  = (emp.workDays || []).includes(cb.value);
+                    cb.disabled = false;
                 });
 
                 // Part time
@@ -2563,36 +2655,50 @@
                     cb.checked = (emp.assignedClasses || []).includes(cb.value);
                 });
 
+                // Trigger specialty change que setea turno, dias bloqueados, etc.
                 onSpecialtyChange();
+                // Luego setear el turno correcto (onSpecialtyChange puede haberlo sobrescrito para profesores)
+                if (!emp.specialty?.startsWith('profesor_')) {
+                    document.getElementById('employee-shift').value = emp.workShift || '';
+                    onShiftChange();
+                }
+
                 document.getElementById('employee-modal').style.display = 'flex';
             }
 
             document.getElementById('employee-form').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const employeeId = document.getElementById('employee-id').value;
+                const specialty  = document.getElementById('employee-specialty').value;
                 const shift      = document.getElementById('employee-shift').value;
+                const isProfesor = specialty && specialty.startsWith('profesor_');
 
+                // Para no-profesores: validar días
                 const workDays = Array.from(
                     document.querySelectorAll('input[name="workDays"]:checked')
                 ).map(cb => cb.value);
 
-                const checkedClasses = Array.from(
-                    document.querySelectorAll('input[name="assignedClasses"]:checked')
-                ).map(cb => cb.value);
-
-                if (workDays.length === 0) {
+                if (!isProfesor && workDays.length === 0) {
                     showToast('warning', 'Seleccioná al menos un día laboral');
                     return;
                 }
+                if (!isProfesor && !shift) {
+                    showToast('warning', 'Seleccioná un turno laboral');
+                    return;
+                }
+
+                const checkedClasses = Array.from(
+                    document.querySelectorAll('input[name="assignedClasses"]:checked')
+                ).map(cb => cb.value);
 
                 const formData = {
                     fullName:        document.getElementById('employee-fullname').value,
                     email:           document.getElementById('employee-email').value,
                     phone:           document.getElementById('employee-phone').value,
                     status:          document.getElementById('employee-status').value,
-                    specialty:       document.getElementById('employee-specialty').value,
-                    workShift:       shift,
-                    workDays:        workDays,
+                    specialty,
+                    workShift:       isProfesor ? 'clase' : shift,
+                    workDays:        isProfesor ? [] : workDays, // el server asigna los días fijos para profesores
                     assignedClasses: checkedClasses
                 };
 
@@ -2600,12 +2706,11 @@
                     const ptStart = document.getElementById('pt-start').value;
                     const ptHours = document.getElementById('pt-hours').value;
                     if (!ptStart || !ptHours) {
-                        showToast('warning', 'Completa el horario part time (inicio y duración)');
+                        showToast('warning', 'Completá el horario part time (inicio y duración)');
                         return;
                     }
                     formData.partTimeStart = ptStart;
                     formData.partTimeHours = parseInt(ptHours);
-                    formData.workHoursStart = ptStart;
                 }
 
                 const password = document.getElementById('employee-password').value;
